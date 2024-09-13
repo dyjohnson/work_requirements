@@ -1,0 +1,286 @@
+---
+title: "Georgia Medicaid Work Requirements"
+output: html_document
+date: "2024-09-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries
+
+```{r libraries}
+library(tidyverse)
+library(haven)
+library(summarytools)
+library(survey)
+```
+
+## Load BRFSS 2022 and 2023 data
+
+```{r}
+# Load the datasets
+llcp2023 <- read_xpt("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/BRFSS/Data/LLCP2023.XPT")
+llcp2022 <- read_xpt("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/BRFSS/Data/LLCP2022.XPT")
+```
+
+# Clean BRFSS 2022
+```{r}
+# Federal Poverty 2023 calculations
+llcp2023 <- llcp2023 %>%
+  mutate(
+    hhadult_clean = ifelse(HHADULT %in% c(77, 99), NA, HHADULT),
+    children_clean = ifelse(CHILDREN == 99, NA, ifelse(CHILDREN == 88, 0, CHILDREN)),
+    hh_size = ifelse(is.na(NUMADULT), 1, NUMADULT) + ifelse(is.na(hhadult_clean), 0, hhadult_clean) + ifelse(is.na(children_clean), 0, children_clean),
+    hh_size = ifelse(hh_size == 0 | hh_size > 9, 1, hh_size), # Exclude 0 or >99th percentile (9)
+    income_num = case_when(
+      INCOME3 == 1 ~ 10000,
+      INCOME3 == 2 ~ 15000,
+      INCOME3 == 3 ~ 20000,
+      INCOME3 == 4 ~ 25000,
+      INCOME3 == 5 ~ 35000,
+      INCOME3 == 6 ~ 50000,
+      INCOME3 == 7 ~ 75000,
+      INCOME3 == 8 ~ 100000,
+      INCOME3 == 9 ~ 150000,
+      INCOME3 == 10 ~ 200000,
+      INCOME3 == 11 ~ 250000,
+      TRUE ~ NA_real_
+    ),
+    fpg = case_when(
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 1 ~ 100 * (income_num / 14580),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 2 ~ 100 * (income_num / 19720),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 3 ~ 100 * (income_num / 24860),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 4 ~ 100 * (income_num / 30000),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 5 ~ 100 * (income_num / 35140),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 6 ~ 100 * (income_num / 40280),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 7 ~ 100 * (income_num / 45420),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size >= 8 ~ 100 * (income_num / (50560 + (hh_size - 8) * 5140)),
+      `_STATE` == 2 & hh_size == 1 ~ 100 * (income_num / 18210),
+      `_STATE` == 2 & hh_size == 2 ~ 100 * (income_num / 24640),
+      `_STATE` == 2 & hh_size == 3 ~ 100 * (income_num / 31070),
+      `_STATE` == 2 & hh_size == 4 ~ 100 * (income_num / 37500),
+      `_STATE` == 2 & hh_size == 5 ~ 100 * (income_num / 43930),
+      `_STATE` == 2 & hh_size == 6 ~ 100 * (income_num / 50360),
+      `_STATE` == 2 & hh_size == 7 ~ 100 * (income_num / 56790),
+      `_STATE` == 2 & hh_size >= 8 ~ 100 * (income_num / (63220 + (hh_size - 8) * 6430)),
+      `_STATE` == 15 & hh_size == 1 ~ 100 * (income_num / 16770),
+      `_STATE` == 15 & hh_size == 2 ~ 100 * (income_num / 22680),
+      `_STATE` == 15 & hh_size == 3 ~ 100 * (income_num / 28590),
+      `_STATE` == 15 & hh_size == 4 ~ 100 * (income_num / 34500),
+      `_STATE` == 15 & hh_size == 5 ~ 100 * (income_num / 40410),
+      `_STATE` == 15 & hh_size == 6 ~ 100 * (income_num / 46320),
+      `_STATE` == 15 & hh_size == 7 ~ 100 * (income_num / 52230),
+      `_STATE` == 15 & hh_size >= 8 ~ 100 * (income_num / (58140 + (hh_size - 8) * 5910)),
+      TRUE ~ NA_real_
+    )
+  )
+```
+
+# Clean BRFSS 2023
+```{r}
+# Federal Poverty 2023 calculations
+llcp2023 <- llcp2023 %>%
+  mutate(
+    hhadult_clean = ifelse(HHADULT %in% c(77, 99), NA, HHADULT),
+    children_clean = ifelse(CHILDREN == 99, NA, ifelse(CHILDREN == 88, 0, CHILDREN)),
+    hh_size = ifelse(is.na(NUMADULT), 1, NUMADULT) + ifelse(is.na(hhadult_clean), 0, hhadult_clean) + ifelse(is.na(children_clean), 0, children_clean),
+    hh_size = ifelse(hh_size == 0 | hh_size > 9, 1, hh_size), # Exclude 0 or >99th percentile (9)
+    income_num = case_when(
+      INCOME3 == 1 ~ 10000,
+      INCOME3 == 2 ~ 15000,
+      INCOME3 == 3 ~ 20000,
+      INCOME3 == 4 ~ 25000,
+      INCOME3 == 5 ~ 35000,
+      INCOME3 == 6 ~ 50000,
+      INCOME3 == 7 ~ 75000,
+      INCOME3 == 8 ~ 100000,
+      INCOME3 == 9 ~ 150000,
+      INCOME3 == 10 ~ 200000,
+      INCOME3 == 11 ~ 250000,
+      TRUE ~ NA_real_
+    ),
+    fpg = case_when(
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 1 ~ 100 * (income_num / 14580),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 2 ~ 100 * (income_num / 19720),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 3 ~ 100 * (income_num / 24860),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 4 ~ 100 * (income_num / 30000),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 5 ~ 100 * (income_num / 35140),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 6 ~ 100 * (income_num / 40280),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 7 ~ 100 * (income_num / 45420),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size >= 8 ~ 100 * (income_num / (50560 + (hh_size - 8) * 5140)),
+      `_STATE` == 2 & hh_size == 1 ~ 100 * (income_num / 18210),
+      `_STATE` == 2 & hh_size == 2 ~ 100 * (income_num / 24640),
+      `_STATE` == 2 & hh_size == 3 ~ 100 * (income_num / 31070),
+      `_STATE` == 2 & hh_size == 4 ~ 100 * (income_num / 37500),
+      `_STATE` == 2 & hh_size == 5 ~ 100 * (income_num / 43930),
+      `_STATE` == 2 & hh_size == 6 ~ 100 * (income_num / 50360),
+      `_STATE` == 2 & hh_size == 7 ~ 100 * (income_num / 56790),
+      `_STATE` == 2 & hh_size >= 8 ~ 100 * (income_num / (63220 + (hh_size - 8) * 6430)),
+      `_STATE` == 15 & hh_size == 1 ~ 100 * (income_num / 16770),
+      `_STATE` == 15 & hh_size == 2 ~ 100 * (income_num / 22680),
+      `_STATE` == 15 & hh_size == 3 ~ 100 * (income_num / 28590),
+      `_STATE` == 15 & hh_size == 4 ~ 100 * (income_num / 34500),
+      `_STATE` == 15 & hh_size == 5 ~ 100 * (income_num / 40410),
+      `_STATE` == 15 & hh_size == 6 ~ 100 * (income_num / 46320),
+      `_STATE` == 15 & hh_size == 7 ~ 100 * (income_num / 52230),
+      `_STATE` == 15 & hh_size >= 8 ~ 100 * (income_num / (58140 + (hh_size - 8) * 5910)),
+      TRUE ~ NA_real_
+    )
+  )
+```
+
+# Select target population
+```{r}
+# Create survey design object
+llcp2023_survey <- svydesign(id = ~`_PSU`, strata = ~`_STSTR`, weights = ~`_LLCPWT`, data = llcp2023, nest = TRUE)
+
+# Handle single-PSU strata by treating them as adjusted PSU
+options(survey.lonely.psu = "adjust")
+
+eligible <- llcp2023_survey %>%
+  subset(
+    `_STATE` == 13 & # Georgia resident 
+    `_AGE80` >= 19 & `_AGE80` <= 64 & # 19-64 years old
+      fpg <= 100 & # Income up to 100% FPL
+      (PREGNANT != 1 | is.na(PREGNANT)) & # Not pregnant
+      (BLIND != 1 | is.na(BLIND)) & # Not legally blind
+      (DEAF != 1 | is.na(DEAF)) & # Not deaf
+      (DECIDE != 1 | is.na(DECIDE)) & # No difficulty with cognition
+      (DIFFWALK != 1 | is.na(DIFFWALK)) & # No difficulty with mobility
+      (DIFFDRES != 1 | is.na(DIFFDRES)) & # No difficulty with self-care
+      (DIFFALON != 1 | is.na(DIFFALON)) # No difficulty with independent living
+      # Not disabled "Disability is defined as the inability to engage in any substantial gainful activity by reason of a medically determinable physical or mental impairment(s) that can be expected to result in death or that has lasted or can be expected to last for a continuous period of not less than 12 months."
+      # No nursing home care
+  )
+
+eligible_medicaid <- eligible %>%
+  subset(
+    IYEAR == 2023 &
+      IMONTH %in% c(01, 02, 03, 04, 05, 06) &
+      PRIMINS1 == 5
+  )
+
+eligible_uw <- llcp2023 %>%
+  filter(
+    `_STATE` == 13 & # Georgia resident 
+    `_AGE80` >= 19 & `_AGE80` <= 64 & # 19-64 years old
+      fpg <= 100 & # Income up to 100% FPL
+      (PREGNANT != 1 | is.na(PREGNANT)) & # Not pregnant
+      (BLIND != 1 | is.na(BLIND)) & # Not legally blind
+      (DEAF != 1 | is.na(DEAF)) & # Not deaf
+      (DECIDE != 1 | is.na(DECIDE)) & # No difficulty with cognition
+      (DIFFWALK != 1 | is.na(DIFFWALK)) & # No difficulty with mobility
+      (DIFFDRES != 1 | is.na(DIFFDRES)) & # No difficulty with self-care
+      (DIFFALON != 1 | is.na(DIFFALON)) # No difficulty with independent living
+      # Not disabled "Disability is defined as the inability to engage in any substantial gainful activity by reason of a medically determinable physical or mental impairment(s) that can be expected to result in death or that has lasted or can be expected to last for a continuous period of not less than 12 months."
+      # No nursing home care
+  )
+
+eligible_uw_medicaid <- eligible_uw %>%
+  filter(
+    IYEAR == 2023 &
+      IMONTH %in% c("01", "02", "03", "04", "05", "06") &
+      PRIMINS1 == 5
+  )
+
+summary(eligible_uw_medicaid$fpg)
+table(eligible_uw_medicaid$`_AGE80`, useNA = "ifany")
+table(eligible_uw_medicaid$EMPLOY1, useNA = "ifany")
+table(eligible_uw_medicaid$BLIND, useNA = "ifany")
+table(eligible_uw_medicaid$DEAF, useNA = "ifany")
+table(eligible_uw_medicaid$DECIDE, useNA = "ifany")
+table(eligible_uw_medicaid$DIFFWALK, useNA = "ifany")
+table(eligible_uw_medicaid$DIFFDRES, useNA = "ifany")
+table(eligible_uw_medicaid$DIFFALON, useNA = "ifany")
+```
+
+# Data exploration
+```{r}
+# Unweighted number of observations
+nrow(eligible) # 331
+
+# Weighted number of observations
+svytable(~`_STATE`, eligible) # 571493
+
+# Time period
+svytable(~IYEAR + IMONTH, eligible) # 415,685 from July 2023 - January 2024
+table(eligible_uw$IYEAR, eligible_uw$IMONTH) # 250 from July 2023 - January 2024
+
+# Insurance coverage
+svytable(~PRIMINS1, eligible)
+
+# Insurance coverage by month
+svytable(~PRIMINS1 + IMONTH + IYEAR, eligible) # 49014.37 on Medicaid during pre-period?
+table(eligible_uw$PRIMINS1, eligible_uw$IMONTH, useNA = "always") # 24 on Medicaid during pre-period?
+
+# Employment
+svytable(~EMPLOY1, eligible) # 361332.8 employed or in school
+```
+
+# Match states
+
+```{r match_states}
+library(MatchIt)
+
+snap_ea_matching <- read_csv("snap_ea_matching.csv")
+
+head(snap_ea_matching)
+
+snap_ea_matching <- snap_ea_matching %>% filter(!is.na(treat))
+
+# Checking balance prior to matching
+m.out0 <- matchit(
+  treat ~ region + division + population + poverty,
+  data = snap_ea_matching,
+  method = NULL,
+  distance = "glm"
+)
+
+summary(m.out0)
+
+# 1:1 NN PS matching w/o replacement
+m.out1 <- matchit(
+  treat ~ region + division + population + poverty,
+  data = snap_ea_matching,
+  method = "nearest",
+  distance = "glm",
+  ratio = 2
+)
+
+m.out1
+
+# Checking balance after NN matching without region
+summary(m.out1, un = FALSE)
+
+plot(m.out1, type = "jitter", interactive = FALSE)
+
+plot(
+  m.out1,
+  type = "density",
+  interactive = FALSE,
+  which.xs = ~ region + division + population + poverty
+)
+
+m.data <- match.data(m.out1)
+
+table(m.data$state, m.data$treat)
+```
+
+# DID analysis
+```{r}
+# Medicaid rate
+# HLTHPLN1_model <- svyglm(HLTHPLN1_flag ~ treated * time, design = survey_design, family = quasibinomial())
+
+# Uninsurance rate
+
+# Employment rate
+
+# Employer-sponsored insurance
+
+# Access to PCP
+# PERSDOC3_model <- svyglm(PERSDOC3_flag ~ treated * time, design = survey_design, family = quasibinomial())
+
+# Cost-related delays in care
+```
