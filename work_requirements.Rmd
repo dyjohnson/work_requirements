@@ -313,7 +313,8 @@ merge_2223 <- merge_2223 %>%
                              DIFFWALK == 1 |
                              DIFFDRES == 1 |
                              DIFFALON == 1 ~ 1,
-                           TRUE ~ NA_real_)
+                           TRUE ~ NA_real_),
+    age = `_AGE80`
   )
 
 # summary(merge_2223$fpg)
@@ -364,7 +365,7 @@ eligible <- survey_2223 %>%
     # Exclude "unable to work"?
   )
 
-svytable(~disability + medicaid, survey_2223, exclude=NULL, na.action=na.pass)
+# svytable(~disability + medicaid, survey_2223, exclude=NULL, na.action=na.pass)
 ```
 
 # Data exploration
@@ -556,36 +557,36 @@ svytable(~disability + medicaid, survey_2223, exclude=NULL, na.action=na.pass)
 # Test parallel trends
 ```{r}
 # Medicaid
-medicaid_unadj <- svyglm(medicaid ~ intervention * prepost, design = eligible)
-summary(medicaid_unadj)
+medicaid_unadj_pttest <- svyglm(medicaid ~ intervention * prepost, design = eligible)
+summary(medicaid_unadj_pttest)
 
 # Uninsured
-uninsured_unadj <- svyglm(uninsured ~ intervention * prepost, design = eligible)
-summary(uninsured_unadj)
+uninsured_unadj_pttest <- svyglm(uninsured ~ intervention * prepost, design = eligible)
+summary(uninsured_unadj_pttest)
 
 # Qualifying activities
-qualifying_unadj <- svyglm(qualifying ~ intervention * prepost, design = eligible)
-summary(qualifying_unadj)
+qualifying_unadj_pttest <- svyglm(qualifying ~ intervention * prepost, design = eligible)
+summary(qualifying_unadj_pttest)
 
 # Employed
-employed_unadj <- svyglm(employed ~ intervention * prepost, design = eligible)
-summary(employed_unadj)
+employed_unadj_pttest <- svyglm(employed ~ intervention * prepost, design = eligible)
+summary(employed_unadj_pttest)
 
 # Student
-student_unadj <- svyglm(student ~ intervention * prepost, design = eligible)
-summary(student_unadj)
+student_unadj_pttest <- svyglm(student ~ intervention * prepost, design = eligible)
+summary(student_unadj_pttest)
 
 # Employer-sponsored insurance
-esi_unadj <- svyglm(esi ~ intervention * prepost, design = eligible)
-summary(esi_unadj)
+esi_unadj_pttest <- svyglm(esi ~ intervention * prepost, design = eligible)
+summary(esi_unadj_pttest)
 
 # Access to PCP
-pcp_unadj <- svyglm(pcp ~ intervention * prepost, design = eligible)
-summary(pcp_unadj)
+pcp_unadj_pttest <- svyglm(pcp ~ intervention * prepost, design = eligible)
+summary(pcp_unadj_pttest)
 
 # Cost-related delays in care
-not_afford_unadj <- svyglm(not_afford ~ intervention * prepost, design = eligible)
-summary(not_afford_unadj)
+not_afford_unadj_pttest <- svyglm(not_afford ~ intervention * prepost, design = eligible)
+summary(not_afford_unadj_pttest)
 ```
 
 # Plot data - prepost
@@ -791,7 +792,218 @@ not_afford_plot
 ggsave("not_afford_plot.jpg")
 ```
 
-# Plot data - halves
+# Plot data - quarters
+```{r}
+# Medicaid coverage
+medicaid_quarter <- svytable(~medicaid + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    medicaid_1 = sum(Freq[medicaid == 1]),
+    percentage = (medicaid_1 / total) * 100
+  ) %>%
+  ungroup()
+
+medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has Medicaid",
+    x = "quarter",
+    y = "Medicaid",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+medicaid_quarter_plot
+ggsave("medicaid_quarter_plot.jpg")
+
+# ESI
+esi_quarter <- svytable(~esi + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    esi_1 = sum(Freq[esi == 1]),
+    percentage = (esi_1 / total) * 100
+  ) %>%
+  ungroup()
+
+esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has ESI",
+    x = "quarter",
+    y = "ESI",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+esi_quarter_plot
+ggsave("esi_quarter_plot.jpg")
+
+# Uninsured
+uninsured_quarter <- svytable(~uninsured + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    uninsured_1 = sum(Freq[uninsured == 1]),
+    percentage = (uninsured_1 / total) * 100
+  ) %>%
+  ungroup()
+
+uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Uninsured",
+    x = "quarter",
+    y = "Uninsured",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+uninsured_quarter_plot
+ggsave("uninsured_quarter_plot.jpg")
+
+# Qualifying activities
+qualifying_quarter <- svytable(~qualifying + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    qualifying_1 = sum(Freq[qualifying == 1]),
+    percentage = (qualifying_1 / total) * 100
+  ) %>%
+  ungroup()
+
+qualifying_quarter_plot <- ggplot(qualifying_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Qualifying activities",
+    x = "quarter",
+    y = "Qualifying",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+qualifying_quarter_plot
+ggsave("qualifying_quarter_plot.jpg")
+
+# Employed
+employed_quarter <- svytable(~employed + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    employed_1 = sum(Freq[employed == 1]),
+    percentage = (employed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Employed",
+    x = "quarter",
+    y = "Employed",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+employed_quarter_plot
+ggsave("employed_quarter_plot.jpg")
+
+# Student
+student_quarter <- svytable(~student + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    student_1 = sum(Freq[student == 1]),
+    percentage = (student_1 / total) * 100
+  ) %>%
+  ungroup()
+
+student_quarter_plot <- ggplot(student_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Student",
+    x = "quarter",
+    y = "Student",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+student_quarter_plot
+ggsave("student_quarter_plot.jpg")
+
+# PCP
+pcp_quarter <- svytable(~pcp + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    pcp_1 = sum(Freq[pcp == 1]),
+    percentage = (pcp_1 / total) * 100
+  ) %>%
+  ungroup()
+
+pcp_quarter_plot <- ggplot(pcp_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "PCP",
+    x = "quarter",
+    y = "PCP",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+pcp_quarter_plot
+ggsave("pcp_quarter_plot.jpg")
+
+# Could not afford to see doctor in past 12 months
+not_afford_quarter <- svytable(~not_afford + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    not_afford_1 = sum(Freq[not_afford == 1]),
+    percentage = (not_afford_1 / total) * 100
+  ) %>%
+  ungroup()
+
+not_afford_quarter_plot <- ggplot(not_afford_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Could not afford to see doctor in past 12 months",
+    x = "quarter",
+    y = "Could not afford to see doctor in past 12 months",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+not_afford_quarter_plot
+ggsave("not_afford_quarter_plot.jpg")
+```
+
+# Plot data - quarters
 ```{r}
 # Medicaid coverage
 medicaid_quarter <- svytable(~medicaid + quarter + intervention, eligible) %>%
@@ -1026,9 +1238,21 @@ eligible_pre <- eligible %>%
 eligible_post <- eligible %>%
   subset(post == 1)
 
-# Tabulate weighted respondent characteristics in pre periods
-# group_tab_w <- svytable(~ intervention, design = eligible_pre) %>% as.data.frame()
-# group_tab_w
+# Total study population
+total <- svytable(~intervention, design = eligible) %>% as.data.frame()
+total
+
+# Tabulate weighted respondent characteristics in pre period
+total_tbl_pre_u <- table(eligible_pre$variables$intervention)
+total_tbl_pre_u
+
+total_tbl_pre_w <- svytable(~intervention, design = eligible_pre) %>% as.data.frame()
+total_tbl_pre_w
+
+age_tbl_pre <- svyby(~age, ~intervention, eligible_pre, svymean, vartype = c("se"), na.rm = TRUE)
+age_tbl_pre
+age_tbl_pre_p <- svyttest(age~intervention, eligible_pre)
+age_tbl_pre_p
 
 sex_tbl_pre <- gen_table_chisq("sex_cat", "intervention", eligible_pre)
 sex_tbl_pre$table
@@ -1038,7 +1262,7 @@ race_tbl_pre <- gen_table_chisq("race_cat", "intervention", eligible_pre)
 race_tbl_pre$table
 race_tbl_pre$chi_square
 
-education_tbl_pre <- gen_table_chisq("education", "intervention", eligible_pre)
+education_tbl_pre <- gen_table_chisq("education_cat", "intervention", eligible_pre)
 education_tbl_pre$table
 education_tbl_pre$chi_square
 
@@ -1063,8 +1287,16 @@ cancer_tbl_pre$table
 cancer_tbl_pre$chi_square
 
 # Tabulate weighted respondent characteristics in post periods
-intervention_tab_w <- svytable(~ intervention, design = eligible_post) %>% as.data.frame()
-intervention_tab_w
+total_tbl_post_u <- table(eligible_post$variables$intervention)
+total_tbl_post_u
+
+total_tbl_post_w <- svytable(~intervention, design = eligible_post) %>% as.data.frame()
+total_tbl_post_w
+
+age_tbl_post <- svyby(~age, ~intervention, eligible_post, svymean, vartype = c("se"), na.rm = TRUE)
+age_tbl_post
+age_tbl_post_p <- svyttest(age~intervention, eligible_post)
+age_tbl_post_p
 
 sex_tbl_post <- gen_table_chisq("sex_cat", "intervention", eligible_post)
 sex_tbl_post$table
@@ -1074,7 +1306,7 @@ race_tbl_post <- gen_table_chisq("race_cat", "intervention", eligible_post)
 race_tbl_post$table
 race_tbl_post$chi_square
 
-education_tbl_post <- gen_table_chisq("education", "intervention", eligible_post)
+education_tbl_post <- gen_table_chisq("education_cat", "intervention", eligible_post)
 education_tbl_post$table
 education_tbl_post$chi_square
 
@@ -1170,9 +1402,9 @@ summary(not_afford_adj)
 ```
 
 # Create DID table
-```{r did_tbl}
+```{r}
 # Define function to fill in diff-in-diff table
-gen_did_tbl <- function(outcome_var, survey_design, z_value = 1.96) {
+gen_did_tbl <- function(outcome_var, unadj_model, adj_model, survey_design, z_value = 1.96) {
   # Tabulate the average percentages in the pre and post time periods for intervention == 1
   tbl_t <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention == 1), svymean, vartype = c("ci"), na.rm = TRUE)
   
@@ -1253,54 +1485,80 @@ gen_did_tbl <- function(outcome_var, survey_design, z_value = 1.96) {
   
   # Print the results for intervention == 1
   cat("Intervention group:\n")
-  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_t, format = "f", digits = 2), " (", 
-             formatC(ci_pre_low_percent_t, format = "f", digits = 2), ", ", 
-             formatC(ci_pre_upp_percent_t, format = "f", digits = 2), ")\n"))
-  cat(paste0("Post period mean: ", formatC(post_mean_percent_t, format = "f", digits = 2), " (", 
-             formatC(ci_post_low_percent_t, format = "f", digits = 2), ", ",
-             formatC(ci_post_upp_percent_t, format = "f", digits = 2), ")\n"))
-  cat(paste0("Difference: ", formatC(diff_mean_percent_t, format = "f", digits = 2), " (", 
-             formatC(ci_diff_low_percent_t, format = "f", digits = 2), ", ",
-             formatC(ci_diff_upp_percent_t, format = "f", digits = 2), ")\n"))
+  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_t, format = "f", digits = 2), "% (", 
+             formatC(ci_pre_low_percent_t, format = "f", digits = 2), "%, ", 
+             formatC(ci_pre_upp_percent_t, format = "f", digits = 2), "%)\n"))
+  cat(paste0("Post period mean: ", formatC(post_mean_percent_t, format = "f", digits = 2), "% (", 
+             formatC(ci_post_low_percent_t, format = "f", digits = 2), "%, ",
+             formatC(ci_post_upp_percent_t, format = "f", digits = 2), "%)\n"))
+  cat(paste0("Difference: ", formatC(diff_mean_percent_t, format = "f", digits = 2), "% (", 
+             formatC(ci_diff_low_percent_t, format = "f", digits = 2), "%, ",
+             formatC(ci_diff_upp_percent_t, format = "f", digits = 2), "%)\n"))
   cat(paste0("P value: ", formatC(did_pval_t, format = "f", digits = 4), "\n\n"))
   
   # Print the results for intervention == 0
   cat("Control group:\n")
-  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_c, format = "f", digits = 2), " (", 
-             formatC(ci_pre_low_percent_c, format = "f", digits = 2), ", ",
-             formatC(ci_pre_upp_percent_c, format = "f", digits = 2), ")\n"))
-  cat(paste0("Post period mean: ", formatC(post_mean_percent_c, format = "f", digits = 2), " (", 
-             formatC(ci_post_low_percent_c, format = "f", digits = 2), ", ",
-             formatC(ci_post_upp_percent_c, format = "f", digits = 2), ")\n"))
-  cat(paste0("Difference: ", formatC(diff_mean_percent_c, format = "f", digits = 2), " (", 
-             formatC(ci_diff_low_percent_c, format = "f", digits = 2), ", ",
-             formatC(ci_diff_upp_percent_c, format = "f", digits = 2), ")\n"))
+  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_c, format = "f", digits = 2), "% (", 
+             formatC(ci_pre_low_percent_c, format = "f", digits = 2), "%, ",
+             formatC(ci_pre_upp_percent_c, format = "f", digits = 2), "%)\n"))
+  cat(paste0("Post period mean: ", formatC(post_mean_percent_c, format = "f", digits = 2), "% (", 
+             formatC(ci_post_low_percent_c, format = "f", digits = 2), "%, ",
+             formatC(ci_post_upp_percent_c, format = "f", digits = 2), "%)\n"))
+  cat(paste0("Difference: ", formatC(diff_mean_percent_c, format = "f", digits = 2), "% (", 
+             formatC(ci_diff_low_percent_c, format = "f", digits = 2), "%, ",
+             formatC(ci_diff_upp_percent_c, format = "f", digits = 2), "%)\n"))
   cat(paste0("P value: ", formatC(did_pval_c, format = "f", digits = 4), "\n\n"))
   
-  # Difference-in-differences (DiD) calculation
-  did_diff_mean <- diff_mean_percent_t - diff_mean_percent_c
+  # # Difference-in-differences (DiD) calculation
+  # did_diff_mean <- diff_mean_percent_t - diff_mean_percent_c
+  # 
+  # # Standard error of the DiD estimate
+  # did_se <- sqrt(diff_se_t^2 + diff_se_c^2)
+  # 
+  # # Confidence interval for the DiD estimate
+  # ci_did_low <- did_diff_mean - z_value * did_se * 100
+  # ci_did_upp <- did_diff_mean + z_value * did_se * 100
+  # 
+  # # Print the DiD results
+  # cat("Difference-in-Differences (DiD):\n")
+  # cat(paste0("DiD estimate: ", formatC(did_diff_mean, format = "f", digits = 2), " (", 
+  #            formatC(ci_did_low, format = "f", digits = 2), ", ",
+  #            formatC(ci_did_upp, format = "f", digits = 2), ")\n"))
   
-  # Standard error of the DiD estimate
-  did_se <- sqrt(diff_se_t^2 + diff_se_c^2)
+  # Extract estimates, confidence intervals, and p-values for both models
   
-  # Confidence interval for the DiD estimate
-  ci_did_low <- did_diff_mean - z_value * did_se * 100
-  ci_did_upp <- did_diff_mean + z_value * did_se * 100
+  # Unadjusted Model
+  unadj_diff_in_diff <- coef(unadj_model)["intervention:post"] * 100
+  unadj_ci <- confint(unadj_model)["intervention:post", ] * 100
+  unadj_p_value <- summary(unadj_model)$coefficients["intervention:post", "Pr(>|t|)"]
   
-  # Print the DiD results
-  cat("Difference-in-Differences (DiD):\n")
-  cat(paste0("DiD estimate: ", formatC(did_diff_mean, format = "f", digits = 2), " (", 
-             formatC(ci_did_low, format = "f", digits = 2), ", ",
-             formatC(ci_did_upp, format = "f", digits = 2), ")\n"))
+  # Adjusted Model
+  adj_diff_in_diff <- coef(adj_model)["intervention:post"] * 100
+  adj_ci <- confint(adj_model)["intervention:post", ] * 100
+  adj_p_value <- summary(adj_model)$coefficients["intervention:post", "Pr(>|t|)"]
+  
+  # Print the results for the unadjusted model
+  cat("\nUnadjusted Model:\n")
+  cat(paste0("Difference-in-Difference Estimate: ", formatC(unadj_diff_in_diff, format = "f", digits = 2), "% (", 
+      formatC(unadj_ci[1], format = "f", digits = 2), "%, ", 
+      formatC(unadj_ci[2], format = "f", digits = 2), "%)\n"))
+  cat(paste0("p-value: ", formatC(unadj_p_value, format = "f", digits = 2), "\n"))
+  
+  # Print the results for the adjusted model
+  cat(paste0("\nAdjusted Model:\n"))
+  cat(paste0("Difference-in-Difference Estimate: ", formatC(adj_diff_in_diff, format = "f", digits = 2), "% (", 
+      formatC(adj_ci[1], format = "f", digits = 2), "%, ", 
+      formatC(adj_ci[2], format = "f", digits = 2), "%)\n"))
+  cat(paste0("p-value: ", formatC(adj_p_value, format = "f", digits = 2), "\n"))
 }
 
 # Run on outcomes
-gen_did_tbl("medicaid", eligible)
-gen_did_tbl("esi", eligible)
-gen_did_tbl("uninsured", eligible)
-gen_did_tbl("qualifying", eligible)
-gen_did_tbl("employed", eligible)
-gen_did_tbl("student", eligible)
-gen_did_tbl("pcp", eligible)
-gen_did_tbl("not_afford", eligible)
+gen_did_tbl("medicaid", medicaid_unadj, medicaid_adj, eligible)
+gen_did_tbl("esi", esi_unadj, esi_adj, eligible)
+gen_did_tbl("uninsured", uninsured_unadj, uninsured_adj, eligible)
+gen_did_tbl("qualifying", qualifying_unadj, qualifying_adj, eligible)
+gen_did_tbl("employed", employed_unadj, employed_adj, eligible)
+gen_did_tbl("student", student_unadj, student_adj, eligible)
+gen_did_tbl("pcp", pcp_unadj, pcp_adj, eligible)
+gen_did_tbl("not_afford", not_afford_unadj, not_afford_adj, eligible)
 ```
