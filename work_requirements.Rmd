@@ -104,13 +104,13 @@ llcp2022 <- llcp2022 %>%
     ),
     medicaid = ifelse(PRIMINSR == 5, 1, 0),
     esi = ifelse(PRIMINSR == 1, 1, 0),
-    uninsured = ifelse(`_HLTHPL1` == 2, 1, ifelse(`_HLTHPL1` == 1, 0, NA)),
+    uninsured = ifelse(`_HLTHPLN` == 2, 1, ifelse(`_HLTHPLN` == 1, 0, NA)),
     employed = ifelse(EMPLOY1 %in% c(1, 2), 1, 0),
     student = ifelse(EMPLOY1 == 6, 1, 0),
     qualifying = ifelse(EMPLOY1 %in% c(1, 2, 6), 1, 0),
     pcp = ifelse(PERSDOC3 %in% c(1, 2), 1, ifelse(PERSDOC3 == 3, 0, NA)),
     not_afford = ifelse(MEDCOST1 == 1, 1, ifelse(MEDCOST1 == 2, 0, NA)),
-    dm = ifelse(DIABETE4 %in% c(1, 2), 1, ifelse(DIABETE4 %in% c(3, 4), 0, NA)),
+    dm = ifelse(DIABETE4 == 1, 1, ifelse(DIABETE4 %in% c(2, 3, 4), 0, NA)),
     mi = ifelse(CVDINFR4 == 1, 1, ifelse(CVDINFR4 == 2, 0, NA)),
     stroke = ifelse(CVDSTRK3 == 1, 1, ifelse(CVDSTRK3 == 2, 0, NA)),
     copd = ifelse(CHCCOPD3 == 1, 1, ifelse(CHCCOPD3 == 2, 0, NA)),
@@ -203,7 +203,7 @@ llcp2023 <- llcp2023 %>%
     qualifying = ifelse(EMPLOY1 %in% c(1, 2, 6), 1, 0),
     pcp = ifelse(PERSDOC3 %in% c(1, 2), 1, ifelse(PERSDOC3 == 3, 0, NA)),
     not_afford = ifelse(MEDCOST1 == 1, 1, ifelse(MEDCOST1 == 2, 0, NA)),
-    dm = ifelse(DIABETE4 %in% c(1, 2), 1, ifelse(DIABETE4 %in% c(3, 4), 0, NA)),
+    dm = ifelse(DIABETE4 == 1, 1, ifelse(DIABETE4 %in% c(2, 3, 4), 0, NA)),
     mi = ifelse(CVDINFR4 == 1, 1, ifelse(CVDINFR4 == 2, 0, NA)),
     stroke = ifelse(CVDSTRK3 == 1, 1, ifelse(CVDSTRK3 == 2, 0, NA)),
     copd = ifelse(CHCCOPD3 == 1, 1, ifelse(CHCCOPD3 == 2, 0, NA)),
@@ -222,27 +222,113 @@ merge_2223 <- bind_rows(llcp2022, llcp2023)
 merge_2223 <- merge_2223 %>%
   mutate(
     post = case_when(
-      IYEAR == 2022 ~ 0,
-      IYEAR == 2023 & IMONTH %in% 1:6 ~ 0,
-      (IYEAR == 2023 & IMONTH %in% 7:12) | IYEAR == 2024 ~ 1,
+      IYEAR == 2022 | (IYEAR == 2023 & IMONTH %in% c("01", "02", "03", "04", "05", "06")) ~ 0,
+      IYEAR == 2023 & IMONTH %in% c("07", "08", "09", "10", "11", "12") ~ 1,
+      TRUE ~ NA_real_
+    ),
+    prepost = case_when(
+      IYEAR == 2022 & IMONTH %in% c("01", "02", "03", "04", "05", "06", "07", "08", "09") ~ 0,
+      (IYEAR == 2022 & IMONTH %in% c("10", "11", "12")) | (IYEAR == 2023 & IMONTH %in% c("01", "02", "03", "04", "05", "06")) ~ 1,
       TRUE ~ NA_real_
     ),
     intervention = case_when(
       `_STATE` == 13 ~ 1, # Georgia
       `_STATE` %in% c(1, 12, 48, 28) ~ 0, # Alabama, Florida, Texas, Mississippi
       TRUE ~ NA_real_
-    )
+    ),
+    quarter = case_when(
+      IYEAR == 2022 & IMONTH %in% c("01", "02", "03") ~ "1. 2022 Q1",
+      IYEAR == 2022 & IMONTH %in% c("04", "05", "06") ~ "2. 2022 Q2",
+      IYEAR == 2022 & IMONTH %in% c("07", "08", "09") ~ "3. 2022 Q3",
+      IYEAR == 2022 & IMONTH %in% c("10", "11", "12") ~ "4. 2022 Q4",
+      IYEAR == 2023 & IMONTH %in% c("01", "02", "03") ~ "5. 2023 Q1",
+      IYEAR == 2023 & IMONTH %in% c("04", "05", "06") ~ "6. 2023 Q2",
+      IYEAR == 2023 & IMONTH %in% c("07", "08", "09") ~ "7. 2023 Q3",
+      IYEAR == 2023 & IMONTH %in% c("10", "11", "12") ~ "8. 2023 Q4",
+      TRUE ~ NA_character_
+    ),
+    half = case_when(
+      IYEAR == 2022 & IMONTH %in% c("01", "02", "03", "04", "05", "06") ~ "1. 2022 H1",
+      IYEAR == 2022 & IMONTH %in% c("07", "08", "09", "10", "11", "12") ~ "2. 2022 H2",
+      IYEAR == 2023 & IMONTH %in% c("01", "02", "03", "04", "05", "06") ~ "3. 2023 H1",
+      IYEAR == 2023 & IMONTH %in% c("07", "08", "09", "10", "11", "12") ~ "4. 2023 H2",
+      TRUE ~ NA_character_
+    ),
+    state = case_when(
+      `_STATE` == 1 ~ "Alabama",
+      `_STATE` == 2 ~ "Alaska",
+      `_STATE` == 4 ~ "Arizona",
+      `_STATE` == 5 ~ "Arkansas",
+      `_STATE` == 6 ~ "California",
+      `_STATE` == 8 ~ "Colorado",
+      `_STATE` == 9 ~ "Connecticut",
+      `_STATE` == 10 ~ "Delaware",
+      `_STATE` == 11 ~ "District of Columbia",
+      `_STATE` == 12 ~ "Florida",
+      `_STATE` == 13 ~ "Georgia",
+      `_STATE` == 15 ~ "Hawaii",
+      `_STATE` == 16 ~ "Idaho",
+      `_STATE` == 17 ~ "Illinois",
+      `_STATE` == 18 ~ "Indiana",
+      `_STATE` == 19 ~ "Iowa",
+      `_STATE` == 20 ~ "Kansas",
+      `_STATE` == 21 ~ "Kentucky",
+      `_STATE` == 22 ~ "Louisiana",
+      `_STATE` == 23 ~ "Maine",
+      `_STATE` == 24 ~ "Maryland",
+      `_STATE` == 25 ~ "Massachusetts",
+      `_STATE` == 26 ~ "Michigan",
+      `_STATE` == 27 ~ "Minnesota",
+      `_STATE` == 28 ~ "Mississippi",
+      `_STATE` == 29 ~ "Missouri",
+      `_STATE` == 30 ~ "Montana",
+      `_STATE` == 31 ~ "Nebraska",
+      `_STATE` == 32 ~ "Nevada",
+      `_STATE` == 33 ~ "New Hampshire",
+      `_STATE` == 34 ~ "New Jersey",
+      `_STATE` == 35 ~ "New Mexico",
+      `_STATE` == 36 ~ "New York",
+      `_STATE` == 37 ~ "North Carolina",
+      `_STATE` == 38 ~ "North Dakota",
+      `_STATE` == 39 ~ "Ohio",
+      `_STATE` == 40 ~ "Oklahoma",
+      `_STATE` == 41 ~ "Oregon",
+      `_STATE` == 42 ~ "Pennsylvania",
+      `_STATE` == 44 ~ "Rhode Island",
+      `_STATE` == 45 ~ "South Carolina",
+      `_STATE` == 46 ~ "South Dakota",
+      `_STATE` == 47 ~ "Tennessee",
+      `_STATE` == 48 ~ "Texas",
+      `_STATE` == 49 ~ "Utah",
+      `_STATE` == 50 ~ "Vermont",
+      `_STATE` == 51 ~ "Virginia",
+      `_STATE` == 53 ~ "Washington",
+      `_STATE` == 54 ~ "West Virginia",
+      `_STATE` == 55 ~ "Wisconsin",
+      `_STATE` == 56 ~ "Wyoming"
+    ),
+    disability = case_when(BLIND == 1 |
+                             DEAF == 1 |
+                             DECIDE == 1 |
+                             DIFFWALK == 1 |
+                             DIFFDRES == 1 |
+                             DIFFALON == 1 ~ 1,
+                           TRUE ~ NA_real_)
   )
 
-summary(merge_2223$fpg)
-table(merge_2223$`_AGE80`, useNA = "ifany")
-table(merge_2223$EMPLOY1, useNA = "ifany")
-table(merge_2223$BLIND, useNA = "ifany")
-table(merge_2223$DEAF, useNA = "ifany")
-table(merge_2223$DECIDE, useNA = "ifany")
-table(merge_2223$DIFFWALK, useNA = "ifany")
-table(merge_2223$DIFFDRES, useNA = "ifany")
-table(merge_2223$DIFFALON, useNA = "ifany")
+# summary(merge_2223$fpg)
+# table(merge_2223$`_AGE80`, useNA = "ifany")
+# table(merge_2223$EMPLOY1, useNA = "ifany")
+# table(merge_2223$BLIND, useNA = "ifany")
+# table(merge_2223$DEAF, useNA = "ifany")
+# table(merge_2223$DECIDE, useNA = "ifany")
+# table(merge_2223$DIFFWALK, useNA = "ifany")
+# table(merge_2223$DIFFDRES, useNA = "ifany")
+# table(merge_2223$DIFFALON, useNA = "ifany")
+# table(merge_2223$post, merge_2223$IYEAR, useNA = "ifany")
+# table(merge_2223$intervention, merge_2223$`_STATE`, useNA = "ifany")
+# table(merge_2223$quarter, merge_2223$IMONTH, useNA = "ifany")
+# table(merge_2223$half, merge_2223$IMONTH, useNA = "ifany")
 ```
 
 # Create survey object
@@ -272,57 +358,949 @@ eligible <- survey_2223 %>%
          is.na(DIFFDRES)) & # No difficulty with self-care
       (DIFFALON != 1 |
          is.na(DIFFALON)) & # No difficulty with independent living
-      (children_clean >= 1 & fpg > 30) # No parents with income under 30% FPL
+      (children_clean == 0 | (children_clean >= 1 &
+         fpg > 30)) & # No parents with income under 30% FPL
+      IYEAR %in% c(2022, 2023) # Date range: 1/1/2022 - 12/31/2023
+    # Exclude "unable to work"?
   )
+
+svytable(~disability + medicaid, survey_2223, exclude=NULL, na.action=na.pass)
 ```
 
 # Data exploration
 ```{r}
-# Unweighted data
-summary(eligible_uw_medicaid$fpg)
-table(eligible_uw_medicaid$`_AGE80`, useNA = "ifany")
-table(eligible_uw_medicaid$EMPLOY1, useNA = "ifany")
-table(eligible_uw_medicaid$BLIND, useNA = "ifany")
-table(eligible_uw_medicaid$DEAF, useNA = "ifany")
-table(eligible_uw_medicaid$DECIDE, useNA = "ifany")
-table(eligible_uw_medicaid$DIFFWALK, useNA = "ifany")
-table(eligible_uw_medicaid$DIFFDRES, useNA = "ifany")
-table(eligible_uw_medicaid$DIFFALON, useNA = "ifany")
-
-# Unweighted number of observations
-nrow(eligible) # 331
-
-# Weighted number of observations
-svytable(~`_STATE`, eligible) # 571493
-
-# Time period
-svytable(~IYEAR + IMONTH, eligible) # 415,685 from July 2023 - January 2024
-table(eligible_uw$IYEAR, eligible_uw$IMONTH) # 250 from July 2023 - January 2024
-
-# Insurance coverage
-svytable(~PRIMINS1, eligible)
-
-# Insurance coverage by month
-svytable(~PRIMINS1 + IMONTH + IYEAR, eligible) # 49014.37 on Medicaid during pre-period?
-table(eligible_uw$PRIMINS1, eligible_uw$IMONTH, useNA = "always") # 24 on Medicaid during pre-period?
-
-# Employment
-svytable(~EMPLOY1, eligible) # 361332.8 employed or in school
+# # Unweighted number of observations
+# nrow(eligible)
+# 
+# # Weighted number of observations
+# svytable(~intervention, eligible)
+# svytable(~post, eligible)
+# svytable(~intervention + post, eligible)
+# 
+# # Georgia, Alabama, Florida, Texas, Mississippi residents
+# svytable(~`_STATE`, eligible, exclude=NULL, na.action=na.pass)
+# svytable(~`_STATE` + intervention, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # 19-64 years old
+# svytable(~`_AGE80`, eligible, exclude=NULL, na.action=na.pass)
+#   
+# # Income up to 100% FPL
+# svytable(~fpg, eligible, exclude=NULL, na.action=na.pass)
+#   
+# # Not pregnant
+# svytable(~PREGNANT, eligible, exclude=NULL, na.action=na.pass)
+#   
+# # Not legally blind
+# svytable(~BLIND, eligible, exclude=NULL, na.action=na.pass)
+#     
+# # Not deaf
+# svytable(~DEAF, eligible, exclude=NULL, na.action=na.pass)
+#   
+# # No difficulty with cognition
+# svytable(~DECIDE, eligible, exclude=NULL, na.action=na.pass)  
+#   
+# # No difficulty with mobility
+# svytable(~DIFFWALK, eligible, exclude=NULL, na.action=na.pass)  
+#   
+# # No difficulty with self-care
+# svytable(~DIFFDRES, eligible, exclude=NULL, na.action=na.pass)  
+#   
+# # No difficulty with independent living
+# svytable(~DIFFALON, eligible, exclude=NULL, na.action=na.pass) 
+#   
+# # No parents with income under 30% FPL
+# svytable(~children_clean + fpg, eligible, exclude=NULL, na.action=na.pass) 
+#   
+# # Date range: 1/1/2022 - 12/31/2023
+# svytable(~IMONTH + IYEAR, eligible, exclude=NULL, na.action=na.pass) 
+# 
+# # Age category
+# svytable(~age_cat + intervention, eligible, exclude=NULL, na.action=na.pass) 
+# 
+# # Sex 
+# svytable(~sex_cat + intervention, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Race
+# svytable(~race_cat + intervention, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Education
+# svytable(~education_cat + intervention, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Medicaid
+# svytable(~medicaid + PRIMINS1, eligible, exclude=NULL, na.action=na.pass)
+# svytable(~medicaid + PRIMINSR, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # ESI
+# svytable(~esi + PRIMINS1, eligible, exclude=NULL, na.action=na.pass)
+# svytable(~esi + PRIMINSR, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Uninsured
+# svytable(~uninsured + `_HLTHPL1`, eligible, exclude=NULL, na.action=na.pass)
+# svytable(~uninsured + `_HLTHPLN`, eligible, exclude=NULL, na.action=na.pass)
+# 
+# svytable(~uninsured + `_HCVU653`, eligible, exclude=NULL, na.action=na.pass)
+# svytable(~uninsured + `_HCVU652`, eligible, exclude=NULL, na.action=na.pass)
+# 
+# svytable(~uninsured + PRIMINS1, eligible, exclude=NULL, na.action=na.pass)
+# svytable(~uninsured + PRIMINSR, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Employed
+# svytable(~employed + EMPLOY1, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Student
+# svytable(~student + EMPLOY1, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Qualifying
+# svytable(~qualifying + EMPLOY1, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # PCP
+# svytable(~pcp + PERSDOC3, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Not afford
+# svytable(~not_afford + MEDCOST1, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Diabetes
+# svytable(~dm + DIABETE4, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # MI
+# svytable(~mi + CVDINFR4, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Stroke
+# svytable(~stroke + CVDSTRK3, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # COPD
+# svytable(~copd + CHCCOPD3, eligible, exclude=NULL, na.action=na.pass)
+#     
+# # Cancer
+# svytable(~cancer + CHCOCNC1, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Intervention
+# svytable(~intervention + `_STATE`, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Post
+# svytable(~post + IMONTH + IYEAR, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Insurance coverage
+# svytable(~medicaid + post + intervention, eligible)
+# svytable(~uninsured + post + intervention, eligible)
+# svytable(~esi + post + intervention, eligible)
 ```
 
-# DID analysis
+# Medicaid population
 ```{r}
-# Medicaid rate
-# HLTHPLN1_model <- svyglm(HLTHPLN1_flag ~ treated * time, design = survey_design, family = quasibinomial())
+# # Medicaid population
+# eligible_medicaid <- eligible %>%
+#   subset(medicaid == 1)
+# 
+# # Unweighted number of observations
+# nrow(eligible_medicaid)
+# 
+# # Weighted number of observations
+# svytable(~state, eligible_medicaid, exclude=NULL, na.action=na.pass)
+# 
+# # Insurance
+# svytable(~medicaid, eligible_medicaid, exclude=NULL, na.action=na.pass)
+# svytable(~PRIMINSR + PRIMINS1, eligible_medicaid, exclude=NULL, na.action=na.pass)
+# 
+# # Pre post
+# svytable(~post, eligible_medicaid, exclude=NULL, na.action=na.pass)
+# 
+# # Interview month and year
+# svytable(~IMONTH + IYEAR, eligible_medicaid, exclude=NULL, na.action=na.pass)
+# svytable(~IMONTH + IYEAR + medicaid, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Pre post and intervention
+# svytable(~post + intervention, eligible_medicaid, exclude=NULL, na.action=na.pass)
+# 
+# # Pre post and intervention
+# svytable(~post, eligible_medicaid, exclude=NULL, na.action=na.pass)
+# 
+# # Age
+# svytable(~age_cat, eligible_medicaid, exclude=NULL, na.action=na.pass)
+# 
+# # Sex
+# svytable(~sex_cat, eligible_medicaid, exclude=NULL, na.action=na.pass)
+# svytable(~sex_cat + medicaid, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Income
+# svytable(~fpg, eligible_medicaid, exclude=NULL, na.action=na.pass)
+# 
+# # Family size
+# svytable(~hh_size, eligible_medicaid, exclude=NULL, na.action=na.pass)
+# 
+# # Children
+# svytable(~children_clean, eligible_medicaid, exclude=NULL, na.action=na.pass)
+# 
+# # Children ages
+# svytable(~CAGEG, eligible_medicaid, exclude=NULL, na.action=na.pass)
+# 
+# # Family size and income
+# svytable(~hh_size + fpg, eligible_medicaid, exclude=NULL, na.action=na.pass)
+# 
+# # Employment
+# svytable(~EMPLOY1 + medicaid + post, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Student
+# svytable(~student + EMPLOY1, eligible_medicaid, exclude=NULL, na.action=na.pass)
+# 
+# # Qualifying
+# svytable(~qualifying + medicaid + post, eligible, exclude=NULL, na.action=na.pass)
+# 
+# # Pregnant
+# svytable(~PREGNANT + post, eligible_medicaid, exclude=NULL, na.action=na.pass)
+# 
+# # Cancer
+# svytable(~cancer + medicaid, eligible, exclude=NULL, na.action=na.pass)
+```
 
-# Uninsurance rate
+# Test parallel trends
+```{r}
+# Medicaid
+medicaid_unadj <- svyglm(medicaid ~ intervention * prepost, design = eligible)
+summary(medicaid_unadj)
 
-# Employment rate
+# Uninsured
+uninsured_unadj <- svyglm(uninsured ~ intervention * prepost, design = eligible)
+summary(uninsured_unadj)
+
+# Qualifying activities
+qualifying_unadj <- svyglm(qualifying ~ intervention * prepost, design = eligible)
+summary(qualifying_unadj)
+
+# Employed
+employed_unadj <- svyglm(employed ~ intervention * prepost, design = eligible)
+summary(employed_unadj)
+
+# Student
+student_unadj <- svyglm(student ~ intervention * prepost, design = eligible)
+summary(student_unadj)
 
 # Employer-sponsored insurance
+esi_unadj <- svyglm(esi ~ intervention * prepost, design = eligible)
+summary(esi_unadj)
 
 # Access to PCP
-# PERSDOC3_model <- svyglm(PERSDOC3_flag ~ treated * time, design = survey_design, family = quasibinomial())
+pcp_unadj <- svyglm(pcp ~ intervention * prepost, design = eligible)
+summary(pcp_unadj)
 
 # Cost-related delays in care
+not_afford_unadj <- svyglm(not_afford ~ intervention * prepost, design = eligible)
+summary(not_afford_unadj)
+```
+
+# Plot data - prepost
+```{r}
+# Medicaid coverage
+medicaid_summary <- svytable(~medicaid + post + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    medicaid_1 = sum(Freq[medicaid == 1]),
+    percentage = (medicaid_1 / total) * 100
+  ) %>%
+  ungroup()
+
+medicaid_plot <- ggplot(medicaid_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Had Medicaid",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+medicaid_plot
+ggsave("medicaid_plot.jpg")
+
+# ESI
+esi_summary <- svytable(~esi + post + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    esi_1 = sum(Freq[esi == 1]),
+    percentage = (esi_1 / total) * 100
+  ) %>%
+  ungroup()
+
+esi_plot <- ggplot(esi_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Had employer-sponsored insurance",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+esi_plot
+ggsave("esi_plot.jpg")
+
+# Uninsured
+uninsured_summary <- svytable(~uninsured + post + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    uninsured_1 = sum(Freq[uninsured == 1]),
+    percentage = (uninsured_1 / total) * 100
+  ) %>%
+  ungroup()
+
+uninsured_plot <- ggplot(uninsured_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Uninsured",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+uninsured_plot
+ggsave("uninsured_plot.jpg")
+
+# Qualifying activities
+qualifying_summary <- svytable(~qualifying + post + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    qualifying_1 = sum(Freq[qualifying == 1]),
+    percentage = (qualifying_1 / total) * 100
+  ) %>%
+  ungroup()
+
+qualifying_plot <- ggplot(qualifying_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Qualifying activities",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+qualifying_plot
+ggsave("qualifying_plot.jpg")
+
+# Employed
+employed_summary <- svytable(~employed + post + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    employed_1 = sum(Freq[employed == 1]),
+    percentage = (employed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+employed_plot <- ggplot(employed_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Employed",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+employed_plot
+ggsave("employed_plot.jpg")
+
+# Student
+student_summary <- svytable(~student + post + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    student_1 = sum(Freq[student == 1]),
+    percentage = (student_1 / total) * 100
+  ) %>%
+  ungroup()
+
+student_plot <- ggplot(student_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Student",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+student_plot
+ggsave("student_plot.jpg")
+
+# PCP
+pcp_summary <- svytable(~pcp + post + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    pcp_1 = sum(Freq[pcp == 1]),
+    percentage = (pcp_1 / total) * 100
+  ) %>%
+  ungroup()
+
+pcp_plot <- ggplot(pcp_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Has PCP",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+pcp_plot
+ggsave("pcp_plot.jpg")
+
+# Could not afford to see doctor in past 12 months
+not_afford_summary <- svytable(~not_afford + post + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    not_afford_1 = sum(Freq[not_afford == 1]),
+    percentage = (not_afford_1 / total) * 100
+  ) %>%
+  ungroup()
+
+not_afford_plot <- ggplot(not_afford_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Could not afford to see doctor in past 12 months",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+not_afford_plot
+ggsave("not_afford_plot.jpg")
+```
+
+# Plot data - halves
+```{r}
+# Medicaid coverage
+medicaid_quarter <- svytable(~medicaid + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    medicaid_1 = sum(Freq[medicaid == 1]),
+    percentage = (medicaid_1 / total) * 100
+  ) %>%
+  ungroup()
+
+medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has Medicaid",
+    x = "quarter",
+    y = "Medicaid",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+medicaid_quarter_plot
+ggsave("medicaid_quarter_plot.jpg")
+
+# ESI
+esi_quarter <- svytable(~esi + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    esi_1 = sum(Freq[esi == 1]),
+    percentage = (esi_1 / total) * 100
+  ) %>%
+  ungroup()
+
+esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has ESI",
+    x = "quarter",
+    y = "ESI",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+esi_quarter_plot
+ggsave("esi_quarter_plot.jpg")
+
+# Uninsured
+uninsured_quarter <- svytable(~uninsured + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    uninsured_1 = sum(Freq[uninsured == 1]),
+    percentage = (uninsured_1 / total) * 100
+  ) %>%
+  ungroup()
+
+uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Uninsured",
+    x = "quarter",
+    y = "Uninsured",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+uninsured_quarter_plot
+ggsave("uninsured_quarter_plot.jpg")
+
+# Qualifying activities
+qualifying_quarter <- svytable(~qualifying + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    qualifying_1 = sum(Freq[qualifying == 1]),
+    percentage = (qualifying_1 / total) * 100
+  ) %>%
+  ungroup()
+
+qualifying_quarter_plot <- ggplot(qualifying_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Qualifying activities",
+    x = "quarter",
+    y = "Qualifying",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+qualifying_quarter_plot
+ggsave("qualifying_quarter_plot.jpg")
+
+# Employed
+employed_quarter <- svytable(~employed + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    employed_1 = sum(Freq[employed == 1]),
+    percentage = (employed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Employed",
+    x = "quarter",
+    y = "Employed",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+employed_quarter_plot
+ggsave("employed_quarter_plot.jpg")
+
+# Student
+student_quarter <- svytable(~student + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    student_1 = sum(Freq[student == 1]),
+    percentage = (student_1 / total) * 100
+  ) %>%
+  ungroup()
+
+student_quarter_plot <- ggplot(student_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Student",
+    x = "quarter",
+    y = "Student",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+student_quarter_plot
+ggsave("student_quarter_plot.jpg")
+
+# PCP
+pcp_quarter <- svytable(~pcp + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    pcp_1 = sum(Freq[pcp == 1]),
+    percentage = (pcp_1 / total) * 100
+  ) %>%
+  ungroup()
+
+pcp_quarter_plot <- ggplot(pcp_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "PCP",
+    x = "quarter",
+    y = "PCP",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+pcp_quarter_plot
+ggsave("pcp_quarter_plot.jpg")
+
+# Could not afford to see doctor in past 12 months
+not_afford_quarter <- svytable(~not_afford + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    not_afford_1 = sum(Freq[not_afford == 1]),
+    percentage = (not_afford_1 / total) * 100
+  ) %>%
+  ungroup()
+
+not_afford_quarter_plot <- ggplot(not_afford_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Could not afford to see doctor in past 12 months",
+    x = "quarter",
+    y = "Could not afford to see doctor in past 12 months",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+not_afford_quarter_plot
+ggsave("not_afford_quarter_plot.jpg")
+```
+
+# Respondent characteristics
+```{r}
+# Define a function to generate a table and chi-square test
+gen_table_chisq <- function(variable, group_var, survey_design) {
+  # Calculate the weighted percentages and confidence intervals for the input variable by the group variable
+  tbl <- svyby(as.formula(paste("~", variable)), as.formula(paste("~", group_var)), survey_design, svymean, vartype = c("ci"), na.rm = TRUE)
+  
+  # Generate a Chi-square test to compare the input variable across the group variable
+  chi_test <- svychisq(as.formula(paste("~", variable, "+", group_var)), design = survey_design)
+  
+  # Return the table and chi-square test result as a list
+  list(
+    table = tbl,
+    chi_square = chi_test
+  )
+}
+
+# Split sample into pre and post
+eligible_pre <- eligible %>%
+  subset(post == 0)
+
+eligible_post <- eligible %>%
+  subset(post == 1)
+
+# Tabulate weighted respondent characteristics in pre periods
+# group_tab_w <- svytable(~ intervention, design = eligible_pre) %>% as.data.frame()
+# group_tab_w
+
+sex_tbl_pre <- gen_table_chisq("sex_cat", "intervention", eligible_pre)
+sex_tbl_pre$table
+sex_tbl_pre$chi_square
+
+race_tbl_pre <- gen_table_chisq("race_cat", "intervention", eligible_pre)
+race_tbl_pre$table
+race_tbl_pre$chi_square
+
+education_tbl_pre <- gen_table_chisq("education", "intervention", eligible_pre)
+education_tbl_pre$table
+education_tbl_pre$chi_square
+
+dm_tbl_pre <- gen_table_chisq("dm", "intervention", eligible_pre)
+dm_tbl_pre$table
+dm_tbl_pre$chi_square
+
+mi_tbl_pre <- gen_table_chisq("mi", "intervention", eligible_pre)
+mi_tbl_pre$table
+mi_tbl_pre$chi_square
+
+stroke_tbl_pre <- gen_table_chisq("stroke", "intervention", eligible_pre)
+stroke_tbl_pre$table
+stroke_tbl_pre$chi_square
+
+copd_tbl_pre <- gen_table_chisq("copd", "intervention", eligible_pre)
+copd_tbl_pre$table
+copd_tbl_pre$chi_square
+
+cancer_tbl_pre <- gen_table_chisq("cancer", "intervention", eligible_pre)
+cancer_tbl_pre$table
+cancer_tbl_pre$chi_square
+
+# Tabulate weighted respondent characteristics in post periods
+intervention_tab_w <- svytable(~ intervention, design = eligible_post) %>% as.data.frame()
+intervention_tab_w
+
+sex_tbl_post <- gen_table_chisq("sex_cat", "intervention", eligible_post)
+sex_tbl_post$table
+sex_tbl_post$chi_square
+
+race_tbl_post <- gen_table_chisq("race_cat", "intervention", eligible_post)
+race_tbl_post$table
+race_tbl_post$chi_square
+
+education_tbl_post <- gen_table_chisq("education", "intervention", eligible_post)
+education_tbl_post$table
+education_tbl_post$chi_square
+
+dm_tbl_post <- gen_table_chisq("dm", "intervention", eligible_post)
+dm_tbl_post$table
+dm_tbl_post$chi_square
+
+mi_tbl_post <- gen_table_chisq("mi", "intervention", eligible_post)
+mi_tbl_post$table
+mi_tbl_post$chi_square
+
+stroke_tbl_post <- gen_table_chisq("stroke", "intervention", eligible_post)
+stroke_tbl_post$table
+stroke_tbl_post$chi_square
+
+copd_tbl_post <- gen_table_chisq("copd", "intervention", eligible_post)
+copd_tbl_post$table
+copd_tbl_post$chi_square
+
+cancer_tbl_post <- gen_table_chisq("cancer", "intervention", eligible_post)
+cancer_tbl_post$table
+cancer_tbl_post$chi_square
+```
+
+# Unadjusted DID analysis
+```{r}
+# Medicaid
+medicaid_unadj <- svyglm(medicaid ~ intervention * post, design = eligible)
+summary(medicaid_unadj)
+
+# Uninsured
+uninsured_unadj <- svyglm(uninsured ~ intervention * post, design = eligible)
+summary(uninsured_unadj)
+
+# Qualifying activities
+qualifying_unadj <- svyglm(qualifying ~ intervention * post, design = eligible)
+summary(qualifying_unadj)
+
+# Employed
+employed_unadj <- svyglm(employed ~ intervention * post, design = eligible)
+summary(employed_unadj)
+
+# Student
+student_unadj <- svyglm(student ~ intervention * post, design = eligible)
+summary(student_unadj)
+
+# Employer-sponsored insurance
+esi_unadj <- svyglm(esi ~ intervention * post, design = eligible)
+summary(esi_unadj)
+
+# Access to PCP
+pcp_unadj <- svyglm(pcp ~ intervention * post, design = eligible)
+summary(pcp_unadj)
+
+# Cost-related delays in care
+not_afford_unadj <- svyglm(not_afford ~ intervention * post, design = eligible)
+summary(not_afford_unadj)
+```
+
+# Adjusted DID analysis
+```{r}
+# Medicaid
+medicaid_adj <- svyglm(medicaid ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+summary(medicaid_adj)
+
+# Uninsured
+uninsured_adj <- svyglm(uninsured ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+summary(uninsured_adj)
+
+# Qualifying activities
+qualifying_adj <- svyglm(qualifying ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+summary(qualifying_adj)
+
+# Employed
+employed_adj <- svyglm(employed ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+summary(employed_adj)
+
+# Student
+student_adj <- svyglm(student ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+summary(student_adj)
+
+# Employer-sponsored insurance
+esi_adj <- svyglm(esi ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+summary(esi_adj)
+
+# Access to PCP
+pcp_adj <- svyglm(pcp ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+summary(pcp_adj)
+
+# Cost-related delays in care
+not_afford_adj <- svyglm(not_afford ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+summary(not_afford_adj)
+```
+
+# Create DID table
+```{r did_tbl}
+# Define function to fill in diff-in-diff table
+gen_did_tbl <- function(outcome_var, survey_design, z_value = 1.96) {
+  # Tabulate the average percentages in the pre and post time periods for intervention == 1
+  tbl_t <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention == 1), svymean, vartype = c("ci"), na.rm = TRUE)
+  
+  # Tabulate the average percentages in the pre and post time periods for intervention == 0
+  tbl_c <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention == 0), svymean, vartype = c("ci"), na.rm = TRUE)
+  
+  # Extract the means and confidence intervals for intervention == 1 
+  pre_mean_t <- tbl_t[tbl_t$post == 0, outcome_var]
+  ci_pre_low_t <- tbl_t[tbl_t$post == 0, "ci_l"]
+  ci_pre_upp_t <- tbl_t[tbl_t$post == 0, "ci_u"]
+  post_mean_t <- tbl_t[tbl_t$post == 1, outcome_var]
+  ci_post_low_t <- tbl_t[tbl_t$post == 1, "ci_l"]
+  ci_post_upp_t <- tbl_t[tbl_t$post == 1, "ci_u"]
+  
+  # Convert to percentage points for intervention == 1
+  pre_mean_percent_t <- pre_mean_t * 100
+  ci_pre_low_percent_t <- ci_pre_low_t * 100
+  ci_pre_upp_percent_t <- ci_pre_upp_t * 100
+  post_mean_percent_t <- post_mean_t * 100
+  ci_post_low_percent_t <- ci_post_low_t * 100
+  ci_post_upp_percent_t <- ci_post_upp_t * 100
+  
+  # Calculate the difference for intervention == 1
+  diff_mean_t <- post_mean_t - pre_mean_t
+  
+  # Calculate the standard error of the difference for intervention == 1
+  diff_se_t <- sqrt((((tbl_t[tbl_t$post == 1, "ci_u"] - post_mean_t))/z_value)^2 + 
+                    (((pre_mean_t - tbl_t[tbl_t$post == 0, "ci_l"]))/z_value)^2)
+  
+  # Calculate the confidence interval for intervention == 1
+  ci_diff_low_t <- diff_mean_t - z_value * diff_se_t
+  ci_diff_upp_t <- diff_mean_t + z_value * diff_se_t
+  
+  # Convert to percentage points for intervention == 1
+  diff_mean_percent_t <- diff_mean_t * 100
+  ci_diff_low_percent_t <- ci_diff_low_t * 100
+  ci_diff_upp_percent_t <- ci_diff_upp_t * 100
+  
+  # Extract the means and confidence intervals for intervention == 0
+  pre_mean_c <- tbl_c[tbl_c$post == 0, outcome_var]
+  ci_pre_low_c <- tbl_c[tbl_c$post == 0, "ci_l"]
+  ci_pre_upp_c <- tbl_c[tbl_c$post == 0, "ci_u"]
+  post_mean_c <- tbl_c[tbl_c$post == 1, outcome_var]
+  ci_post_low_c <- tbl_c[tbl_c$post == 1, "ci_l"]
+  ci_post_upp_c <- tbl_c[tbl_c$post == 1, "ci_u"]
+  
+  # Convert to percentage points for intervention == 0
+  pre_mean_percent_c <- pre_mean_c * 100
+  ci_pre_low_percent_c <- ci_pre_low_c * 100
+  ci_pre_upp_percent_c <- ci_pre_upp_c * 100
+  post_mean_percent_c <- post_mean_c * 100
+  ci_post_low_percent_c <- ci_post_low_c * 100
+  ci_post_upp_percent_c <- ci_post_upp_c * 100
+  
+  # Calculate the difference for intervention == 0
+  diff_mean_c <- post_mean_c - pre_mean_c
+  
+  # Calculate p value for intervention == 1
+  did_ttest_t <- svyttest(as.formula(paste0(outcome_var, " ~ post")), design = subset(survey_design, intervention == 1))
+  did_pval_t <- formatC(did_ttest_t$p.value, format = "f", digits = 4)
+  
+  # Calculate the standard error of the difference for intervention == 0
+  diff_se_c <- sqrt((((tbl_c[tbl_c$post == 1, "ci_u"] - post_mean_c))/z_value)^2 +
+                    (((pre_mean_c - tbl_c[tbl_c$post == 0, "ci_l"]))/z_value)^2)
+  
+  # Calculate the confidence interval for intervention == 0
+  ci_diff_low_c <- diff_mean_c - z_value * diff_se_c
+  ci_diff_upp_c <- diff_mean_c + z_value * diff_se_c
+  
+  # Convert to percentage points for intervention == 0
+  diff_mean_percent_c <- diff_mean_c * 100
+  ci_diff_low_percent_c <- ci_diff_low_c * 100
+  ci_diff_upp_percent_c <- ci_diff_upp_c * 100
+  
+  # Calculate p value for intervention == 0
+  did_ttest_c <- svyttest(as.formula(paste0(outcome_var, " ~ post")), design = subset(survey_design, intervention == 0))
+  did_pval_c <- formatC(did_ttest_c$p.value, format = "f", digits = 4)
+  
+  # Print the results for intervention == 1
+  cat("Intervention group:\n")
+  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_t, format = "f", digits = 2), " (", 
+             formatC(ci_pre_low_percent_t, format = "f", digits = 2), ", ", 
+             formatC(ci_pre_upp_percent_t, format = "f", digits = 2), ")\n"))
+  cat(paste0("Post period mean: ", formatC(post_mean_percent_t, format = "f", digits = 2), " (", 
+             formatC(ci_post_low_percent_t, format = "f", digits = 2), ", ",
+             formatC(ci_post_upp_percent_t, format = "f", digits = 2), ")\n"))
+  cat(paste0("Difference: ", formatC(diff_mean_percent_t, format = "f", digits = 2), " (", 
+             formatC(ci_diff_low_percent_t, format = "f", digits = 2), ", ",
+             formatC(ci_diff_upp_percent_t, format = "f", digits = 2), ")\n"))
+  cat(paste0("P value: ", formatC(did_pval_t, format = "f", digits = 4), "\n\n"))
+  
+  # Print the results for intervention == 0
+  cat("Control group:\n")
+  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_c, format = "f", digits = 2), " (", 
+             formatC(ci_pre_low_percent_c, format = "f", digits = 2), ", ",
+             formatC(ci_pre_upp_percent_c, format = "f", digits = 2), ")\n"))
+  cat(paste0("Post period mean: ", formatC(post_mean_percent_c, format = "f", digits = 2), " (", 
+             formatC(ci_post_low_percent_c, format = "f", digits = 2), ", ",
+             formatC(ci_post_upp_percent_c, format = "f", digits = 2), ")\n"))
+  cat(paste0("Difference: ", formatC(diff_mean_percent_c, format = "f", digits = 2), " (", 
+             formatC(ci_diff_low_percent_c, format = "f", digits = 2), ", ",
+             formatC(ci_diff_upp_percent_c, format = "f", digits = 2), ")\n"))
+  cat(paste0("P value: ", formatC(did_pval_c, format = "f", digits = 4), "\n\n"))
+  
+  # Difference-in-differences (DiD) calculation
+  did_diff_mean <- diff_mean_percent_t - diff_mean_percent_c
+  
+  # Standard error of the DiD estimate
+  did_se <- sqrt(diff_se_t^2 + diff_se_c^2)
+  
+  # Confidence interval for the DiD estimate
+  ci_did_low <- did_diff_mean - z_value * did_se * 100
+  ci_did_upp <- did_diff_mean + z_value * did_se * 100
+  
+  # Print the DiD results
+  cat("Difference-in-Differences (DiD):\n")
+  cat(paste0("DiD estimate: ", formatC(did_diff_mean, format = "f", digits = 2), " (", 
+             formatC(ci_did_low, format = "f", digits = 2), ", ",
+             formatC(ci_did_upp, format = "f", digits = 2), ")\n"))
+}
+
+# Run on outcomes
+gen_did_tbl("medicaid", eligible)
+gen_did_tbl("esi", eligible)
+gen_did_tbl("uninsured", eligible)
+gen_did_tbl("qualifying", eligible)
+gen_did_tbl("employed", eligible)
+gen_did_tbl("student", eligible)
+gen_did_tbl("pcp", eligible)
+gen_did_tbl("not_afford", eligible)
 ```
