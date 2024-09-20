@@ -114,7 +114,8 @@ llcp2022 <- llcp2022 %>%
     mi = ifelse(CVDINFR4 == 1, 1, ifelse(CVDINFR4 == 2, 0, NA)),
     stroke = ifelse(CVDSTRK3 == 1, 1, ifelse(CVDSTRK3 == 2, 0, NA)),
     copd = ifelse(CHCCOPD3 == 1, 1, ifelse(CHCCOPD3 == 2, 0, NA)),
-    cancer = ifelse(CHCOCNC1 == 1, 1, ifelse(CHCOCNC1 == 2, 0, NA))
+    cancer = ifelse(CHCOCNC1 == 1, 1, ifelse(CHCOCNC1 == 2, 0, NA)),
+    unemployed = ifelse(EMPLOY1 %in% c(3, 4), 1, 0)
   )
 ```
 
@@ -207,7 +208,8 @@ llcp2023 <- llcp2023 %>%
     mi = ifelse(CVDINFR4 == 1, 1, ifelse(CVDINFR4 == 2, 0, NA)),
     stroke = ifelse(CVDSTRK3 == 1, 1, ifelse(CVDSTRK3 == 2, 0, NA)),
     copd = ifelse(CHCCOPD3 == 1, 1, ifelse(CHCCOPD3 == 2, 0, NA)),
-    cancer = ifelse(CHCOCNC1 == 1, 1, ifelse(CHCOCNC1 == 2, 0, NA))
+    cancer = ifelse(CHCOCNC1 == 1, 1, ifelse(CHCOCNC1 == 2, 0, NA)),
+    unemployed = ifelse(EMPLOY1 %in% c(3, 4), 1, 0)
   )
 ```
 
@@ -332,6 +334,35 @@ merge_2223 <- merge_2223 %>%
 # table(merge_2223$half, merge_2223$IMONTH, useNA = "ifany")
 ```
 
+# Select target population
+```{r}
+eligible2_raw <- merge_2223 %>%
+  filter(
+    `_STATE` %in% c(13, 1, 12, 48, 28) &
+      # Georgia, Alabama, Florida, Texas, Mississippi residents
+      `_AGE80` >= 19 & `_AGE80` <= 64 & # 19-64 years old
+      fpg <= 100 & # Income up to 100% FPL
+      (PREGNANT != 1 | is.na(PREGNANT)) & # Not pregnant
+      (BLIND != 1 | is.na(BLIND)) & # Not legally blind
+      (DEAF != 1 | is.na(DEAF)) & # Not deaf
+      (DECIDE != 1 | is.na(DECIDE)) & # No difficulty with cognition
+      (DIFFWALK != 1 |
+         is.na(DIFFWALK)) & # No difficulty with mobility
+      (DIFFDRES != 1 |
+         is.na(DIFFDRES)) & # No difficulty with self-care
+      (DIFFALON != 1 |
+         is.na(DIFFALON)) & # No difficulty with independent living
+      (children_clean == 0 | (children_clean >= 1 &
+         fpg > 30)) & # No parents with income under 30% FPL
+      IYEAR %in% c(2022, 2023) # Date range: 1/1/2022 - 12/31/2023
+    # Exclude "unable to work"?
+  )
+
+eligible2 <- svydesign(id = ~`_PSU`, strata = ~`_STSTR`, weights = ~`_LLCPWT`, data = eligible2_raw, nest = TRUE)
+options(survey.lonely.psu = "adjust")
+```
+
+
 # Create survey object
 ```{r}
 # Create survey design object
@@ -365,7 +396,27 @@ eligible <- survey_2223 %>%
     # Exclude "unable to work"?
   )
 
-# svytable(~disability + medicaid, survey_2223, exclude=NULL, na.action=na.pass)
+working_age_ga <- survey_2223 %>%
+  subset(
+    `_STATE` %in% c(13) &
+      # Georgia residents
+      `_AGE80` >= 19 & `_AGE80` <= 64 & # 19-64 years old
+      IYEAR %in% c(2022, 2023) # Date range: 1/1/2022 - 12/31/2023
+    # Exclude "unable to work"?
+  )
+
+all_ga <- survey_2223 %>%
+  subset(
+    `_STATE` %in% c(13) &
+      # Georgia residents
+      # `_AGE80` >= 19 & `_AGE80` <= 64 & # 19-64 years old
+      IYEAR %in% c(2022, 2023) # Date range: 1/1/2022 - 12/31/2023
+    # Exclude "unable to work"?
+  )
+
+all_ga_raw <- merge_2223 %>% filter(`_STATE` %in% c(13))
+
+ga_2223 <- svydesign(id = ~`_PSU`, strata = ~`_STSTR`, weights = ~`_LLCPWT`, data = all_ga_raw, nest = TRUE)
 ```
 
 # Data exploration
@@ -592,7 +643,7 @@ summary(not_afford_unadj_pttest)
 # Plot data - prepost
 ```{r}
 # Medicaid coverage
-medicaid_summary <- svytable(~medicaid + post + intervention, eligible) %>%
+medicaid_summary <- svytable(~medicaid + post + intervention, eligible2) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -614,10 +665,10 @@ medicaid_plot <- ggplot(medicaid_summary, aes(x = intervention, y = percentage, 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 medicaid_plot
-ggsave("medicaid_plot.jpg")
+#ggsave("medicaid_plot.jpg")
 
 # ESI
-esi_summary <- svytable(~esi + post + intervention, eligible) %>%
+esi_summary <- svytable(~esi + post + intervention, eligible2) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -639,10 +690,10 @@ esi_plot <- ggplot(esi_summary, aes(x = intervention, y = percentage, fill = pos
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 esi_plot
-ggsave("esi_plot.jpg")
+#ggsave("esi_plot.jpg")
 
 # Uninsured
-uninsured_summary <- svytable(~uninsured + post + intervention, eligible) %>%
+uninsured_summary <- svytable(~uninsured + post + intervention, eligible2) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -664,10 +715,10 @@ uninsured_plot <- ggplot(uninsured_summary, aes(x = intervention, y = percentage
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 uninsured_plot
-ggsave("uninsured_plot.jpg")
+#ggsave("uninsured_plot.jpg")
 
 # Qualifying activities
-qualifying_summary <- svytable(~qualifying + post + intervention, eligible) %>%
+qualifying_summary <- svytable(~qualifying + post + intervention, eligible2) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -689,10 +740,10 @@ qualifying_plot <- ggplot(qualifying_summary, aes(x = intervention, y = percenta
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 qualifying_plot
-ggsave("qualifying_plot.jpg")
+#ggsave("qualifying_plot.jpg")
 
 # Employed
-employed_summary <- svytable(~employed + post + intervention, eligible) %>%
+employed_summary <- svytable(~employed + post + intervention, eligible2) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -714,10 +765,10 @@ employed_plot <- ggplot(employed_summary, aes(x = intervention, y = percentage, 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 employed_plot
-ggsave("employed_plot.jpg")
+#ggsave("employed_plot.jpg")
 
 # Student
-student_summary <- svytable(~student + post + intervention, eligible) %>%
+student_summary <- svytable(~student + post + intervention, eligible2) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -739,10 +790,10 @@ student_plot <- ggplot(student_summary, aes(x = intervention, y = percentage, fi
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 student_plot
-ggsave("student_plot.jpg")
+#ggsave("student_plot.jpg")
 
 # PCP
-pcp_summary <- svytable(~pcp + post + intervention, eligible) %>%
+pcp_summary <- svytable(~pcp + post + intervention, eligible2) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -764,10 +815,10 @@ pcp_plot <- ggplot(pcp_summary, aes(x = intervention, y = percentage, fill = pos
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 pcp_plot
-ggsave("pcp_plot.jpg")
+#ggsave("pcp_plot.jpg")
 
 # Could not afford to see doctor in past 12 months
-not_afford_summary <- svytable(~not_afford + post + intervention, eligible) %>%
+not_afford_summary <- svytable(~not_afford + post + intervention, eligible2) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -789,7 +840,464 @@ not_afford_plot <- ggplot(not_afford_summary, aes(x = intervention, y = percenta
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 not_afford_plot
-ggsave("not_afford_plot.jpg")
+#ggsave("not_afford_plot.jpg")
+
+# Unemployed
+unemployed_summary <- svytable(~unemployed + post + intervention, eligible2) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    unemployed_1 = sum(Freq[unemployed == 1]),
+    percentage = (unemployed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+unemployed_plot <- ggplot(unemployed_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Unemployed",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+unemployed_plot
+#ggsave("unemployed_plot.jpg")
+```
+
+# Plot data - prepost all
+```{r}
+# Medicaid coverage
+medicaid_summary <- svytable(~medicaid + post + intervention, survey_2223) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    medicaid_1 = sum(Freq[medicaid == 1]),
+    percentage = (medicaid_1 / total) * 100
+  ) %>%
+  ungroup()
+
+medicaid_all_plot <- ggplot(medicaid_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Had Medicaid",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+medicaid_all_plot
+ggsave("medicaid_all_plot.jpg")
+
+# ESI
+esi_summary <- svytable(~esi + post + intervention, survey_2223) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    esi_1 = sum(Freq[esi == 1]),
+    percentage = (esi_1 / total) * 100
+  ) %>%
+  ungroup()
+
+esi_all_plot <- ggplot(esi_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Had employer-sponsored insurance",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+esi_all_plot
+ggsave("esi_all_plot.jpg")
+
+# Uninsured
+uninsured_summary <- svytable(~uninsured + post + intervention, survey_2223) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    uninsured_1 = sum(Freq[uninsured == 1]),
+    percentage = (uninsured_1 / total) * 100
+  ) %>%
+  ungroup()
+
+uninsured_all_plot <- ggplot(uninsured_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Uninsured",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+uninsured_all_plot
+ggsave("uninsured_all_plot.jpg")
+
+# Qualifying activities
+qualifying_summary <- svytable(~qualifying + post + intervention, survey_2223) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    qualifying_1 = sum(Freq[qualifying == 1]),
+    percentage = (qualifying_1 / total) * 100
+  ) %>%
+  ungroup()
+
+qualifying_all_plot <- ggplot(qualifying_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Qualifying activities",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+qualifying_all_plot
+ggsave("qualifying_all_plot.jpg")
+
+# Employed
+employed_summary <- svytable(~employed + post + intervention, survey_2223) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    employed_1 = sum(Freq[employed == 1]),
+    percentage = (employed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+employed_all_plot <- ggplot(employed_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Employed",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+employed_all_plot
+ggsave("employed_all_plot.jpg")
+
+# Student
+student_summary <- svytable(~student + post + intervention, survey_2223) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    student_1 = sum(Freq[student == 1]),
+    percentage = (student_1 / total) * 100
+  ) %>%
+  ungroup()
+
+student_all_plot <- ggplot(student_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Student",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+student_all_plot
+ggsave("student_all_plot.jpg")
+
+# PCP
+pcp_summary <- svytable(~pcp + post + intervention, survey_2223) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    pcp_1 = sum(Freq[pcp == 1]),
+    percentage = (pcp_1 / total) * 100
+  ) %>%
+  ungroup()
+
+pcp_all_plot <- ggplot(pcp_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Has PCP",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+pcp_all_plot
+ggsave("pcp_all_plot.jpg")
+
+# Could not afford to see doctor in past 12 months
+not_afford_summary <- svytable(~not_afford + post + intervention, survey_2223) %>%
+  as.data.frame() %>%
+  group_by(post, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    not_afford_1 = sum(Freq[not_afford == 1]),
+    percentage = (not_afford_1 / total) * 100
+  ) %>%
+  ungroup()
+
+not_afford_all_plot <- ggplot(not_afford_summary, aes(x = intervention, y = percentage, fill = post)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Could not afford to see doctor in past 12 months",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+not_afford_all_plot
+ggsave("not_afford_all_plot.jpg")
+```
+# Plot data - GA 2022-2023
+```{r}
+# Medicaid coverage
+medicaid_summary <- svytable(~medicaid + IYEAR + intervention, working_age_ga) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    medicaid_1 = sum(Freq[medicaid == 1]),
+    percentage = (medicaid_1 / total) * 100
+  ) %>%
+  ungroup()
+
+medicaid_all_plot <- ggplot(medicaid_summary, aes(x = intervention, y = percentage, fill = IYEAR)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Had Medicaid",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+medicaid_all_plot
+ggsave("medicaid_all_plot.jpg")
+
+# ESI
+esi_summary <- svytable(~esi + IYEAR + intervention, working_age_ga) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    esi_1 = sum(Freq[esi == 1]),
+    percentage = (esi_1 / total) * 100
+  ) %>%
+  ungroup()
+
+esi_all_plot <- ggplot(esi_summary, aes(x = intervention, y = percentage, fill = IYEAR)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Had employer-sponsored insurance",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+esi_all_plot
+ggsave("esi_all_plot.jpg")
+
+# Uninsured
+uninsured_summary <- svytable(~uninsured + IYEAR + intervention, all_ga) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    uninsured_1 = sum(Freq[uninsured == 1]),
+    percentage = (uninsured_1 / total) * 100
+  ) %>%
+  ungroup()
+
+uninsured_all_plot <- ggplot(uninsured_summary, aes(x = intervention, y = percentage, fill = IYEAR)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Uninsured",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+uninsured_all_plot
+ggsave("uninsured_all_plot.jpg")
+
+
+
+
+uninsured_summary <- svytable(~uninsured + IYEAR + intervention, ga_2223) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    uninsured_1 = sum(Freq[uninsured == 1]),
+    percentage = (uninsured_1 / total) * 100
+  ) %>%
+  ungroup()
+
+uninsured_all_plot <- ggplot(uninsured_summary, aes(x = intervention, y = percentage, fill = IYEAR)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Uninsured",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+uninsured_all_plot
+ggsave("uninsured_all_plot.jpg")
+
+# Qualifying activities
+qualifying_summary <- svytable(~qualifying + IYEAR + intervention, working_age_ga) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    qualifying_1 = sum(Freq[qualifying == 1]),
+    percentage = (qualifying_1 / total) * 100
+  ) %>%
+  ungroup()
+
+qualifying_all_plot <- ggplot(qualifying_summary, aes(x = intervention, y = percentage, fill = IYEAR)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Qualifying activities",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+qualifying_all_plot
+ggsave("qualifying_all_plot.jpg")
+
+# Employed
+employed_summary <- svytable(~employed + IYEAR + intervention, working_age_ga) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    employed_1 = sum(Freq[employed == 1]),
+    percentage = (employed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+employed_all_plot <- ggplot(employed_summary, aes(x = intervention, y = percentage, fill = IYEAR)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Employed",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+employed_all_plot
+ggsave("employed_all_plot.jpg")
+
+# Student
+student_summary <- svytable(~student + IYEAR + intervention, working_age_ga) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    student_1 = sum(Freq[student == 1]),
+    percentage = (student_1 / total) * 100
+  ) %>%
+  ungroup()
+
+student_all_plot <- ggplot(student_summary, aes(x = intervention, y = percentage, fill = IYEAR)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Student",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+student_all_plot
+ggsave("student_all_plot.jpg")
+
+# PCP
+pcp_summary <- svytable(~pcp + IYEAR + intervention, working_age_ga) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    pcp_1 = sum(Freq[pcp == 1]),
+    percentage = (pcp_1 / total) * 100
+  ) %>%
+  ungroup()
+
+pcp_all_plot <- ggplot(pcp_summary, aes(x = intervention, y = percentage, fill = IYEAR)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Has PCP",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+pcp_all_plot
+ggsave("pcp_all_plot.jpg")
+
+# Could not afford to see doctor in past 12 months
+not_afford_summary <- svytable(~not_afford + IYEAR + intervention, working_age_ga) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    not_afford_1 = sum(Freq[not_afford == 1]),
+    percentage = (not_afford_1 / total) * 100
+  ) %>%
+  ungroup()
+
+not_afford_all_plot <- ggplot(not_afford_summary, aes(x = intervention, y = percentage, fill = IYEAR)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Could not afford to see doctor in past 12 months",
+    x = "Group",
+    y = "Percentage",
+    fill = "Period"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+not_afford_all_plot
+ggsave("not_afford_all_plot.jpg")
 ```
 
 # Plot data - quarters
@@ -811,7 +1319,7 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentag
   labs(
     title = "Has Medicaid",
     x = "quarter",
-    y = "Medicaid",
+    y = "Percentage",
     color = "intervention"
   ) +
   theme_minimal() +
@@ -837,7 +1345,7 @@ esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color =
   labs(
     title = "Has ESI",
     x = "quarter",
-    y = "ESI",
+    y = "Percentage",
     color = "intervention"
   ) +
   theme_minimal() +
@@ -863,7 +1371,7 @@ uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percent
   labs(
     title = "Uninsured",
     x = "quarter",
-    y = "Uninsured",
+    y = "Percentage",
     color = "intervention"
   ) +
   theme_minimal() +
@@ -889,7 +1397,7 @@ qualifying_quarter_plot <- ggplot(qualifying_quarter, aes(x = quarter, y = perce
   labs(
     title = "Qualifying activities",
     x = "quarter",
-    y = "Qualifying",
+    y = "Percentage",
     color = "intervention"
   ) +
   theme_minimal() +
@@ -915,7 +1423,7 @@ employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentag
   labs(
     title = "Employed",
     x = "quarter",
-    y = "Employed",
+    y = "Percentage",
     color = "intervention"
   ) +
   theme_minimal() +
@@ -941,7 +1449,7 @@ student_quarter_plot <- ggplot(student_quarter, aes(x = quarter, y = percentage,
   labs(
     title = "Student",
     x = "quarter",
-    y = "Student",
+    y = "Percentage",
     color = "intervention"
   ) +
   theme_minimal() +
@@ -967,7 +1475,7 @@ pcp_quarter_plot <- ggplot(pcp_quarter, aes(x = quarter, y = percentage, color =
   labs(
     title = "PCP",
     x = "quarter",
-    y = "PCP",
+    y = "Percentage",
     color = "intervention"
   ) +
   theme_minimal() +
@@ -993,7 +1501,7 @@ not_afford_quarter_plot <- ggplot(not_afford_quarter, aes(x = quarter, y = perce
   labs(
     title = "Could not afford to see doctor in past 12 months",
     x = "quarter",
-    y = "Could not afford to see doctor in past 12 months",
+    y = "Percentage",
     color = "intervention"
   ) +
   theme_minimal() +
@@ -1001,14 +1509,40 @@ not_afford_quarter_plot <- ggplot(not_afford_quarter, aes(x = quarter, y = perce
 
 not_afford_quarter_plot
 ggsave("not_afford_quarter_plot.jpg")
-```
 
-# Plot data - quarters
-```{r}
-# Medicaid coverage
-medicaid_quarter <- svytable(~medicaid + quarter + intervention, eligible) %>%
+# Unemployed
+unemployed_quarter <- svytable(~unemployed + quarter + intervention, eligible) %>%
   as.data.frame() %>%
   group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    unemployed_1 = sum(Freq[unemployed == 1]),
+    percentage = (unemployed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+unemployed_quarter_plot <- ggplot(unemployed_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Unemployed",
+    x = "quarter",
+    y = "Percentage",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+unemployed_quarter_plot
+ggsave("unemployed_quarter_plot.jpg")
+```
+
+# Plot data - halves
+```{r}
+# Medicaid coverage
+medicaid_half <- svytable(~medicaid + half + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(half, intervention) %>%
   summarize(
     total = sum(Freq),
     medicaid_1 = sum(Freq[medicaid == 1]),
@@ -1016,25 +1550,25 @@ medicaid_quarter <- svytable(~medicaid + quarter + intervention, eligible) %>%
   ) %>%
   ungroup()
 
-medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+medicaid_half_plot <- ggplot(medicaid_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   labs(
     title = "Has Medicaid",
-    x = "quarter",
-    y = "Medicaid",
+    x = "half",
+    y = "Percentage",
     color = "intervention"
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-medicaid_quarter_plot
-ggsave("medicaid_quarter_plot.jpg")
+medicaid_half_plot
+ggsave("medicaid_half_plot.jpg")
 
 # ESI
-esi_quarter <- svytable(~esi + quarter + intervention, eligible) %>%
+esi_half <- svytable(~esi + half + intervention, eligible) %>%
   as.data.frame() %>%
-  group_by(quarter, intervention) %>%
+  group_by(half, intervention) %>%
   summarize(
     total = sum(Freq),
     esi_1 = sum(Freq[esi == 1]),
@@ -1042,25 +1576,25 @@ esi_quarter <- svytable(~esi + quarter + intervention, eligible) %>%
   ) %>%
   ungroup()
 
-esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+esi_half_plot <- ggplot(esi_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   labs(
     title = "Has ESI",
-    x = "quarter",
-    y = "ESI",
+    x = "half",
+    y = "Percentage",
     color = "intervention"
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-esi_quarter_plot
-ggsave("esi_quarter_plot.jpg")
+esi_half_plot
+ggsave("esi_half_plot.jpg")
 
 # Uninsured
-uninsured_quarter <- svytable(~uninsured + quarter + intervention, eligible) %>%
+uninsured_half <- svytable(~uninsured + half + intervention, eligible) %>%
   as.data.frame() %>%
-  group_by(quarter, intervention) %>%
+  group_by(half, intervention) %>%
   summarize(
     total = sum(Freq),
     uninsured_1 = sum(Freq[uninsured == 1]),
@@ -1068,25 +1602,25 @@ uninsured_quarter <- svytable(~uninsured + quarter + intervention, eligible) %>%
   ) %>%
   ungroup()
 
-uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+uninsured_half_plot <- ggplot(uninsured_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   labs(
     title = "Uninsured",
-    x = "quarter",
-    y = "Uninsured",
+    x = "half",
+    y = "Percentage",
     color = "intervention"
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-uninsured_quarter_plot
-ggsave("uninsured_quarter_plot.jpg")
+uninsured_half_plot
+ggsave("uninsured_half_plot.jpg")
 
 # Qualifying activities
-qualifying_quarter <- svytable(~qualifying + quarter + intervention, eligible) %>%
+qualifying_half <- svytable(~qualifying + half + intervention, eligible) %>%
   as.data.frame() %>%
-  group_by(quarter, intervention) %>%
+  group_by(half, intervention) %>%
   summarize(
     total = sum(Freq),
     qualifying_1 = sum(Freq[qualifying == 1]),
@@ -1094,25 +1628,25 @@ qualifying_quarter <- svytable(~qualifying + quarter + intervention, eligible) %
   ) %>%
   ungroup()
 
-qualifying_quarter_plot <- ggplot(qualifying_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+qualifying_half_plot <- ggplot(qualifying_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   labs(
     title = "Qualifying activities",
-    x = "quarter",
-    y = "Qualifying",
+    x = "half",
+    y = "Percentage",
     color = "intervention"
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-qualifying_quarter_plot
-ggsave("qualifying_quarter_plot.jpg")
+qualifying_half_plot
+ggsave("qualifying_half_plot.jpg")
 
 # Employed
-employed_quarter <- svytable(~employed + quarter + intervention, eligible) %>%
+employed_half <- svytable(~employed + half + intervention, eligible) %>%
   as.data.frame() %>%
-  group_by(quarter, intervention) %>%
+  group_by(half, intervention) %>%
   summarize(
     total = sum(Freq),
     employed_1 = sum(Freq[employed == 1]),
@@ -1120,25 +1654,25 @@ employed_quarter <- svytable(~employed + quarter + intervention, eligible) %>%
   ) %>%
   ungroup()
 
-employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+employed_half_plot <- ggplot(employed_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   labs(
     title = "Employed",
-    x = "quarter",
-    y = "Employed",
+    x = "half",
+    y = "Percentage",
     color = "intervention"
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-employed_quarter_plot
-ggsave("employed_quarter_plot.jpg")
+employed_half_plot
+ggsave("employed_half_plot.jpg")
 
 # Student
-student_quarter <- svytable(~student + quarter + intervention, eligible) %>%
+student_half <- svytable(~student + half + intervention, eligible) %>%
   as.data.frame() %>%
-  group_by(quarter, intervention) %>%
+  group_by(half, intervention) %>%
   summarize(
     total = sum(Freq),
     student_1 = sum(Freq[student == 1]),
@@ -1146,25 +1680,25 @@ student_quarter <- svytable(~student + quarter + intervention, eligible) %>%
   ) %>%
   ungroup()
 
-student_quarter_plot <- ggplot(student_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+student_half_plot <- ggplot(student_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   labs(
     title = "Student",
-    x = "quarter",
-    y = "Student",
+    x = "half",
+    y = "Percentage",
     color = "intervention"
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-student_quarter_plot
-ggsave("student_quarter_plot.jpg")
+student_half_plot
+ggsave("student_half_plot.jpg")
 
 # PCP
-pcp_quarter <- svytable(~pcp + quarter + intervention, eligible) %>%
+pcp_half <- svytable(~pcp + half + intervention, eligible) %>%
   as.data.frame() %>%
-  group_by(quarter, intervention) %>%
+  group_by(half, intervention) %>%
   summarize(
     total = sum(Freq),
     pcp_1 = sum(Freq[pcp == 1]),
@@ -1172,25 +1706,25 @@ pcp_quarter <- svytable(~pcp + quarter + intervention, eligible) %>%
   ) %>%
   ungroup()
 
-pcp_quarter_plot <- ggplot(pcp_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+pcp_half_plot <- ggplot(pcp_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   labs(
     title = "PCP",
-    x = "quarter",
-    y = "PCP",
+    x = "half",
+    y = "Percentage",
     color = "intervention"
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-pcp_quarter_plot
-ggsave("pcp_quarter_plot.jpg")
+pcp_half_plot
+ggsave("pcp_half_plot.jpg")
 
 # Could not afford to see doctor in past 12 months
-not_afford_quarter <- svytable(~not_afford + quarter + intervention, eligible) %>%
+not_afford_half <- svytable(~not_afford + half + intervention, eligible) %>%
   as.data.frame() %>%
-  group_by(quarter, intervention) %>%
+  group_by(half, intervention) %>%
   summarize(
     total = sum(Freq),
     not_afford_1 = sum(Freq[not_afford == 1]),
@@ -1198,20 +1732,109 @@ not_afford_quarter <- svytable(~not_afford + quarter + intervention, eligible) %
   ) %>%
   ungroup()
 
-not_afford_quarter_plot <- ggplot(not_afford_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+not_afford_half_plot <- ggplot(not_afford_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   labs(
     title = "Could not afford to see doctor in past 12 months",
-    x = "quarter",
-    y = "Could not afford to see doctor in past 12 months",
+    x = "half",
+    y = "Percentage",
     color = "intervention"
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-not_afford_quarter_plot
-ggsave("not_afford_quarter_plot.jpg")
+not_afford_half_plot
+ggsave("not_afford_half_plot.jpg")
+
+# Unemployed
+unemployed_half <- svytable(~unemployed + half + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(half, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    unemployed_1 = sum(Freq[unemployed == 1]),
+    percentage = (unemployed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+unemployed_half_plot <- ggplot(unemployed_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Unemployed",
+    x = "half",
+    y = "Percentage",
+    color = "intervention"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+unemployed_half_plot
+ggsave("unemployed_half_plot.jpg")
+```
+
+# Stacked bar graph
+```{r}
+temp <- merge_2223 %>%
+  mutate(
+    employment = as.character(EMPLOY1),
+    insurance = case_when(
+      is.na(PRIMINS1) ~ as.character(PRIMINSR),
+      is.na(PRIMINSR) ~ as.character(PRIMINS1)
+    )
+  ) %>%
+  filter(
+    state == "Georgia" & `_AGE80` >= 19 & `_AGE80` <= 64
+  )
+
+temp_survey <- svydesign(id = ~`_PSU`, strata = ~`_STSTR`, weights = ~`_LLCPWT`, data = temp, nest = TRUE)
+
+# Calculate weighted proportions of EMPLOY1 by quarter
+employment_proportions <- svyby(
+  ~employment, 
+  ~quarter, 
+  temp_survey, 
+  svymean, 
+  vartype = "ci", 
+  na.rm = TRUE
+)
+
+# Convert proportions to percentage
+employment_proportions_long <- as.data.frame(employment_proportions) %>%
+  pivot_longer(cols = starts_with("employment"), names_to = "employment", values_to = "proportion") %>%
+  mutate(proportion = proportion * 100)  # Convert to percentage
+
+# Create the stacked bar graph
+ggplot(employment_proportions_long, aes(x = factor(quarter), y = proportion, fill = employment)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Quarter", y = "Percentage", fill = "Employment Status") +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +  # Convert y-axis to percentage format
+  theme_minimal() +
+  ggtitle("Employment Status by Quarter")
+
+# Calculate weighted proportions of EMPLOY1 by quarter
+insurance_proportions <- svyby(
+  ~insurance, 
+  ~quarter, 
+  temp_survey, 
+  svymean, 
+  vartype = "ci", 
+  na.rm = TRUE
+)
+
+# Convert proportions to percentage
+insurance_proportions_long <- as.data.frame(insurance_proportions) %>%
+  pivot_longer(cols = starts_with("insurance"), names_to = "insurance", values_to = "proportion") %>%
+  mutate(proportion = proportion * 100)  # Convert to percentage
+
+# Create the stacked bar graph
+ggplot(insurance_proportions_long, aes(x = factor(quarter), y = proportion, fill = insurance)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Quarter", y = "Percentage", fill = "Employment Status") +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +  # Convert y-axis to percentage format
+  theme_minimal() +
+  ggtitle("Insurance Status by Quarter")
 ```
 
 # Respondent characteristics
