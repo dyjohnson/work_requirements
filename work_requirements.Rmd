@@ -634,7 +634,7 @@ summary(not_afford_unadj_pttest)
 # Plot data - prepost
 ```{r}
 # Medicaid coverage
-medicaid_summary <- svytable(~medicaid + post + intervention, eligible2) %>%
+medicaid_summary <- svytable(~medicaid + post + intervention, eligible) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -661,7 +661,7 @@ medicaid_plot
 ggsave("medicaid_plot.jpg")
 
 # ESI
-esi_summary <- svytable(~esi + post + intervention, eligible2) %>%
+esi_summary <- svytable(~esi + post + intervention, eligible) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -688,7 +688,7 @@ esi_plot
 ggsave("esi_plot.jpg")
 
 # Uninsured
-uninsured_summary <- svytable(~uninsured + post + intervention, eligible2) %>%
+uninsured_summary <- svytable(~uninsured + post + intervention, eligible) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -715,7 +715,7 @@ uninsured_plot
 ggsave("uninsured_plot.jpg")
 
 # Qualifying activities
-qualifying_summary <- svytable(~qualifying + post + intervention, eligible2) %>%
+qualifying_summary <- svytable(~qualifying + post + intervention, eligible) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -742,7 +742,7 @@ qualifying_plot
 ggsave("qualifying_plot.jpg")
 
 # Employed
-employed_summary <- svytable(~employed + post + intervention, eligible2) %>%
+employed_summary <- svytable(~employed + post + intervention, eligible) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -769,7 +769,7 @@ employed_plot
 ggsave("employed_plot.jpg")
 
 # Student
-student_summary <- svytable(~student + post + intervention, eligible2) %>%
+student_summary <- svytable(~student + post + intervention, eligible) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -796,7 +796,7 @@ student_plot
 ggsave("student_plot.jpg")
 
 # PCP
-pcp_summary <- svytable(~pcp + post + intervention, eligible2) %>%
+pcp_summary <- svytable(~pcp + post + intervention, eligible) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -823,7 +823,7 @@ pcp_plot
 ggsave("pcp_plot.jpg")
 
 # Could not afford to see doctor in past 12 months
-not_afford_summary <- svytable(~not_afford + post + intervention, eligible2) %>%
+not_afford_summary <- svytable(~not_afford + post + intervention, eligible) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -850,7 +850,7 @@ not_afford_plot
 ggsave("not_afford_plot.jpg")
 
 # Unemployed
-unemployed_summary <- svytable(~unemployed + post + intervention, eligible2) %>%
+unemployed_summary <- svytable(~unemployed + post + intervention, eligible) %>%
   as.data.frame() %>%
   group_by(post, intervention) %>%
   summarize(
@@ -2087,7 +2087,282 @@ unemployed_half_cv_plot <- ggplot(unemployed_half, aes(x = half, y = percentage,
 unemployed_half_cv_plot
 ggsave("unemployed_half_cv_plot.jpg")
 ```
+# Plot data - 1yr quarters
+```{r}
+eligible_1yr <- survey_2223 %>%
+  subset(
+    `_STATE` %in% c(13, 1, 12, 48, 28) &
+      # Georgia, Alabama, Florida, Texas, Mississippi residents
+      `_AGE80` >= 19 & `_AGE80` <= 64 & # 19-64 years old
+      fpg <= 100 & # Income up to 100% FPL
+      (PREGNANT != 1 | is.na(PREGNANT)) & # Not pregnant
+      (BLIND != 1 | is.na(BLIND)) & # Not legally blind
+      (DEAF != 1 | is.na(DEAF)) & # Not deaf
+      (DECIDE != 1 | is.na(DECIDE)) & # No difficulty with cognition
+      (DIFFWALK != 1 |
+         is.na(DIFFWALK)) & # No difficulty with mobility
+      (DIFFDRES != 1 |
+         is.na(DIFFDRES)) & # No difficulty with self-care
+      (DIFFALON != 1 |
+         is.na(DIFFALON)) & # No difficulty with independent living
+      (children_clean == 0 | (children_clean >= 1 &
+         fpg > 30)) & # No parents with income under 30% FPL
+      ((IYEAR == 2022 & IMONTH %in% c("07", "08", "09", "10", "11", "12")) | IYEAR == 2023)  # Date range: 7/1/2022 - 12/31/2023
+    # Exclude "unable to work"?
+  )
 
+# Medicaid coverage
+medicaid_quarter <- svytable(~medicaid + quarter + intervention, eligible_1yr) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    medicaid_1 = sum(Freq[medicaid == 1]),
+    percentage = (medicaid_1 / total) * 100
+  ) %>%
+  ungroup()
+
+medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has Medicaid",
+    x = "Quarter",
+    y = "Percentage",
+    color = ""
+  ) +
+  scale_x_discrete(labels = c("2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+medicaid_quarter_plot
+# ggsave("medicaid_quarter_plot.jpg")
+
+# ESI
+esi_quarter <- svytable(~esi + quarter + intervention, eligible_1yr) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    esi_1 = sum(Freq[esi == 1]),
+    percentage = (esi_1 / total) * 100
+  ) %>%
+  ungroup()
+
+esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has employer-sponsored insurance",
+    x = "Quarter",
+    y = "Percentage",
+    color = ""
+  ) +
+  scale_x_discrete(labels = c("2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+esi_quarter_plot
+# ggsave("esi_quarter_plot.jpg")
+
+# Uninsured
+uninsured_quarter <- svytable(~uninsured + quarter + intervention, eligible_1yr) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    uninsured_1 = sum(Freq[uninsured == 1]),
+    percentage = (uninsured_1 / total) * 100
+  ) %>%
+  ungroup()
+
+uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Uninsured",
+    x = "Quarter",
+    y = "Percentage",
+    color = ""
+  ) +
+  scale_x_discrete(labels = c("2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+uninsured_quarter_plot
+# ggsave("uninsured_quarter_plot.jpg")
+
+# Qualifying activities
+qualifying_quarter <- svytable(~qualifying + quarter + intervention, eligible_1yr) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    qualifying_1 = sum(Freq[qualifying == 1]),
+    percentage = (qualifying_1 / total) * 100
+  ) %>%
+  ungroup()
+
+qualifying_quarter_plot <- ggplot(qualifying_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Qualifying activities",
+    x = "Quarter",
+    y = "Percentage",
+    color = ""
+  ) +
+  scale_x_discrete(labels = c("2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+qualifying_quarter_plot
+# ggsave("qualifying_quarter_plot.jpg")
+
+# Employed
+employed_quarter <- svytable(~employed + quarter + intervention, eligible_1yr) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    employed_1 = sum(Freq[employed == 1]),
+    percentage = (employed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Employed",
+    x = "Quarter",
+    y = "Percentage",
+    color = ""
+  ) +
+  scale_x_discrete(labels = c("2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+employed_quarter_plot
+# ggsave("employed_quarter_plot.jpg")
+
+# Student
+student_quarter <- svytable(~student + quarter + intervention, eligible_1yr) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    student_1 = sum(Freq[student == 1]),
+    percentage = (student_1 / total) * 100
+  ) %>%
+  ungroup()
+
+student_quarter_plot <- ggplot(student_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Student",
+    x = "Quarter",
+    y = "Percentage",
+    color = ""
+  ) +
+  scale_x_discrete(labels = c("2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+student_quarter_plot
+# ggsave("student_quarter_plot.jpg")
+
+# PCP
+pcp_quarter <- svytable(~pcp + quarter + intervention, eligible_1yr) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    pcp_1 = sum(Freq[pcp == 1]),
+    percentage = (pcp_1 / total) * 100
+  ) %>%
+  ungroup()
+
+pcp_quarter_plot <- ggplot(pcp_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "PCP",
+    x = "Quarter",
+    y = "Percentage",
+    color = ""
+  ) +
+  scale_x_discrete(labels = c("2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+pcp_quarter_plot
+# ggsave("pcp_quarter_plot.jpg")
+
+# Could not afford to see doctor in past 12 months
+not_afford_quarter <- svytable(~not_afford + quarter + intervention, eligible_1yr) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    not_afford_1 = sum(Freq[not_afford == 1]),
+    percentage = (not_afford_1 / total) * 100
+  ) %>%
+  ungroup()
+
+not_afford_quarter_plot <- ggplot(not_afford_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Could not afford to see doctor in past 12 months",
+    x = "Quarter",
+    y = "Percentage",
+    color = ""
+  ) +
+  scale_x_discrete(labels = c("2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+not_afford_quarter_plot
+# ggsave("not_afford_quarter_plot.jpg")
+
+# Unemployed
+unemployed_quarter <- svytable(~unemployed + quarter + intervention, eligible_1yr) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    unemployed_1 = sum(Freq[unemployed == 1]),
+    percentage = (unemployed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+unemployed_quarter_plot <- ggplot(unemployed_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Unemployed",
+    x = "Quarter",
+    y = "Percentage",
+    color = ""
+  ) +
+  scale_x_discrete(labels = c("2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+unemployed_quarter_plot
+# ggsave("unemployed_quarter_plot.jpg")
+```
 
 # Stacked bar graph
 ```{r}
