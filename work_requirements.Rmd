@@ -239,6 +239,8 @@ merge_2223 <- merge_2223 %>%
       (IYEAR == 2022 & IMONTH %in% c("10", "11", "12")) | (IYEAR == 2023 & IMONTH %in% c("01", "02", "03", "04", "05", "06")) ~ 1,
       TRUE ~ NA_real_
     ),
+    yearmonth = format(as.Date(paste(IYEAR, IMONTH, IDAY, sep = "-")), "%Y-%m"),
+    yearmonth2 = paste(IYEAR, IMONTH, sep = ""),
     intervention = case_when(
       `_STATE` == 13 ~ 1, # Georgia
       `_STATE` %in% c(1, 12, 48, 28) ~ 0, # Alabama, Florida, Texas, Mississippi
@@ -327,27 +329,27 @@ merge_2223 <- merge_2223 %>%
 
 # Filter then select target population
 ```{r}
-# eligible2_raw <- merge_2223 %>%
-#   filter(
-#     `_STATE` %in% c(13, 1, 12, 48, 28) &
-#       # Georgia, Alabama, Florida, Texas, Mississippi residents
-#       `_AGE80` >= 19 & `_AGE80` <= 64 & # 19-64 years old
-#       fpg <= 100 & # Income up to 100% FPL
-#       (PREGNANT != 1 | is.na(PREGNANT)) & # Not pregnant
-#       (BLIND != 1 | is.na(BLIND)) & # Not legally blind
-#       (DEAF != 1 | is.na(DEAF)) & # Not deaf
-#       (DECIDE != 1 | is.na(DECIDE)) & # No difficulty with cognition
-#       (DIFFWALK != 1 |
-#          is.na(DIFFWALK)) & # No difficulty with mobility
-#       (DIFFDRES != 1 |
-#          is.na(DIFFDRES)) & # No difficulty with self-care
-#       (DIFFALON != 1 |
-#          is.na(DIFFALON)) & # No difficulty with independent living
-#       (children_clean == 0 | (children_clean >= 1 &
-#          fpg > 30)) & # No parents with income under 30% FPL
-#       IYEAR %in% c(2022, 2023) # Date range: 1/1/2022 - 12/31/2023
-#     # Exclude "unable to work"?
-#   )
+eligible2_raw <- merge_2223 %>%
+  filter(
+    `_STATE` %in% c(13, 1, 12, 48, 28) &
+      # Georgia, Alabama, Florida, Texas, Mississippi residents
+      `_AGE80` >= 19 & `_AGE80` <= 64 & # 19-64 years old
+      fpg <= 100 & # Income up to 100% FPL
+      # (PREGNANT != 1 | is.na(PREGNANT)) & # Not pregnant
+      # (BLIND != 1 | is.na(BLIND)) & # Not legally blind
+      # (DEAF != 1 | is.na(DEAF)) & # Not deaf
+      # (DECIDE != 1 | is.na(DECIDE)) & # No difficulty with cognition
+      # (DIFFWALK != 1 |
+      #    is.na(DIFFWALK)) & # No difficulty with mobility
+      # (DIFFDRES != 1 |
+      #    is.na(DIFFDRES)) & # No difficulty with self-care
+      # (DIFFALON != 1 |
+      #    is.na(DIFFALON)) & # No difficulty with independent living
+      # (children_clean == 0 | (children_clean >= 1 &
+      #    fpg > 30)) & # No parents with income under 30% FPL
+      IYEAR %in% c(2022, 2023) # Date range: 1/1/2022 - 12/31/2023
+    # Exclude "unable to work"?
+  )
 # 
 # eligible2 <- svydesign(id = ~`_PSU`, strata = ~`_STSTR`, weights = ~`_LLCPWT`, data = eligible2_raw, nest = TRUE)
 # options(survey.lonely.psu = "adjust")
@@ -367,22 +369,22 @@ options(survey.lonely.psu = "adjust")
 ```{r}
 eligible <- survey_2223 %>%
   subset(
-    `_STATE` %in% c(13, 1, 12, 48, 28) &
+    state %in% c("Georgia", "Alabama", "Florida", "Texas", "Mississippi") &
       # Georgia, Alabama, Florida, Texas, Mississippi residents
       `_AGE80` >= 19 & `_AGE80` <= 64 & # 19-64 years old
       fpg <= 100 & # Income up to 100% FPL
-      (PREGNANT != 1 | is.na(PREGNANT)) & # Not pregnant
-      (BLIND != 1 | is.na(BLIND)) & # Not legally blind
-      (DEAF != 1 | is.na(DEAF)) & # Not deaf
-      (DECIDE != 1 | is.na(DECIDE)) & # No difficulty with cognition
-      (DIFFWALK != 1 |
-         is.na(DIFFWALK)) & # No difficulty with mobility
-      (DIFFDRES != 1 |
-         is.na(DIFFDRES)) & # No difficulty with self-care
-      (DIFFALON != 1 |
-         is.na(DIFFALON)) & # No difficulty with independent living
-      (children_clean == 0 | (children_clean >= 1 &
-         fpg > 30)) & # No parents with income under 30% FPL
+      # (PREGNANT != 1 | is.na(PREGNANT)) & # Not pregnant
+      # (BLIND != 1 | is.na(BLIND)) & # Not legally blind
+      # (DEAF != 1 | is.na(DEAF)) & # Not deaf
+      # (DECIDE != 1 | is.na(DECIDE)) & # No difficulty with cognition
+      # (DIFFWALK != 1 |
+      #    is.na(DIFFWALK)) & # No difficulty with mobility
+      # (DIFFDRES != 1 |
+      #    is.na(DIFFDRES)) & # No difficulty with self-care
+      # (DIFFALON != 1 |
+      #    is.na(DIFFALON)) & # No difficulty with independent living
+      # (children_clean == 0 | (children_clean >= 1 &
+      #    fpg > 30)) & # No parents with income under 30% FPL
       IYEAR %in% c(2022, 2023) # Date range: 1/1/2022 - 12/31/2023
     # Exclude "unable to work"?
   )
@@ -598,36 +600,46 @@ eligible <- survey_2223 %>%
 
 # Test parallel trends
 ```{r}
+library(sandwich)
+library(lmtest)
+
+model <- lm(medicaid ~ intervention*yearmonth3, 
+                data = eligible2_raw, weights = `_LLCPWT`)
+clustered_se <- vcovCL(model, cluster = ~ state)
+a <- coeftest(model, vcov = clustered_se)
+a
+confint(a)
+
 # Medicaid
-medicaid_unadj_pttest <- svyglm(medicaid ~ intervention * prepost, design = eligible)
+medicaid_unadj_pttest <- svyglm(medicaid ~ intervention * yearmonth, design = eligible)
 summary(medicaid_unadj_pttest)
 
 # Uninsured
-uninsured_unadj_pttest <- svyglm(uninsured ~ intervention * prepost, design = eligible)
+uninsured_unadj_pttest <- svyglm(uninsured ~ intervention * yearmonth, design = eligible)
 summary(uninsured_unadj_pttest)
 
 # Qualifying activities
-qualifying_unadj_pttest <- svyglm(qualifying ~ intervention * prepost, design = eligible)
+qualifying_unadj_pttest <- svyglm(qualifying ~ intervention * yearmonth, design = eligible)
 summary(qualifying_unadj_pttest)
 
 # Employed
-employed_unadj_pttest <- svyglm(employed ~ intervention * prepost, design = eligible)
+employed_unadj_pttest <- svyglm(employed ~ intervention * yearmonth, design = eligible)
 summary(employed_unadj_pttest)
 
 # Student
-student_unadj_pttest <- svyglm(student ~ intervention * prepost, design = eligible)
+student_unadj_pttest <- svyglm(student ~ intervention * yearmonth, design = eligible)
 summary(student_unadj_pttest)
 
 # Employer-sponsored insurance
-esi_unadj_pttest <- svyglm(esi ~ intervention * prepost, design = eligible)
+esi_unadj_pttest <- svyglm(esi ~ intervention * yearmonth, design = eligible)
 summary(esi_unadj_pttest)
 
 # Access to PCP
-pcp_unadj_pttest <- svyglm(pcp ~ intervention * prepost, design = eligible)
+pcp_unadj_pttest <- svyglm(pcp ~ intervention * yearmonth, design = eligible)
 summary(pcp_unadj_pttest)
 
 # Cost-related delays in care
-not_afford_unadj_pttest <- svyglm(not_afford ~ intervention * prepost, design = eligible)
+not_afford_unadj_pttest <- svyglm(not_afford ~ intervention * yearmonth, design = eligible)
 summary(not_afford_unadj_pttest)
 ```
 
@@ -1108,7 +1120,7 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentag
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 medicaid_quarter_plot
-ggsave("medicaid_quarter_plot.jpg")
+#ggsave("medicaid_quarter_plot.jpg")
 
 # ESI
 esi_quarter <- svytable(~esi + quarter + intervention, eligible) %>%
@@ -1136,7 +1148,7 @@ esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color =
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 esi_quarter_plot
-ggsave("esi_quarter_plot.jpg")
+#ggsave("esi_quarter_plot.jpg")
 
 # Uninsured
 uninsured_quarter <- svytable(~uninsured + quarter + intervention, eligible) %>%
@@ -1164,7 +1176,7 @@ uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percent
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 uninsured_quarter_plot
-ggsave("uninsured_quarter_plot.jpg")
+#ggsave("uninsured_quarter_plot.jpg")
 
 # Qualifying activities
 qualifying_quarter <- svytable(~qualifying + quarter + intervention, eligible) %>%
@@ -1192,7 +1204,7 @@ qualifying_quarter_plot <- ggplot(qualifying_quarter, aes(x = quarter, y = perce
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 qualifying_quarter_plot
-ggsave("qualifying_quarter_plot.jpg")
+#ggsave("qualifying_quarter_plot.jpg")
 
 # Employed
 employed_quarter <- svytable(~employed + quarter + intervention, eligible) %>%
@@ -1220,7 +1232,7 @@ employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentag
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 employed_quarter_plot
-ggsave("employed_quarter_plot.jpg")
+#ggsave("employed_quarter_plot.jpg")
 
 # Student
 student_quarter <- svytable(~student + quarter + intervention, eligible) %>%
@@ -1248,7 +1260,7 @@ student_quarter_plot <- ggplot(student_quarter, aes(x = quarter, y = percentage,
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 student_quarter_plot
-ggsave("student_quarter_plot.jpg")
+#ggsave("student_quarter_plot.jpg")
 
 # PCP
 pcp_quarter <- svytable(~pcp + quarter + intervention, eligible) %>%
@@ -1276,7 +1288,7 @@ pcp_quarter_plot <- ggplot(pcp_quarter, aes(x = quarter, y = percentage, color =
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 pcp_quarter_plot
-ggsave("pcp_quarter_plot.jpg")
+#ggsave("pcp_quarter_plot.jpg")
 
 # Could not afford to see doctor in past 12 months
 not_afford_quarter <- svytable(~not_afford + quarter + intervention, eligible) %>%
@@ -1304,7 +1316,7 @@ not_afford_quarter_plot <- ggplot(not_afford_quarter, aes(x = quarter, y = perce
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 not_afford_quarter_plot
-ggsave("not_afford_quarter_plot.jpg")
+#ggsave("not_afford_quarter_plot.jpg")
 
 # Unemployed
 unemployed_quarter <- svytable(~unemployed + quarter + intervention, eligible) %>%
@@ -1332,7 +1344,7 @@ unemployed_quarter_plot <- ggplot(unemployed_quarter, aes(x = quarter, y = perce
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 unemployed_quarter_plot
-ggsave("unemployed_quarter_plot.jpg")
+#ggsave("unemployed_quarter_plot.jpg")
 ```
 
 # Plot data - halves
@@ -1363,7 +1375,7 @@ medicaid_half_plot <- ggplot(medicaid_half, aes(x = half, y = percentage, color 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 medicaid_half_plot
-ggsave("medicaid_half_plot.jpg")
+#ggsave("medicaid_half_plot.jpg")
 
 # ESI
 esi_half <- svytable(~esi + half + intervention, eligible) %>%
@@ -1391,7 +1403,7 @@ esi_half_plot <- ggplot(esi_half, aes(x = half, y = percentage, color = interven
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 esi_half_plot
-ggsave("esi_half_plot.jpg")
+#ggsave("esi_half_plot.jpg")
 
 # Uninsured
 uninsured_half <- svytable(~uninsured + half + intervention, eligible) %>%
@@ -1419,7 +1431,7 @@ uninsured_half_plot <- ggplot(uninsured_half, aes(x = half, y = percentage, colo
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 uninsured_half_plot
-ggsave("uninsured_half_plot.jpg")
+#ggsave("uninsured_half_plot.jpg")
 
 # Qualifying activities
 qualifying_half <- svytable(~qualifying + half + intervention, eligible) %>%
@@ -1447,7 +1459,7 @@ qualifying_half_plot <- ggplot(qualifying_half, aes(x = half, y = percentage, co
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 qualifying_half_plot
-ggsave("qualifying_half_plot.jpg")
+#ggsave("qualifying_half_plot.jpg")
 
 # Employed
 employed_half <- svytable(~employed + half + intervention, eligible) %>%
@@ -1475,7 +1487,7 @@ employed_half_plot <- ggplot(employed_half, aes(x = half, y = percentage, color 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 employed_half_plot
-ggsave("employed_half_plot.jpg")
+#ggsave("employed_half_plot.jpg")
 
 # Student
 student_half <- svytable(~student + half + intervention, eligible) %>%
@@ -1503,7 +1515,7 @@ student_half_plot <- ggplot(student_half, aes(x = half, y = percentage, color = 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 student_half_plot
-ggsave("student_half_plot.jpg")
+#ggsave("student_half_plot.jpg")
 
 # PCP
 pcp_half <- svytable(~pcp + half + intervention, eligible) %>%
@@ -1531,7 +1543,7 @@ pcp_half_plot <- ggplot(pcp_half, aes(x = half, y = percentage, color = interven
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 pcp_half_plot
-ggsave("pcp_half_plot.jpg")
+#ggsave("pcp_half_plot.jpg")
 
 # Could not afford to see doctor in past 12 months
 not_afford_half <- svytable(~not_afford + half + intervention, eligible) %>%
@@ -1559,7 +1571,7 @@ not_afford_half_plot <- ggplot(not_afford_half, aes(x = half, y = percentage, co
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 not_afford_half_plot
-ggsave("not_afford_half_plot.jpg")
+#ggsave("not_afford_half_plot.jpg")
 
 # Unemployed
 unemployed_half <- svytable(~unemployed + half + intervention, eligible) %>%
@@ -1587,7 +1599,7 @@ unemployed_half_plot <- ggplot(unemployed_half, aes(x = half, y = percentage, co
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 unemployed_half_plot
-ggsave("unemployed_half_plot.jpg")
+#ggsave("unemployed_half_plot.jpg")
 ```
 
 # Plot data - GA 2022-2023
@@ -2091,7 +2103,7 @@ ggsave("unemployed_half_cv_plot.jpg")
 ```{r}
 eligible_1yr <- survey_2223 %>%
   subset(
-    `_STATE` %in% c(13, 1, 12, 48, 28) &
+    state %in% c("Georgia", "Alabama", "Florida", "Texas", "Mississippi", "South Carolina", "Tennessee") &
       # Georgia, Alabama, Florida, Texas, Mississippi residents
       `_AGE80` >= 19 & `_AGE80` <= 64 & # 19-64 years old
       fpg <= 100 & # Income up to 100% FPL
