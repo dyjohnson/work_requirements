@@ -8,7 +8,7 @@ date: "2024-10-17"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Load libraries
+# Load libraries
 
 ```{r libraries}
 library(ipumsr)
@@ -18,14 +18,16 @@ library(summarytools)
 library(survey)
 ```
 
+# Cross-sectional data
+
 ## Load data
 
 ```{r}
-ddi <- read_ipums_ddi("cps_00006.xml")
+ddi <- read_ipums_ddi("cps_00008.xml")
 data <- read_ipums_micro(ddi)
 ```
 
-# Clean data
+## Clean data
 ``` {r}
 data <- data %>%
   mutate(
@@ -78,14 +80,14 @@ data <- data %>%
   )
 ```
 
-# Create survey design object
+## Create survey design object
 ```{r}
 survey <- svydesign(id = ~`CPSIDP`, weights = ~`ASECWT`, data = data, nest = TRUE)
 
 options(survey.lonely.psu = "adjust")
 ```
 
-# Select sample
+## Select sample
 ```{r}
 eligible <- survey %>%
   subset(
@@ -102,13 +104,226 @@ eligible_raw <- data %>%
   )
 ```
 
-# Data exploration
+## Data exploration
 ```{r}
 table(eligible_raw$STATEFIP, eligible_raw$post)
 ```
 
 
-# Plot data
+## Plot data
+```{r}
+medicaid_year <- svytable(~medicaid + YEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(YEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    medicaid_1 = sum(Freq[medicaid == 1]),
+    percentage = (medicaid_1 / total) * 100
+  ) %>%
+  ungroup()
+
+medicaid_year_plot <- ggplot(medicaid_year, aes(x = YEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has Medicaid",
+    x = "Year",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+medicaid_year_plot
+# ggsave("medicaid_year_plot.jpg")
+
+# Uninsured
+uninsured_year <- svytable(~uninsured + YEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(YEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    uninsured_1 = sum(Freq[uninsured == 1]),
+    percentage = (uninsured_1 / total) * 100
+  ) %>%
+  ungroup()
+
+uninsured_year_plot <- ggplot(uninsured_year, aes(x = YEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Uninsured",
+    x = "Year",
+    y = "Percentage",
+    color = ""
+  ) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+uninsured_year_plot
+# ggsave("medicaid_year_plot.jpg")
+
+# esi
+esi_year <- svytable(~esi + YEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(YEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    esi_1 = sum(Freq[esi == 1]),
+    percentage = (esi_1 / total) * 100
+  ) %>%
+  ungroup()
+
+esi_year_plot <- ggplot(esi_year, aes(x = YEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "ESI",
+    x = "Year",
+    y = "Percentage",
+    color = ""
+  ) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+esi_year_plot
+# ggsave("medicaid_year_plot.jpg")
+
+# Employed
+employed_year <- svytable(~employed + YEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(YEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    employed_1 = sum(Freq[employed == 1]),
+    percentage = (employed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+employed_year_plot <- ggplot(employed_year, aes(x = YEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Employed",
+    x = "Year",
+    y = "Percentage",
+    color = ""
+  ) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+employed_year_plot
+# ggsave("medicaid_year_plot.jpg")
+
+```
+
+# Longitudinal data
+
+## Load data
+
+```{r}
+ddi <- read_ipums_ddi("cps_00007.xml")
+data <- read_ipums_micro(ddi)
+```
+
+## Clean data
+``` {r}
+# Convert from wide to long
+data <- data %>%
+  pivot_longer(
+    cols = matches("_(1|2)$"),  # Select columns ending in _1 or _2
+    names_to = c(".value", "year"),  # Extract base name and year suffix
+    names_pattern = "(.*)_(1|2)"  # Regex to separate name and year
+  ) %>%
+  mutate(year = as.integer(year))  # Convert year to numeric if needed
+
+data <- data %>%
+  mutate(
+    intervention = case_when(
+      STATEFIP == 13 ~ 1, # Georgia
+      STATEFIP == 46 ~ 0, # South Dakota
+      TRUE ~ NA_real_
+    ),
+    post = case_when(
+      YEAR %in% c(2022, 2023) ~ 0,
+      YEAR == 2024 ~ 1, 
+      TRUE ~ NA_real_
+    ),
+    medicaid = case_when(
+      HIMCAIDNW == 1 ~ 0,
+      HIMCAIDNW == 2 ~ 1,
+      TRUE ~ NA_real_
+    ),
+    uninsured = case_when(
+      ANYCOVNW == 1 ~ 0,
+      ANYCOVNW == 2 ~ 1,
+      TRUE ~ NA_real_
+    ),
+    esi = case_when(
+      GRPCOVNW == 1 ~ 0,
+      GRPCOVNW == 2 ~ 1,
+      TRUE ~ NA_real_
+    ),
+    employed = case_when(
+      EMPSTAT %in% c(20, 21, 22) ~ 0,
+      EMPSTAT %in% c(10, 12) ~ 1,
+      TRUE ~ NA_real_
+    ),
+    student = case_when( # only for 16-24 year olds
+      SCHLCOLL %in% c(1, 2, 3, 4) ~ 1,
+      SCHLCOLL  == 5 ~ 0,
+      TRUE ~ NA_real_
+    ),
+    qualifying = case_when( # consider dropping because of student
+      employed == 1 | student == 1 ~ 1,
+      employed == 0 & student == 0 ~ 0,
+      TRUE ~ NA_real_
+    ),
+    poorhealth = case_when(
+      HEALTH %in% c(4, 5) ~ 1,
+      HEALTH %in% c(1, 2, 3) ~ 0,
+      TRUE ~ NA_real_
+    ),
+    spending = MOOP
+  )
+```
+
+## Create survey design object
+```{r}
+survey <- svydesign(id = ~`CPSIDP`, weights = ~`ASECWT`, data = data, nest = TRUE)
+
+options(survey.lonely.psu = "adjust")
+```
+
+## Select sample
+```{r}
+eligible <- survey %>%
+  subset(
+    !is.na(intervention) &
+      AGE >= 19 & AGE <= 64 & # 19-64 years old
+      OFFPOV == 1 # Income up to 100% FPL
+  )
+
+eligible_raw <- data %>%
+  filter(
+    !is.na(intervention) &
+      AGE >= 19 & AGE <= 64 & # 19-64 years old
+      OFFPOV == 1 # Income up to 100% FPL
+  )
+```
+
+## Data exploration
+```{r}
+table(eligible_raw$STATEFIP, eligible_raw$post)
+```
+
+
+## Plot data
 ```{r}
 medicaid_year <- svytable(~medicaid + YEAR + intervention, eligible) %>%
   as.data.frame() %>%
