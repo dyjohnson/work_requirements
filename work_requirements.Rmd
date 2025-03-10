@@ -21,8 +21,105 @@ library(survey)
 
 ```{r}
 # Load the datasets
+llcp2021 <- read_xpt("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/BRFSS/Data/LLCP2021.XPT")
 llcp2022 <- read_xpt("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/BRFSS/Data/LLCP2022.XPT")
 llcp2023 <- read_xpt("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/BRFSS/Data/LLCP2023.XPT")
+```
+
+# Clean BRFSS 2021
+```{r}
+# Federal Poverty 2021 calculations
+llcp2021 <- llcp2021 %>%
+  mutate(
+    hhadult_clean = ifelse(HHADULT %in% c(77, 99), NA, HHADULT),
+    children_clean = ifelse(CHILDREN == 99, NA, ifelse(CHILDREN == 88, 0, CHILDREN)),
+    hh_size = ifelse(is.na(NUMADULT), 1, NUMADULT) + ifelse(is.na(hhadult_clean), 0, hhadult_clean) + ifelse(is.na(children_clean), 0, children_clean),
+    hh_size = ifelse(hh_size == 0 | hh_size > 9, 1, hh_size), # Exclude 0 or >99th percentile (9)
+    income_num = case_when(
+      INCOME3 == 1 ~ 5000,
+      INCOME3 == 2 ~ 12500,
+      INCOME3 == 3 ~ 17500,
+      INCOME3 == 4 ~ 22500,
+      INCOME3 == 5 ~ 30000,
+      INCOME3 == 6 ~ 42500,
+      INCOME3 == 7 ~ 62500,
+      INCOME3 == 8 ~ 87500,
+      INCOME3 == 9 ~ 125000,
+      INCOME3 == 10 ~ 175000,
+      INCOME3 == 11 ~ 200000,
+      TRUE ~ NA_real_
+    ),
+    fpg = case_when(
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 1 ~ 100 * (income_num / 12880),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 2 ~ 100 * (income_num / 17420),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 3 ~ 100 * (income_num / 21960),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 4 ~ 100 * (income_num / 26500),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 5 ~ 100 * (income_num / 31040),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 6 ~ 100 * (income_num / 35580),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size == 7 ~ 100 * (income_num / 40120),
+      `_STATE` != 2 & `_STATE` != 15 & hh_size >= 8 ~ 100 * (income_num / (44660 + (hh_size - 8) * 4540)),
+      `_STATE` == 2 & hh_size == 1 ~ 100 * (income_num / 16090),
+      `_STATE` == 2 & hh_size == 2 ~ 100 * (income_num / 21770),
+      `_STATE` == 2 & hh_size == 3 ~ 100 * (income_num / 27450),
+      `_STATE` == 2 & hh_size == 4 ~ 100 * (income_num / 33130),
+      `_STATE` == 2 & hh_size == 5 ~ 100 * (income_num / 38810),
+      `_STATE` == 2 & hh_size == 6 ~ 100 * (income_num / 44490),
+      `_STATE` == 2 & hh_size == 7 ~ 100 * (income_num / 50170),
+      `_STATE` == 2 & hh_size >= 8 ~ 100 * (income_num / (55850 + (hh_size - 8) * 5680)),
+      `_STATE` == 15 & hh_size == 1 ~ 100 * (income_num / 14820),
+      `_STATE` == 15 & hh_size == 2 ~ 100 * (income_num / 20040),
+      `_STATE` == 15 & hh_size == 3 ~ 100 * (income_num / 25260),
+      `_STATE` == 15 & hh_size == 4 ~ 100 * (income_num / 30480),
+      `_STATE` == 15 & hh_size == 5 ~ 100 * (income_num / 35700),
+      `_STATE` == 15 & hh_size == 6 ~ 100 * (income_num / 40920),
+      `_STATE` == 15 & hh_size == 7 ~ 100 * (income_num / 46140),
+      `_STATE` == 15 & hh_size >= 8 ~ 100 * (income_num / (51360 + (hh_size - 8) * 5220)),
+      TRUE ~ NA_real_
+    ),
+    age = `_AGE80`,
+    age_cat = case_when(
+      `_AGE80` >= 18 & `_AGE80` <= 24 ~ "18-24",
+      `_AGE80` >= 25 & `_AGE80` <= 34 ~ "25-34",
+      `_AGE80` >= 35 & `_AGE80` <= 44 ~ "35-44",
+      `_AGE80` >= 45 & `_AGE80` <= 54 ~ "45-54",
+      `_AGE80` >= 55 & `_AGE80` <= 64 ~ "55-64",
+      `_AGE80` >= 65 ~ ">65",
+      TRUE ~ NA_character_
+    ),
+    sex_cat = case_when(
+      SEXVAR == 1 ~ "1.Male",
+      SEXVAR == 2 ~ "2.Female",
+      TRUE ~ NA_character_
+    ),
+    race_cat = case_when(
+      `_IMPRACE` == 1 ~ "1.Non-Hispanic White",
+      `_IMPRACE` == 2 ~ "2.Non-Hispanic Black",
+      `_IMPRACE` == 3 ~ "3.Non-Hispanic Asian",
+      `_IMPRACE` == 5 ~ "4.Hispanic",
+      `_IMPRACE` %in% c(4, 6) ~ "5.Other",
+      TRUE ~ NA_character_
+    ),
+    education_cat = case_when(
+      EDUCA %in% c(5, 6) ~ "College educated",
+      EDUCA %in% c(1, 2, 3, 4) ~ "Not college educated",
+      TRUE ~ NA_character_
+    ),
+    medicaid = ifelse(PRIMINSR == 5, 1, 0),
+    esi = ifelse(PRIMINSR == 1, 1, 0),
+    uninsured = ifelse(`_HLTHPLN` == 2, 1, ifelse(`_HLTHPLN` == 1, 0, NA)),
+    employed = ifelse(EMPLOY1 %in% c(1, 2), 1, 0),
+    student = ifelse(EMPLOY1 == 6, 1, 0),
+    qualifying = ifelse(EMPLOY1 %in% c(1, 2, 6), 1, 0),
+    pcp = ifelse(PERSDOC3 %in% c(1, 2), 1, ifelse(PERSDOC3 == 3, 0, NA)),
+    not_afford = ifelse(MEDCOST1 == 1, 1, ifelse(MEDCOST1 == 2, 0, NA)),
+    dm = ifelse(DIABETE4 == 1, 1, ifelse(DIABETE4 %in% c(2, 3, 4), 0, NA)),
+    mi = ifelse(CVDINFR4 == 1, 1, ifelse(CVDINFR4 == 2, 0, NA)),
+    chd = ifelse(CVDCRHD4 == 1, 1, ifelse(CVDCRHD4 == 2, 0, NA)),
+    stroke = ifelse(CVDSTRK3 == 1, 1, ifelse(CVDSTRK3 == 2, 0, NA)),
+    copd = ifelse(CHCCOPD3 == 1, 1, ifelse(CHCCOPD3 == 2, 0, NA)),
+    # cancer = ifelse(CHCOCNCR == 1, 1, ifelse(CHCOCNCR == 2, 0, NA)),
+    unemployed = ifelse(EMPLOY1 %in% c(3, 4), 1, 0)
+  )
 ```
 
 # Clean BRFSS 2022
@@ -222,29 +319,35 @@ llcp2023 <- llcp2023 %>%
 # Merge data
 ```{r}
 # Merge datasets
-merge_2223 <- bind_rows(llcp2022, llcp2023)
+merge_2123 <- bind_rows(llcp2021, llcp2022, llcp2023)
 ```
 
 # Clean merged data
 ```{r}
-merge_2223 <- merge_2223 %>%
+merge_2123 <- merge_2123 %>%
   mutate(
     quarter = case_when(
-      IYEAR == 2022 & IMONTH %in% c("01", "02", "03") ~ "1. 2022 Q1",
-      IYEAR == 2022 & IMONTH %in% c("04", "05", "06") ~ "2. 2022 Q2",
-      IYEAR == 2022 & IMONTH %in% c("07", "08", "09") ~ "3. 2022 Q3",
-      IYEAR == 2022 & IMONTH %in% c("10", "11", "12") ~ "4. 2022 Q4",
-      IYEAR == 2023 & IMONTH %in% c("01", "02", "03") ~ "5. 2023 Q1",
-      IYEAR == 2023 & IMONTH %in% c("04", "05", "06") ~ "6. 2023 Q2",
-      IYEAR == 2023 & IMONTH %in% c("07", "08", "09") ~ "7. 2023 Q3",
-      IYEAR == 2023 & IMONTH %in% c("10", "11", "12") ~ "8. 2023 Q4",
+      IYEAR == 2021 & IMONTH %in% c("01", "02", "03") ~ "2021 Q1",
+      IYEAR == 2021 & IMONTH %in% c("04", "05", "06") ~ "2021 Q2",
+      IYEAR == 2021 & IMONTH %in% c("07", "08", "09") ~ "2021 Q3",
+      IYEAR == 2021 & IMONTH %in% c("10", "11", "12") ~ "2021 Q4",
+      IYEAR == 2022 & IMONTH %in% c("01", "02", "03") ~ "2022 Q1",
+      IYEAR == 2022 & IMONTH %in% c("04", "05", "06") ~ "2022 Q2",
+      IYEAR == 2022 & IMONTH %in% c("07", "08", "09") ~ "2022 Q3",
+      IYEAR == 2022 & IMONTH %in% c("10", "11", "12") ~ "2022 Q4",
+      IYEAR == 2023 & IMONTH %in% c("01", "02", "03") ~ "2023 Q1",
+      IYEAR == 2023 & IMONTH %in% c("04", "05", "06") ~ "2023 Q2",
+      IYEAR == 2023 & IMONTH %in% c("07", "08", "09") ~ "2023 Q3",
+      IYEAR == 2023 & IMONTH %in% c("10", "11", "12") ~ "2023 Q4",
       TRUE ~ NA_character_
     ),
     half = case_when(
-      IYEAR == 2022 & IMONTH %in% c("01", "02", "03", "04", "05", "06") ~ "1. 2022 H1",
-      IYEAR == 2022 & IMONTH %in% c("07", "08", "09", "10", "11", "12") ~ "2. 2022 H2",
-      IYEAR == 2023 & IMONTH %in% c("01", "02", "03", "04", "05", "06") ~ "3. 2023 H1",
-      IYEAR == 2023 & IMONTH %in% c("07", "08", "09", "10", "11", "12") ~ "4. 2023 H2",
+      IYEAR == 2021 & IMONTH %in% c("01", "02", "03", "04", "05", "06") ~ "2021 H1",
+      IYEAR == 2021 & IMONTH %in% c("07", "08", "09", "10", "11", "12") ~ "2021 H2",
+      IYEAR == 2022 & IMONTH %in% c("01", "02", "03", "04", "05", "06") ~ "2022 H1",
+      IYEAR == 2022 & IMONTH %in% c("07", "08", "09", "10", "11", "12") ~ "2022 H2",
+      IYEAR == 2023 & IMONTH %in% c("01", "02", "03", "04", "05", "06") ~ "2023 H1",
+      IYEAR == 2023 & IMONTH %in% c("07", "08", "09", "10", "11", "12") ~ "2023 H2",
       TRUE ~ NA_character_
     ),
     state = case_when(
@@ -301,7 +404,7 @@ merge_2223 <- merge_2223 %>%
       `_STATE` == 56 ~ "Wyoming"
     ),
     post = case_when(
-      IYEAR == 2022 | (IYEAR == 2023 & IMONTH %in% c("01", "02", "03", "04", "05", "06")) ~ 0,
+      IYEAR == 2021 | IYEAR == 2022 | (IYEAR == 2023 & IMONTH %in% c("01", "02", "03", "04", "05", "06")) ~ 0,
       IYEAR == 2023 & IMONTH %in% c("07", "08", "09", "10", "11", "12") ~ 1,
       TRUE ~ NA_real_
     ),
@@ -311,7 +414,45 @@ merge_2223 <- merge_2223 %>%
       TRUE ~ NA_real_
     ),
     yearmonth = format(as.Date(paste(IYEAR, IMONTH, IDAY, sep = "-")), "%Y-%m"),
-    yearmonth2 = as.numeric(paste(IYEAR, IMONTH, sep = "")), # Fix?
+    yearmonth_num = case_when(
+      IYEAR == 2021 & IMONTH == "01" ~ 1,
+      IYEAR == 2021 & IMONTH == "02" ~ 2,
+      IYEAR == 2021 & IMONTH == "03" ~ 3,
+      IYEAR == 2021 & IMONTH == "04" ~ 4,
+      IYEAR == 2021 & IMONTH == "05" ~ 5,
+      IYEAR == 2021 & IMONTH == "06" ~ 6,
+      IYEAR == 2021 & IMONTH == "07" ~ 7,
+      IYEAR == 2021 & IMONTH == "08" ~ 8,
+      IYEAR == 2021 & IMONTH == "09" ~ 9,
+      IYEAR == 2021 & IMONTH == "10" ~ 10,
+      IYEAR == 2021 & IMONTH == "11" ~ 11,
+      IYEAR == 2021 & IMONTH == "12" ~ 12,
+      IYEAR == 2022 & IMONTH == "01" ~ 13,
+      IYEAR == 2022 & IMONTH == "02" ~ 14,
+      IYEAR == 2022 & IMONTH == "03" ~ 15,
+      IYEAR == 2022 & IMONTH == "04" ~ 16,
+      IYEAR == 2022 & IMONTH == "05" ~ 17,
+      IYEAR == 2022 & IMONTH == "06" ~ 18,
+      IYEAR == 2022 & IMONTH == "07" ~ 19,
+      IYEAR == 2022 & IMONTH == "08" ~ 20,
+      IYEAR == 2022 & IMONTH == "09" ~ 21,
+      IYEAR == 2022 & IMONTH == "10" ~ 22,
+      IYEAR == 2022 & IMONTH == "11" ~ 23,
+      IYEAR == 2022 & IMONTH == "12" ~ 24,
+      IYEAR == 2023 & IMONTH == "01" ~ 25,
+      IYEAR == 2023 & IMONTH == "02" ~ 26,
+      IYEAR == 2023 & IMONTH == "03" ~ 27,
+      IYEAR == 2023 & IMONTH == "04" ~ 28,
+      IYEAR == 2023 & IMONTH == "05" ~ 29,
+      IYEAR == 2023 & IMONTH == "06" ~ 30,
+      IYEAR == 2023 & IMONTH == "07" ~ 31,
+      IYEAR == 2023 & IMONTH == "08" ~ 32,
+      IYEAR == 2023 & IMONTH == "09" ~ 33,
+      IYEAR == 2023 & IMONTH == "10" ~ 34,
+      IYEAR == 2023 & IMONTH == "11" ~ 35,
+      IYEAR == 2023 & IMONTH == "12" ~ 36,
+      TRUE ~ NA_real_
+    ),
     intervention = case_when(
       state == "Georgia" ~ 1, # Georgia
       state == "South Dakota" ~ 0, # Alabama, Florida, Texas, Mississippi
@@ -330,7 +471,7 @@ merge_2223 <- merge_2223 %>%
 # Create survey object
 ```{r}
 # Create survey design object
-survey_2223 <- svydesign(id = ~`_PSU`, strata = ~`_STSTR`, weights = ~`_LLCPWT`, data = merge_2223, nest = TRUE)
+survey_2123 <- svydesign(id = ~`_PSU`, strata = ~`_STSTR`, weights = ~`_LLCPWT`, data = merge_2123, nest = TRUE)
 
 # Handle single-PSU strata by treating them as adjusted PSU
 options(survey.lonely.psu = "adjust")
@@ -338,7 +479,7 @@ options(survey.lonely.psu = "adjust")
 
 # Select target population
 ```{r}
-eligible <- survey_2223 %>%
+eligible <- survey_2123 %>%
   subset(
     state %in% c("Georgia", "South Dakota") &
       `_AGE80` >= 19 & `_AGE80` <= 64 & # 19-64 years old
@@ -355,8 +496,29 @@ eligible <- survey_2223 %>%
       #    is.na(DIFFALON)) & # No difficulty with independent living
       # (children_clean == 0 | (children_clean >= 1 &
       #    fpg > 30)) & # No parents with income under 30% FPL
-      # IYEAR %in% c(2022, 2023) # Date range: 1/1/2022 - 12/31/2023
-      ((IYEAR == 2022 & IMONTH %in% c("07", "08", "09", "10", "11", "12")) | IYEAR == 2023)
+      IYEAR %in% c(2021, 2022, 2023) # Date range: 1/1/2022 - 12/31/2023
+      # ((IYEAR == 2022 & IMONTH %in% c("07", "08", "09", "10", "11", "12")) | IYEAR == 2023)
+  )
+
+eligible_raw <- merge_2123 %>%
+  filter(
+    state %in% c("Georgia", "South Dakota") &
+      `_AGE80` >= 19 & `_AGE80` <= 64 & # 19-64 years old
+      fpg <= 100 & # Income up to 100% FPL
+      # (PREGNANT != 1 | is.na(PREGNANT)) & # Not pregnant
+      # # (BLIND != 1 | is.na(BLIND)) & # Not legally blind
+      # (DEAF != 1 | is.na(DEAF)) & # Not deaf
+      # (DECIDE != 1 | is.na(DECIDE)) & # No difficulty with cognition
+      # (DIFFWALK != 1 |
+      #    is.na(DIFFWALK)) & # No difficulty with mobility
+      # (DIFFDRES != 1 |
+      #    is.na(DIFFDRES)) & # No difficulty with self-care
+      # (DIFFALON != 1 |
+      #    is.na(DIFFALON)) & # No difficulty with independent living
+      # (children_clean == 0 | (children_clean >= 1 &
+      #    fpg > 30)) & # No parents with income under 30% FPL
+      IYEAR %in% c(2021, 2022, 2023) # Date range: 1/1/2022 - 12/31/2023
+      # ((IYEAR == 2022 & IMONTH %in% c("07", "08", "09", "10", "11", "12")) | IYEAR == 2023)
   )
 ```
 
@@ -383,7 +545,7 @@ medicaid_yearmonth_plot <- ggplot(medicaid_yearmonth, aes(x = yearmonth, y = per
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -411,7 +573,7 @@ esi_yearmonth_plot <- ggplot(esi_yearmonth, aes(x = yearmonth, y = percentage, c
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -439,7 +601,7 @@ uninsured_yearmonth_plot <- ggplot(uninsured_yearmonth, aes(x = yearmonth, y = p
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -467,7 +629,7 @@ qualifying_yearmonth_plot <- ggplot(qualifying_yearmonth, aes(x = yearmonth, y =
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -495,7 +657,7 @@ employed_yearmonth_plot <- ggplot(employed_yearmonth, aes(x = yearmonth, y = per
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -523,7 +685,7 @@ student_yearmonth_plot <- ggplot(student_yearmonth, aes(x = yearmonth, y = perce
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -551,7 +713,7 @@ pcp_yearmonth_plot <- ggplot(pcp_yearmonth, aes(x = yearmonth, y = percentage, c
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -579,7 +741,7 @@ not_afford_yearmonth_plot <- ggplot(not_afford_yearmonth, aes(x = yearmonth, y =
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -607,7 +769,7 @@ unemployed_yearmonth_plot <- ggplot(unemployed_yearmonth, aes(x = yearmonth, y =
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -638,7 +800,7 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentag
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -666,7 +828,7 @@ esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color =
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -694,7 +856,7 @@ uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percent
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -722,7 +884,7 @@ qualifying_quarter_plot <- ggplot(qualifying_quarter, aes(x = quarter, y = perce
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -750,7 +912,7 @@ employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentag
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -778,7 +940,7 @@ student_quarter_plot <- ggplot(student_quarter, aes(x = quarter, y = percentage,
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -806,7 +968,7 @@ pcp_quarter_plot <- ggplot(pcp_quarter, aes(x = quarter, y = percentage, color =
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -834,7 +996,7 @@ not_afford_quarter_plot <- ggplot(not_afford_quarter, aes(x = quarter, y = perce
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -862,7 +1024,7 @@ unemployed_quarter_plot <- ggplot(unemployed_quarter, aes(x = quarter, y = perce
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -893,7 +1055,7 @@ medicaid_half_plot <- ggplot(medicaid_half, aes(x = half, y = percentage, color 
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -921,7 +1083,7 @@ esi_half_plot <- ggplot(esi_half, aes(x = half, y = percentage, color = interven
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -949,7 +1111,7 @@ uninsured_half_plot <- ggplot(uninsured_half, aes(x = half, y = percentage, colo
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -977,7 +1139,7 @@ qualifying_half_plot <- ggplot(qualifying_half, aes(x = half, y = percentage, co
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -1005,7 +1167,7 @@ employed_half_plot <- ggplot(employed_half, aes(x = half, y = percentage, color 
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -1033,7 +1195,7 @@ student_half_plot <- ggplot(student_half, aes(x = half, y = percentage, color = 
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -1061,7 +1223,7 @@ pcp_half_plot <- ggplot(pcp_half, aes(x = half, y = percentage, color = interven
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -1089,7 +1251,7 @@ not_afford_half_plot <- ggplot(not_afford_half, aes(x = half, y = percentage, co
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -1117,7 +1279,7 @@ unemployed_half_plot <- ggplot(unemployed_half, aes(x = half, y = percentage, co
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("Control States", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -1125,166 +1287,297 @@ unemployed_half_plot
 #ggsave("unemployed_half_plot.jpg")
 ```
 
+# Plot data - years
+```{r}
+# Medicaid coverage
+medicaid_IYEAR <- svytable(~medicaid + IYEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    medicaid_1 = sum(Freq[medicaid == 1]),
+    percentage = (medicaid_1 / total) * 100
+  ) %>%
+  ungroup()
+
+medicaid_IYEAR_plot <- ggplot(medicaid_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has Medicaid",
+    x = "IYEAR",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+medicaid_IYEAR_plot
+#ggsave("medicaid_IYEAR_plot.jpg")
+
+# ESI
+esi_IYEAR <- svytable(~esi + IYEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    esi_1 = sum(Freq[esi == 1]),
+    percentage = (esi_1 / total) * 100
+  ) %>%
+  ungroup()
+
+esi_IYEAR_plot <- ggplot(esi_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has ESI",
+    x = "IYEAR",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+esi_IYEAR_plot
+#ggsave("esi_IYEAR_plot.jpg")
+
+# Uninsured
+uninsured_IYEAR <- svytable(~uninsured + IYEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    uninsured_1 = sum(Freq[uninsured == 1]),
+    percentage = (uninsured_1 / total) * 100
+  ) %>%
+  ungroup()
+
+uninsured_IYEAR_plot <- ggplot(uninsured_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Uninsured",
+    x = "IYEAR",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+uninsured_IYEAR_plot
+#ggsave("uninsured_IYEAR_plot.jpg")
+
+# Qualifying activities
+qualifying_IYEAR <- svytable(~qualifying + IYEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    qualifying_1 = sum(Freq[qualifying == 1]),
+    percentage = (qualifying_1 / total) * 100
+  ) %>%
+  ungroup()
+
+qualifying_IYEAR_plot <- ggplot(qualifying_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Qualifying activities",
+    x = "IYEAR",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+qualifying_IYEAR_plot
+#ggsave("qualifying_IYEAR_plot.jpg")
+
+# Employed
+employed_IYEAR <- svytable(~employed + IYEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    employed_1 = sum(Freq[employed == 1]),
+    percentage = (employed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+employed_IYEAR_plot <- ggplot(employed_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Employed",
+    x = "IYEAR",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+employed_IYEAR_plot
+#ggsave("employed_IYEAR_plot.jpg")
+
+# Student
+student_IYEAR <- svytable(~student + IYEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    student_1 = sum(Freq[student == 1]),
+    percentage = (student_1 / total) * 100
+  ) %>%
+  ungroup()
+
+student_IYEAR_plot <- ggplot(student_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Student",
+    x = "IYEAR",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+student_IYEAR_plot
+#ggsave("student_IYEAR_plot.jpg")
+
+# PCP
+pcp_IYEAR <- svytable(~pcp + IYEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    pcp_1 = sum(Freq[pcp == 1]),
+    percentage = (pcp_1 / total) * 100
+  ) %>%
+  ungroup()
+
+pcp_IYEAR_plot <- ggplot(pcp_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "PCP",
+    x = "IYEAR",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+pcp_IYEAR_plot
+#ggsave("pcp_IYEAR_plot.jpg")
+
+# Could not afford to see doctor in past 12 months
+not_afford_IYEAR <- svytable(~not_afford + IYEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    not_afford_1 = sum(Freq[not_afford == 1]),
+    percentage = (not_afford_1 / total) * 100
+  ) %>%
+  ungroup()
+
+not_afford_IYEAR_plot <- ggplot(not_afford_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Could not afford to see doctor in past 12 months",
+    x = "IYEAR",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+not_afford_IYEAR_plot
+#ggsave("not_afford_IYEAR_plot.jpg")
+
+# Unemployed
+unemployed_IYEAR <- svytable(~unemployed + IYEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    unemployed_1 = sum(Freq[unemployed == 1]),
+    percentage = (unemployed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+unemployed_IYEAR_plot <- ggplot(unemployed_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Unemployed",
+    x = "IYEAR",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+unemployed_IYEAR_plot
+#ggsave("unemployed_IYEAR_plot.jpg")
+```
+
 # Test parallel trends
 ```{r}
-library(sandwich)
-library(lmtest)
-
-model <- lm(medicaid ~ intervention*yearmonth3, 
-                data = eligible2_raw, weights = `_LLCPWT`)
-clustered_se <- vcovCL(model, cluster = ~ state)
-a <- coeftest(model, vcov = clustered_se)
-a
-confint(a)
+# Subset to pre-period
+eligible_pre <- eligible %>% subset(post == 0)
 
 # Medicaid
-medicaid_unadj_pttest <- svyglm(medicaid ~ intervention * yearmonth, design = eligible)
+medicaid_unadj_pttest <- svyglm(medicaid ~ intervention * yearmonth_num, design = eligible_pre)
 summary(medicaid_unadj_pttest)
 
 # Uninsured
-uninsured_unadj_pttest <- svyglm(uninsured ~ intervention * yearmonth, design = eligible)
+uninsured_unadj_pttest <- svyglm(uninsured ~ intervention * yearmonth_num, design = eligible_pre)
 summary(uninsured_unadj_pttest)
 
 # Qualifying activities
-qualifying_unadj_pttest <- svyglm(qualifying ~ intervention * yearmonth, design = eligible)
+qualifying_unadj_pttest <- svyglm(qualifying ~ intervention * yearmonth_num, design = eligible_pre)
 summary(qualifying_unadj_pttest)
 
 # Employed
-employed_unadj_pttest <- svyglm(employed ~ intervention * yearmonth, design = eligible)
+employed_unadj_pttest <- svyglm(employed ~ intervention * yearmonth_num, design = eligible_pre)
 summary(employed_unadj_pttest)
 
 # Student
-student_unadj_pttest <- svyglm(student ~ intervention * yearmonth, design = eligible)
+student_unadj_pttest <- svyglm(student ~ intervention * yearmonth_num, design = eligible_pre)
 summary(student_unadj_pttest)
 
 # Employer-sponsored insurance
-esi_unadj_pttest <- svyglm(esi ~ intervention * yearmonth, design = eligible)
+esi_unadj_pttest <- svyglm(esi ~ intervention * yearmonth_num, design = eligible_pre)
 summary(esi_unadj_pttest)
 
 # Access to PCP
-pcp_unadj_pttest <- svyglm(pcp ~ intervention * yearmonth, design = eligible)
+pcp_unadj_pttest <- svyglm(pcp ~ intervention * yearmonth_num, design = eligible_pre)
 summary(pcp_unadj_pttest)
 
 # Cost-related delays in care
-not_afford_unadj_pttest <- svyglm(not_afford ~ intervention * yearmonth, design = eligible)
+not_afford_unadj_pttest <- svyglm(not_afford ~ intervention * yearmonth_num, design = eligible_pre)
 summary(not_afford_unadj_pttest)
-```
-
-# Respondent characteristics
-```{r}
-# Define a function to generate a table and chi-square test
-gen_table_chisq <- function(variable, group_var, survey_design) {
-  # Calculate the weighted percentages and confidence intervals for the input variable by the group variable
-  tbl <- svyby(as.formula(paste("~", variable)), as.formula(paste("~", group_var)), survey_design, svymean, vartype = c("ci"), na.rm = TRUE)
-  
-  # Generate a Chi-square test to compare the input variable across the group variable
-  chi_test <- svychisq(as.formula(paste("~", variable, "+", group_var)), design = survey_design)
-  
-  # Return the table and chi-square test result as a list
-  list(
-    table = tbl,
-    chi_square = chi_test
-  )
-}
-
-# Split sample into pre and post
-eligible_pre <- eligible %>%
-  subset(post == 0)
-
-eligible_post <- eligible %>%
-  subset(post == 1)
-
-# Total study population
-total <- svytable(~intervention, design = eligible) %>% as.data.frame()
-total
-
-# Tabulate weighted respondent characteristics in pre period
-total_tbl_pre_u <- table(eligible_pre$variables$intervention)
-total_tbl_pre_u
-
-total_tbl_pre_w <- svytable(~intervention, design = eligible_pre) %>% as.data.frame()
-total_tbl_pre_w
-
-age_tbl_pre <- svyby(~age, ~intervention, eligible_pre, svymean, vartype = c("se"), na.rm = TRUE)
-age_tbl_pre
-age_tbl_pre_p <- svyttest(age~intervention, eligible_pre)
-age_tbl_pre_p
-
-sex_tbl_pre <- gen_table_chisq("sex_cat", "intervention", eligible_pre)
-sex_tbl_pre$table
-sex_tbl_pre$chi_square
-
-race_tbl_pre <- gen_table_chisq("race_cat", "intervention", eligible_pre)
-race_tbl_pre$table
-race_tbl_pre$chi_square
-
-education_tbl_pre <- gen_table_chisq("education_cat", "intervention", eligible_pre)
-education_tbl_pre$table
-education_tbl_pre$chi_square
-
-dm_tbl_pre <- gen_table_chisq("dm", "intervention", eligible_pre)
-dm_tbl_pre$table
-dm_tbl_pre$chi_square
-
-mi_tbl_pre <- gen_table_chisq("mi", "intervention", eligible_pre)
-mi_tbl_pre$table
-mi_tbl_pre$chi_square
-
-stroke_tbl_pre <- gen_table_chisq("stroke", "intervention", eligible_pre)
-stroke_tbl_pre$table
-stroke_tbl_pre$chi_square
-
-copd_tbl_pre <- gen_table_chisq("copd", "intervention", eligible_pre)
-copd_tbl_pre$table
-copd_tbl_pre$chi_square
-
-cancer_tbl_pre <- gen_table_chisq("cancer", "intervention", eligible_pre)
-cancer_tbl_pre$table
-cancer_tbl_pre$chi_square
-
-# Tabulate weighted respondent characteristics in post periods
-total_tbl_post_u <- table(eligible_post$variables$intervention)
-total_tbl_post_u
-
-total_tbl_post_w <- svytable(~intervention, design = eligible_post) %>% as.data.frame()
-total_tbl_post_w
-
-age_tbl_post <- svyby(~age, ~intervention, eligible_post, svymean, vartype = c("se"), na.rm = TRUE)
-age_tbl_post
-age_tbl_post_p <- svyttest(age~intervention, eligible_post)
-age_tbl_post_p
-
-sex_tbl_post <- gen_table_chisq("sex_cat", "intervention", eligible_post)
-sex_tbl_post$table
-sex_tbl_post$chi_square
-
-race_tbl_post <- gen_table_chisq("race_cat", "intervention", eligible_post)
-race_tbl_post$table
-race_tbl_post$chi_square
-
-education_tbl_post <- gen_table_chisq("education_cat", "intervention", eligible_post)
-education_tbl_post$table
-education_tbl_post$chi_square
-
-dm_tbl_post <- gen_table_chisq("dm", "intervention", eligible_post)
-dm_tbl_post$table
-dm_tbl_post$chi_square
-
-mi_tbl_post <- gen_table_chisq("mi", "intervention", eligible_post)
-mi_tbl_post$table
-mi_tbl_post$chi_square
-
-stroke_tbl_post <- gen_table_chisq("stroke", "intervention", eligible_post)
-stroke_tbl_post$table
-stroke_tbl_post$chi_square
-
-copd_tbl_post <- gen_table_chisq("copd", "intervention", eligible_post)
-copd_tbl_post$table
-copd_tbl_post$chi_square
-
-cancer_tbl_post <- gen_table_chisq("cancer", "intervention", eligible_post)
-cancer_tbl_post$table
-cancer_tbl_post$chi_square
 ```
 
 # Unadjusted DID analysis
@@ -1355,166 +1648,4 @@ summary(pcp_adj)
 # Cost-related delays in care
 not_afford_adj <- svyglm(not_afford ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
 summary(not_afford_adj)
-```
-
-# Create DID table
-```{r}
-# Define function to fill in diff-in-diff table
-gen_did_tbl <- function(outcome_var, unadj_model, adj_model, survey_design, z_value = 1.96) {
-  # Tabulate the average percentages in the pre and post time periods for intervention == 1
-  tbl_t <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention == 1), svymean, vartype = c("ci"), na.rm = TRUE)
-  
-  # Tabulate the average percentages in the pre and post time periods for intervention == 0
-  tbl_c <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention == 0), svymean, vartype = c("ci"), na.rm = TRUE)
-  
-  # Extract the means and confidence intervals for intervention == 1 
-  pre_mean_t <- tbl_t[tbl_t$post == 0, outcome_var]
-  ci_pre_low_t <- tbl_t[tbl_t$post == 0, "ci_l"]
-  ci_pre_upp_t <- tbl_t[tbl_t$post == 0, "ci_u"]
-  post_mean_t <- tbl_t[tbl_t$post == 1, outcome_var]
-  ci_post_low_t <- tbl_t[tbl_t$post == 1, "ci_l"]
-  ci_post_upp_t <- tbl_t[tbl_t$post == 1, "ci_u"]
-  
-  # Convert to percentage points for intervention == 1
-  pre_mean_percent_t <- pre_mean_t * 100
-  ci_pre_low_percent_t <- ci_pre_low_t * 100
-  ci_pre_upp_percent_t <- ci_pre_upp_t * 100
-  post_mean_percent_t <- post_mean_t * 100
-  ci_post_low_percent_t <- ci_post_low_t * 100
-  ci_post_upp_percent_t <- ci_post_upp_t * 100
-  
-  # Calculate the difference for intervention == 1
-  diff_mean_t <- post_mean_t - pre_mean_t
-  
-  # Calculate the standard error of the difference for intervention == 1
-  diff_se_t <- sqrt((((tbl_t[tbl_t$post == 1, "ci_u"] - post_mean_t))/z_value)^2 + 
-                    (((pre_mean_t - tbl_t[tbl_t$post == 0, "ci_l"]))/z_value)^2)
-  
-  # Calculate the confidence interval for intervention == 1
-  ci_diff_low_t <- diff_mean_t - z_value * diff_se_t
-  ci_diff_upp_t <- diff_mean_t + z_value * diff_se_t
-  
-  # Convert to percentage points for intervention == 1
-  diff_mean_percent_t <- diff_mean_t * 100
-  ci_diff_low_percent_t <- ci_diff_low_t * 100
-  ci_diff_upp_percent_t <- ci_diff_upp_t * 100
-  
-  # Extract the means and confidence intervals for intervention == 0
-  pre_mean_c <- tbl_c[tbl_c$post == 0, outcome_var]
-  ci_pre_low_c <- tbl_c[tbl_c$post == 0, "ci_l"]
-  ci_pre_upp_c <- tbl_c[tbl_c$post == 0, "ci_u"]
-  post_mean_c <- tbl_c[tbl_c$post == 1, outcome_var]
-  ci_post_low_c <- tbl_c[tbl_c$post == 1, "ci_l"]
-  ci_post_upp_c <- tbl_c[tbl_c$post == 1, "ci_u"]
-  
-  # Convert to percentage points for intervention == 0
-  pre_mean_percent_c <- pre_mean_c * 100
-  ci_pre_low_percent_c <- ci_pre_low_c * 100
-  ci_pre_upp_percent_c <- ci_pre_upp_c * 100
-  post_mean_percent_c <- post_mean_c * 100
-  ci_post_low_percent_c <- ci_post_low_c * 100
-  ci_post_upp_percent_c <- ci_post_upp_c * 100
-  
-  # Calculate the difference for intervention == 0
-  diff_mean_c <- post_mean_c - pre_mean_c
-  
-  # Calculate p value for intervention == 1
-  did_ttest_t <- svyttest(as.formula(paste0(outcome_var, " ~ post")), design = subset(survey_design, intervention == 1))
-  did_pval_t <- formatC(did_ttest_t$p.value, format = "f", digits = 4)
-  
-  # Calculate the standard error of the difference for intervention == 0
-  diff_se_c <- sqrt((((tbl_c[tbl_c$post == 1, "ci_u"] - post_mean_c))/z_value)^2 +
-                    (((pre_mean_c - tbl_c[tbl_c$post == 0, "ci_l"]))/z_value)^2)
-  
-  # Calculate the confidence interval for intervention == 0
-  ci_diff_low_c <- diff_mean_c - z_value * diff_se_c
-  ci_diff_upp_c <- diff_mean_c + z_value * diff_se_c
-  
-  # Convert to percentage points for intervention == 0
-  diff_mean_percent_c <- diff_mean_c * 100
-  ci_diff_low_percent_c <- ci_diff_low_c * 100
-  ci_diff_upp_percent_c <- ci_diff_upp_c * 100
-  
-  # Calculate p value for intervention == 0
-  did_ttest_c <- svyttest(as.formula(paste0(outcome_var, " ~ post")), design = subset(survey_design, intervention == 0))
-  did_pval_c <- formatC(did_ttest_c$p.value, format = "f", digits = 4)
-  
-  # Print the results for intervention == 1
-  cat("Intervention group:\n")
-  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_t, format = "f", digits = 2), "% (", 
-             formatC(ci_pre_low_percent_t, format = "f", digits = 2), "%, ", 
-             formatC(ci_pre_upp_percent_t, format = "f", digits = 2), "%)\n"))
-  cat(paste0("Post period mean: ", formatC(post_mean_percent_t, format = "f", digits = 2), "% (", 
-             formatC(ci_post_low_percent_t, format = "f", digits = 2), "%, ",
-             formatC(ci_post_upp_percent_t, format = "f", digits = 2), "%)\n"))
-  cat(paste0("Difference: ", formatC(diff_mean_percent_t, format = "f", digits = 2), "% (", 
-             formatC(ci_diff_low_percent_t, format = "f", digits = 2), "%, ",
-             formatC(ci_diff_upp_percent_t, format = "f", digits = 2), "%)\n"))
-  cat(paste0("P value: ", formatC(did_pval_t, format = "f", digits = 4), "\n\n"))
-  
-  # Print the results for intervention == 0
-  cat("Control group:\n")
-  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_c, format = "f", digits = 2), "% (", 
-             formatC(ci_pre_low_percent_c, format = "f", digits = 2), "%, ",
-             formatC(ci_pre_upp_percent_c, format = "f", digits = 2), "%)\n"))
-  cat(paste0("Post period mean: ", formatC(post_mean_percent_c, format = "f", digits = 2), "% (", 
-             formatC(ci_post_low_percent_c, format = "f", digits = 2), "%, ",
-             formatC(ci_post_upp_percent_c, format = "f", digits = 2), "%)\n"))
-  cat(paste0("Difference: ", formatC(diff_mean_percent_c, format = "f", digits = 2), "% (", 
-             formatC(ci_diff_low_percent_c, format = "f", digits = 2), "%, ",
-             formatC(ci_diff_upp_percent_c, format = "f", digits = 2), "%)\n"))
-  cat(paste0("P value: ", formatC(did_pval_c, format = "f", digits = 4), "\n\n"))
-  
-  # # Difference-in-differences (DiD) calculation
-  # did_diff_mean <- diff_mean_percent_t - diff_mean_percent_c
-  # 
-  # # Standard error of the DiD estimate
-  # did_se <- sqrt(diff_se_t^2 + diff_se_c^2)
-  # 
-  # # Confidence interval for the DiD estimate
-  # ci_did_low <- did_diff_mean - z_value * did_se * 100
-  # ci_did_upp <- did_diff_mean + z_value * did_se * 100
-  # 
-  # # Print the DiD results
-  # cat("Difference-in-Differences (DiD):\n")
-  # cat(paste0("DiD estimate: ", formatC(did_diff_mean, format = "f", digits = 2), " (", 
-  #            formatC(ci_did_low, format = "f", digits = 2), ", ",
-  #            formatC(ci_did_upp, format = "f", digits = 2), ")\n"))
-  
-  # Extract estimates, confidence intervals, and p-values for both models
-  
-  # Unadjusted Model
-  unadj_diff_in_diff <- coef(unadj_model)["intervention:post"] * 100
-  unadj_ci <- confint(unadj_model)["intervention:post", ] * 100
-  unadj_p_value <- summary(unadj_model)$coefficients["intervention:post", "Pr(>|t|)"]
-  
-  # Adjusted Model
-  adj_diff_in_diff <- coef(adj_model)["intervention:post"] * 100
-  adj_ci <- confint(adj_model)["intervention:post", ] * 100
-  adj_p_value <- summary(adj_model)$coefficients["intervention:post", "Pr(>|t|)"]
-  
-  # Print the results for the unadjusted model
-  cat("\nUnadjusted Model:\n")
-  cat(paste0("Difference-in-Difference Estimate: ", formatC(unadj_diff_in_diff, format = "f", digits = 2), "% (", 
-      formatC(unadj_ci[1], format = "f", digits = 2), "%, ", 
-      formatC(unadj_ci[2], format = "f", digits = 2), "%)\n"))
-  cat(paste0("p-value: ", formatC(unadj_p_value, format = "f", digits = 2), "\n"))
-  
-  # Print the results for the adjusted model
-  cat(paste0("\nAdjusted Model:\n"))
-  cat(paste0("Difference-in-Difference Estimate: ", formatC(adj_diff_in_diff, format = "f", digits = 2), "% (", 
-      formatC(adj_ci[1], format = "f", digits = 2), "%, ", 
-      formatC(adj_ci[2], format = "f", digits = 2), "%)\n"))
-  cat(paste0("p-value: ", formatC(adj_p_value, format = "f", digits = 2), "\n"))
-}
-
-# Run on outcomes
-gen_did_tbl("medicaid", medicaid_unadj, medicaid_adj, eligible)
-gen_did_tbl("esi", esi_unadj, esi_adj, eligible)
-gen_did_tbl("uninsured", uninsured_unadj, uninsured_adj, eligible)
-gen_did_tbl("qualifying", qualifying_unadj, qualifying_adj, eligible)
-gen_did_tbl("employed", employed_unadj, employed_adj, eligible)
-gen_did_tbl("student", student_unadj, student_adj, eligible)
-gen_did_tbl("pcp", pcp_unadj, pcp_adj, eligible)
-gen_did_tbl("not_afford", not_afford_unadj, not_afford_adj, eligible)
 ```
