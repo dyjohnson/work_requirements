@@ -1,0 +1,1136 @@
+---
+title: "Georgia Medicaid Work Requirements"
+output: html_document
+date: "2025-03-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries
+
+```{r libraries}
+library(tidyverse)
+library(haven)
+library(summarytools)
+library(survey)
+```
+
+## Load data
+
+```{r}
+puf_41 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week41_PUF_CSV/pulse2022_puf_41.csv")
+puf_42 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week42_PUF_CSV/pulse2022_puf_42.csv")
+puf_43 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week43_PUF_CSV/pulse2022_puf_43.csv")
+puf_44 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week44_PUF_CSV/pulse2022_puf_44.csv")
+puf_45 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week45_PUF_CSV/pulse2022_puf_45.csv")
+puf_46 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week46_PUF_CSV/pulse2022_puf_46.csv")
+puf_47 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week47_PUF_CSV/pulse2022_puf_47.csv")
+puf_48 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week48_PUF_CSV/pulse2022_puf_48.csv")
+puf_49 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week49_PUF_CSV/pulse2022_puf_49.csv")
+puf_50 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week50_PUF_CSV/pulse2022_puf_50.csv")
+puf_51 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week51_PUF_CSV/pulse2022_puf_51.csv")
+puf_52 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week52_PUF_CSV/pulse2022_puf_52.csv")
+puf_53 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week53_PUF_CSV/pulse2023_puf_53.csv")
+puf_54 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week54_PUF_CSV/pulse2023_puf_54.csv")
+puf_55 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week55_PUF_CSV/pulse2023_puf_55.csv")
+puf_56 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week56_PUF_CSV/pulse2023_puf_56.csv")
+puf_57 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week57_PUF_CSV/pulse2023_puf_57.csv")
+puf_58 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week58_PUF_CSV/pulse2023_puf_58.csv")
+puf_59 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week59_PUF_CSV/pulse2023_puf_59.csv")
+puf_60 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week60_PUF_CSV/pulse2023_puf_60.csv")
+puf_61 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week61_PUF_CSV/pulse2023_puf_61.csv")
+puf_62 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week62_PUF_CSV/pulse2023_puf_62.csv")
+puf_63 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week63_PUF_CSV/pulse2023_puf_63.csv")
+puf_401 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4Cycle01_PUF_CSV/hps_04_00_01_puf.csv")
+puf_402 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4Cycle02_PUF_CSV/hps_04_00_02_puf.csv")
+puf_403 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4Cycle03_PUF_CSV/hps_04_00_03_puf.csv")
+puf_404 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-1Cycle04_PUF_CSV/hps_04_01_04_puf.csv")
+puf_405 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-1Cycle05_PUF_CSV/hps_04_01_05_puf.csv")
+puf_406 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-1Cycle06_PUF_CSV/hps_04_01_06_puf.csv")
+puf_407 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-1Cycle07_PUF_CSV/hps_04_01_07_puf.csv")
+puf_408 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-2Cycle08_PUF_CSV/hps_04_02_08_puf.csv")
+puf_409 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-2Cycle09_PUF_CSV/hps_04_02_09_puf.csv")
+```
+
+# Select variables
+```{r}
+puf_41 <- puf_41 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_42 <- puf_42 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_43 <- puf_43 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_44 <- puf_44 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_45 <- puf_45 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_46 <- puf_46 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_47 <- puf_47 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_48 <- puf_48 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_49 <- puf_49 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_50 <- puf_50 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_51 <- puf_51 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_52 <- puf_52 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_53 <- puf_43 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_54 <- puf_54 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_55 <- puf_55 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_56 <- puf_56 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_57 <- puf_57 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_58 <- puf_58 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_59 <- puf_59 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_60 <- puf_60 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_61 <- puf_61 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_62 <- puf_62 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_63 <- puf_63 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_401 <- puf_401 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
+puf_402 <- puf_402 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
+puf_403 <- puf_403 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
+puf_404 <- puf_404 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
+puf_405 <- puf_405 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
+puf_406 <- puf_406 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
+puf_407 <- puf_407 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
+puf_408 <- puf_408 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
+puf_409 <- puf_409 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
+```
+
+# Merge data
+```{r}
+data <- bind_rows(puf_41, puf_42, puf_43, puf_44, puf_45, puf_46, puf_47, puf_48, puf_49, puf_50, puf_51, puf_52, puf_53, puf_54, puf_55, puf_56, puf_57, puf_58, puf_59, puf_60, puf_61, puf_62, puf_63, puf_401, puf_402, puf_403, puf_404, puf_405, puf_406, puf_407, puf_408, puf_409)
+
+rm("puf_41", "puf_42", "puf_43", "puf_44", "puf_45", "puf_46", "puf_47", "puf_48", "puf_49", "puf_50", "puf_51", "puf_52", "puf_53", "puf_54", "puf_55", "puf_56", "puf_57", "puf_58", "puf_59", "puf_60", "puf_61", "puf_62", "puf_63", "puf_401", "puf_402", "puf_403", "puf_404", "puf_405", "puf_406", "puf_407", "puf_408", "puf_409")
+```
+
+# Load weights
+```{r}
+repwgt_puf_41 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week41_PUF_CSV/pulse2022_repwgt_puf_41.csv")
+repwgt_puf_42 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week42_PUF_CSV/pulse2022_repwgt_puf_42.csv")
+repwgt_puf_43 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week43_PUF_CSV/pulse2022_repwgt_puf_43.csv")
+repwgt_puf_44 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week44_PUF_CSV/pulse2022_repwgt_puf_44.csv")
+repwgt_puf_45 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week45_PUF_CSV/pulse2022_repwgt_puf_45.csv")
+repwgt_puf_46 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week46_PUF_CSV/pulse2022_repwgt_puf_46.csv")
+repwgt_puf_47 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week47_PUF_CSV/pulse2022_repwgt_puf_47.csv")
+repwgt_puf_48 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week48_PUF_CSV/pulse2022_repwgt_puf_48.csv")
+repwgt_puf_49 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week49_PUF_CSV/pulse2022_repwgt_puf_49.csv")
+repwgt_puf_50 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week50_PUF_CSV/pulse2022_repwgt_puf_50.csv")
+repwgt_puf_51 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week51_PUF_CSV/pulse2022_repwgt_puf_51.csv")
+repwgt_puf_52 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week52_PUF_CSV/pulse2022_repwgt_puf_52.csv")
+repwgt_puf_53 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week53_PUF_CSV/pulse2023_repwgt_puf_53.csv")
+repwgt_puf_54 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week54_PUF_CSV/pulse2023_repwgt_puf_54.csv")
+repwgt_puf_55 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week55_PUF_CSV/pulse2023_repwgt_puf_55.csv")
+repwgt_puf_56 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week56_PUF_CSV/pulse2023_repwgt_puf_56.csv")
+repwgt_puf_57 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week57_PUF_CSV/pulse2023_repwgt_puf_57.csv")
+repwgt_puf_58 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week58_PUF_CSV/pulse2023_repwgt_puf_58.csv")
+repwgt_puf_59 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week59_PUF_CSV/pulse2023_repwgt_puf_59.csv")
+repwgt_puf_60 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week60_PUF_CSV/pulse2023_repwgt_puf_60.csv")
+repwgt_puf_61 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week61_PUF_CSV/pulse2023_repwgt_puf_61.csv")
+repwgt_puf_62 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week62_PUF_CSV/pulse2023_repwgt_puf_62.csv")
+repwgt_puf_63 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week63_PUF_CSV/pulse2023_repwgt_puf_63.csv")
+repwgt_puf_401 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4Cycle01_PUF_CSV/hps_04_00_01_repwgt_puf.csv")
+repwgt_puf_402 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4Cycle02_PUF_CSV/hps_04_00_02_repwgt_puf.csv")
+repwgt_puf_403 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4Cycle03_PUF_CSV/hps_04_00_03_repwgt_puf.csv")
+repwgt_puf_404 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-1Cycle04_PUF_CSV/hps_04_01_04_repwgt_puf.csv")
+repwgt_puf_405 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-1Cycle05_PUF_CSV/hps_04_01_05_repwgt_puf.csv")
+repwgt_puf_406 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-1Cycle06_PUF_CSV/hps_04_01_06_repwgt_puf.csv")
+repwgt_puf_407 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-1Cycle07_PUF_CSV/hps_04_01_07_repwgt_puf.csv")
+repwgt_puf_408 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-2Cycle08_PUF_CSV/hps_04_02_08_repwgt_puf.csv")
+repwgt_puf_409 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-2Cycle09_PUF_CSV/hps_04_02_09_repwgt_puf.csv")
+```
+
+# Merge weights and data
+```{r}
+weights <- bind_rows(repwgt_puf_41, repwgt_puf_42, repwgt_puf_43, repwgt_puf_44, repwgt_puf_45, repwgt_puf_46, repwgt_puf_47, repwgt_puf_48, repwgt_puf_49, repwgt_puf_50, repwgt_puf_51, repwgt_puf_52, repwgt_puf_53, repwgt_puf_54, repwgt_puf_55, repwgt_puf_56, repwgt_puf_57, repwgt_puf_58, repwgt_puf_59, repwgt_puf_60, repwgt_puf_61, repwgt_puf_62, repwgt_puf_63, repwgt_puf_401, repwgt_puf_402, repwgt_puf_403, repwgt_puf_404, repwgt_puf_405, repwgt_puf_406, repwgt_puf_407, repwgt_puf_408, repwgt_puf_409)
+
+rm("repwgt_puf_41", "repwgt_puf_42", "repwgt_puf_43", "repwgt_puf_44", "repwgt_puf_45", "repwgt_puf_46", "repwgt_puf_47", "repwgt_puf_48", "repwgt_puf_49", "repwgt_puf_50", "repwgt_puf_51", "repwgt_puf_52", "repwgt_puf_53", "repwgt_puf_54", "repwgt_puf_55", "repwgt_puf_56", "repwgt_puf_57", "repwgt_puf_58", "repwgt_puf_59", "repwgt_puf_60", "repwgt_puf_61", "repwgt_puf_62", "repwgt_puf_63", "repwgt_puf_401", "repwgt_puf_402", "repwgt_puf_403", "repwgt_puf_404", "repwgt_puf_405", "repwgt_puf_406", "repwgt_puf_407", "repwgt_puf_408", "repwgt_puf_409")
+
+data <- data %>% left_join(weights, by = c("SCRAM", "WEEK", "CYCLE"))
+
+rm("weights")
+```
+
+# Clean data
+```{r}
+# Clean time and state
+data <- data %>%
+  mutate(
+    week_cycle = case_when(
+      !is.na(WEEK) ~ WEEK,
+      !is.na(CYCLE) ~ CYCLE + 63,
+      TRUE ~ NA_real_
+    ),
+    year = case_when(
+      WEEK >= 41 & WEEK <= 52 & is.na(CYCLE) ~ 2022,
+      WEEK >= 53 & WEEK <= 63 & is.na(CYCLE) ~ 2023,
+      CYCLE >= 1 & CYCLE <= 9 & is.na(WEEK) ~ 2024,
+      TRUE ~ NA_real_
+    ),
+    quarter = case_when(
+      IYEAR == 2021 & IMONTH %in% c("01", "02", "03") ~ "2021 Q1",
+      IYEAR == 2021 & IMONTH %in% c("04", "05", "06") ~ "2021 Q2",
+      IYEAR == 2021 & IMONTH %in% c("07", "08", "09") ~ "2021 Q3",
+      IYEAR == 2021 & IMONTH %in% c("10", "11", "12") ~ "2021 Q4",
+      IYEAR == 2022 & IMONTH %in% c("01", "02", "03") ~ "2022 Q1",
+      IYEAR == 2022 & IMONTH %in% c("04", "05", "06") ~ "2022 Q2",
+      IYEAR == 2022 & IMONTH %in% c("07", "08", "09") ~ "2022 Q3",
+      IYEAR == 2022 & IMONTH %in% c("10", "11", "12") ~ "2022 Q4",
+      IYEAR == 2023 & IMONTH %in% c("01", "02", "03") ~ "2023 Q1",
+      IYEAR == 2023 & IMONTH %in% c("04", "05", "06") ~ "2023 Q2",
+      IYEAR == 2023 & IMONTH %in% c("07", "08", "09") ~ "2023 Q3",
+      IYEAR == 2023 & IMONTH %in% c("10", "11", "12") ~ "2023 Q4",
+      TRUE ~ NA_character_
+    ),
+    half = case_when(
+      IYEAR == 2021 & IMONTH %in% c("01", "02", "03", "04", "05", "06") ~ "2021 H1",
+      IYEAR == 2021 & IMONTH %in% c("07", "08", "09", "10", "11", "12") ~ "2021 H2",
+      IYEAR == 2022 & IMONTH %in% c("01", "02", "03", "04", "05", "06") ~ "2022 H1",
+      IYEAR == 2022 & IMONTH %in% c("07", "08", "09", "10", "11", "12") ~ "2022 H2",
+      IYEAR == 2023 & IMONTH %in% c("01", "02", "03", "04", "05", "06") ~ "2023 H1",
+      IYEAR == 2023 & IMONTH %in% c("07", "08", "09", "10", "11", "12") ~ "2023 H2",
+      TRUE ~ NA_character_
+    ),
+    state = case_when(
+      EST_ST == "01" ~ "Alabama",
+      EST_ST == "02" ~ "Alaska",
+      EST_ST == "04" ~ "Arizona",
+      EST_ST == "05" ~ "Arkansas",
+      EST_ST == "06" ~ "California",
+      EST_ST == "08" ~ "Colorado",
+      EST_ST == "09" ~ "Connecticut",
+      EST_ST == "10" ~ "Delaware",
+      EST_ST == "11" ~ "District of Columbia",
+      EST_ST == "12" ~ "Florida",
+      EST_ST == "13" ~ "Georgia",
+      EST_ST == "15" ~ "Hawaii",
+      EST_ST == "16" ~ "Idaho",
+      EST_ST == "17" ~ "Illinois",
+      EST_ST == "18" ~ "Indiana",
+      EST_ST == "19" ~ "Iowa",
+      EST_ST == "20" ~ "Kansas",
+      EST_ST == "21" ~ "Kentucky",
+      EST_ST == "22" ~ "Louisiana",
+      EST_ST == "23" ~ "Maine",
+      EST_ST == "24" ~ "Maryland",
+      EST_ST == "25" ~ "Massachusetts",
+      EST_ST == "26" ~ "Michigan",
+      EST_ST == "27" ~ "Minnesota",
+      EST_ST == "28" ~ "Mississippi",
+      EST_ST == "29" ~ "Missouri",
+      EST_ST == "30" ~ "Montana",
+      EST_ST == "31" ~ "Nebraska",
+      EST_ST == "32" ~ "Nevada",
+      EST_ST == "33" ~ "New Hampshire",
+      EST_ST == "34" ~ "New Jersey",
+      EST_ST == "35" ~ "New Mexico",
+      EST_ST == "36" ~ "New York",
+      EST_ST == "37" ~ "North Carolina",
+      EST_ST == "38" ~ "North Dakota",
+      EST_ST == "39" ~ "Ohio",
+      EST_ST == "40" ~ "Oklahoma",
+      EST_ST == "41" ~ "Oregon",
+      EST_ST == "42" ~ "Pennsylvania",
+      EST_ST == "44" ~ "Rhode Island",
+      EST_ST == "45" ~ "South Carolina",
+      EST_ST == "46" ~ "South Dakota",
+      EST_ST == "47" ~ "Tennessee",
+      EST_ST == "48" ~ "Texas",
+      EST_ST == "49" ~ "Utah",
+      EST_ST == "50" ~ "Vermont",
+      EST_ST == "51" ~ "Virginia",
+      EST_ST == "53" ~ "Washington",
+      EST_ST == "54" ~ "West Virginia",
+      EST_ST == "55" ~ "Wisconsin",
+      EST_ST == "56" ~ "Wyoming"
+    )
+  )
+
+# Sociodemographic characteristics
+data <- data %>% 
+  mutate(
+    income_num = case_when(
+      INCOME == 1 ~ 12500,
+      INCOME == 2 ~ 30000,
+      INCOME == 3 ~ 42500,
+      INCOME == 4 ~ 62500,
+      INCOME == 5 ~ 87500,
+      INCOME == 6 ~ 125000,
+      INCOME == 7 ~ 175000,
+      INCOME == 8 ~ 250000,
+      TRUE ~ NA_real_
+    ),
+    fpg = case_when(
+      year == 2022 & state != "Alaska" & state != "Hawaii" ~ 100 * (income_num / (8870 + 4720 * THHLD_NUMPER)),
+      year == 2022 & state == "Alaska" ~ 100 * (income_num / (11090 + 5900 * THHLD_NUMPER)),
+      year == 2022 & state == "Hawaii" ~ 100 * (income_num / (10200 + 5430 * THHLD_NUMPER)),
+      year == 2023 & state != "Alaska" & state != "Hawaii" ~ 100 * (income_num / (9440 + 5140 * THHLD_NUMPER)),
+      year == 2023 & state == "Alaska" ~ 100 * (income_num / (11780 + 6430 * THHLD_NUMPER)),
+      year == 2023 & state == "Hawaii" ~ 100 * (income_num / (10860 + 5910 * THHLD_NUMPER)),
+      year == 2024 & state != "Alaska" & state != "Hawaii" ~ 100 * (income_num / (9680 + 5380 * THHLD_NUMPER)),
+      year == 2024 & state == "Alaska" ~ 100 * (income_num / (12080 + 6730 * THHLD_NUMPER)),
+      year == 2024 & state == "Hawaii" ~ 100 * (income_num / (11120 + 6190 * THHLD_NUMPER)),
+      TRUE ~ NA_real_
+    ),
+    age = year - TBIRTH_YEAR,
+    age_cat = case_when(
+      age >= 18 & age <= 24 ~ "18-24",
+      age >= 25 & age <= 34 ~ "25-34",
+      age >= 35 & age <= 44 ~ "35-44",
+      age >= 45 & age <= 54 ~ "45-54",
+      age >= 55 & age <= 64 ~ "55-64",
+      age >= 65 ~ ">65",
+      TRUE ~ NA_character_
+    ),
+    sex_cat = case_when(
+      EGENID_BIRTH == 1 ~ "1.Male",
+      EGENID_BIRTH == 2 ~ "2.Female",
+      TRUE ~ NA_character_
+    ),
+    race_cat = case_when(
+      RRACE == 1 ~ "White",
+      RRACE == 2 ~ "Black",
+      RRACE == 3 ~ "Asian",
+      RRACE == 4 ~ "Other",
+      TRUE ~ NA_character_
+    ),
+    eth_cat = case_when(
+      RHISPANIC == 1 ~ "Non-Hispanic",
+      RHISPANIC == 2 ~ "Hispanic",
+      TRUE ~ NA_character_
+    ),
+    edu_cat = case_when(
+      EEDUC == 1 ~ "Less than high school",
+      EEDUC == 2 ~ "Some high school",
+      EEDUC == 3 ~ "High school graduate",
+      EEDUC == 4 ~ "Some college",
+      EEDUC == 5 ~ "Associates degree",
+      EEDUC == 6 ~ "Bachelors degree",
+      EEDUC == 7 ~ "Graduate degree",
+      TRUE ~ NA_character_
+    )
+  )
+
+# Outcomes
+data <- data %>%
+  mutate(
+    medicaid = ifelse(HLTHINS1 != 1 & HLTHINS2 != 1 & HLTHINS3 != 1 & HLTHINS4 == 1 & HLTHINS5 != 1 & HLTHINS6 != 1, 1, 0),
+    esi = ifelse(HLTHINS1 == 1 & HLTHINS2 != 1 & HLTHINS3 != 1 & HLTHINS4 != 1 & HLTHINS5 != 1 & HLTHINS6 != 1, 1, 0),
+    uninsured = ifelse(HLTHINS1 == 2 & HLTHINS2 == 2 & HLTHINS3 == 2 & HLTHINS4 == 2 & HLTHINS5 == 2 & HLTHINS6 == 2, 1, 0),
+    employed = ifelse(ANYWORK == 1, 1, 0)
+  )
+
+# DID setup
+data <- data %>% 
+  mutate(
+    post = case_when(
+      IYEAR == 2021 | IYEAR == 2022 | (IYEAR == 2023 & IMONTH %in% c("01", "02", "03", "04", "05", "06")) ~ 0,
+      IYEAR == 2023 & IMONTH %in% c("08", "09", "10", "11", "12") ~ 1,
+      TRUE ~ NA_real_
+    ),
+    prepost = case_when(
+      IYEAR == 2022 & IMONTH %in% c("01", "02", "03", "04", "05", "06", "07", "08", "09") ~ 0,
+      (IYEAR == 2022 & IMONTH %in% c("10", "11", "12")) | (IYEAR == 2023 & IMONTH %in% c("01", "02", "03", "04", "05", "06")) ~ 1,
+      TRUE ~ NA_real_
+    ),
+    intervention = case_when(
+      state == "Georgia" ~ 1,
+      state == "South Dakota" ~ 0,
+      # state %in% c("Alabama", "Florida", "Texas", "Mississippi") ~ 0,
+      TRUE ~ NA_real_
+    )
+  )
+```
+
+# Create survey object
+```{r}
+# Create survey design object
+survey_2123 <- svydesign(id = ~`_PSU`, strata = ~`_STSTR`, weights = ~`_LLCPWT`, data = merge_2123, nest = TRUE)
+
+# Handle single-PSU strata by treating them as adjusted PSU
+options(survey.lonely.psu = "adjust")
+```
+
+# Select target population
+```{r}
+eligible <- survey_2123 %>%
+  subset(
+    state %in% c("Georgia", "South Dakota") &
+      `_AGE80` >= 19 & `_AGE80` <= 64 & # 19-64 years old
+      fpg <= 100 & # Income up to 100% FPL
+      (HLTHINS1 %in% c(1, 2) | HLTHINS2 %in% c(1, 2) | HLTHINS3 %in% c(1, 2) | HLTHINS4 %in% c(1, 2) | HLTHINS5 %in% c(1, 2) | HLTHINS6 %in% c(1, 2) | HLTHINS7 %in% c(1, 2) | HLTHINS8 %in% c(1, 2)) & # Health insurance is not missing for all questions
+      ((IYEAR == 2021 & IMONTH %in% c("07", "08", "09", "10", "11", "12")) | IYEAR %in% c(2022,2023))
+  )
+
+eligible_raw <- merge_2123 %>%
+  filter(
+    state %in% c("Georgia", "South Dakota") &
+      `_AGE80` >= 19 & `_AGE80` <= 64 & # 19-64 years old
+      fpg <= 100 & # Income up to 100% FPL
+      ((IYEAR == 2021 & IMONTH %in% c("07", "08", "09", "10", "11", "12")) | IYEAR %in% c(2022,2023))
+  )
+```
+
+# Plot data - months
+```{r}
+# Medicaid coverage
+medicaid_yearmonth <- svytable(~medicaid + yearmonth + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(yearmonth, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    medicaid_1 = sum(Freq[medicaid == 1]),
+    percentage = (medicaid_1 / total) * 100
+  ) %>%
+  ungroup()
+
+medicaid_yearmonth_plot <- ggplot(medicaid_yearmonth, aes(x = yearmonth, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has Medicaid",
+    x = "yearmonth",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+medicaid_yearmonth_plot
+ggsave("medicaid_yearmonth_plot.jpg")
+
+# ESI
+esi_yearmonth <- svytable(~esi + yearmonth + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(yearmonth, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    esi_1 = sum(Freq[esi == 1]),
+    percentage = (esi_1 / total) * 100
+  ) %>%
+  ungroup()
+
+esi_yearmonth_plot <- ggplot(esi_yearmonth, aes(x = yearmonth, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has employer-sponsored insurance",
+    x = "yearmonth",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+esi_yearmonth_plot
+ggsave("esi_yearmonth_plot.jpg")
+
+# Uninsured
+uninsured_yearmonth <- svytable(~uninsured + yearmonth + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(yearmonth, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    uninsured_1 = sum(Freq[uninsured == 1]),
+    percentage = (uninsured_1 / total) * 100
+  ) %>%
+  ungroup()
+
+uninsured_yearmonth_plot <- ggplot(uninsured_yearmonth, aes(x = yearmonth, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Uninsured",
+    x = "yearmonth",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+uninsured_yearmonth_plot
+ggsave("uninsured_yearmonth_plot.jpg")
+
+# Employed
+employed_yearmonth <- svytable(~employed + yearmonth + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(yearmonth, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    employed_1 = sum(Freq[employed == 1]),
+    percentage = (employed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+employed_yearmonth_plot <- ggplot(employed_yearmonth, aes(x = yearmonth, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Employed",
+    x = "yearmonth",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+employed_yearmonth_plot
+ggsave("employed_yearmonth_plot.jpg")
+```
+
+# Plot data - quarters
+```{r}
+# Medicaid coverage
+medicaid_quarter <- svytable(~medicaid + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    medicaid_1 = sum(Freq[medicaid == 1]),
+    percentage = (medicaid_1 / total) * 100
+  ) %>%
+  ungroup()
+
+medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has Medicaid",
+    x = "Quarter",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+medicaid_quarter_plot
+ggsave("medicaid_quarter_plot_south.jpg")
+
+# ESI
+esi_quarter <- svytable(~esi + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    esi_1 = sum(Freq[esi == 1]),
+    percentage = (esi_1 / total) * 100
+  ) %>%
+  ungroup()
+
+esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has employer-sponsored insurance",
+    x = "Quarter",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+esi_quarter_plot
+ggsave("esi_quarter_plot_south.jpg")
+
+# Uninsured
+uninsured_quarter <- svytable(~uninsured + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    uninsured_1 = sum(Freq[uninsured == 1]),
+    percentage = (uninsured_1 / total) * 100
+  ) %>%
+  ungroup()
+
+uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Uninsured",
+    x = "Quarter",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+uninsured_quarter_plot
+ggsave("uninsured_quarter_plot_south.jpg")
+
+# Employed
+employed_quarter <- svytable(~employed + quarter + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(quarter, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    employed_1 = sum(Freq[employed == 1]),
+    percentage = (employed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Employed",
+    x = "Quarter",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+employed_quarter_plot
+ggsave("employed_quarter_plot_south.jpg")
+```
+
+# Plot data - halves
+```{r}
+# Medicaid coverage
+medicaid_half <- svytable(~medicaid + half + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(half, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    medicaid_1 = sum(Freq[medicaid == 1]),
+    percentage = (medicaid_1 / total) * 100
+  ) %>%
+  ungroup()
+
+medicaid_half_plot <- ggplot(medicaid_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has Medicaid",
+    x = "Half",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+medicaid_half_plot
+ggsave("medicaid_half_plot_south.jpg")
+
+# ESI
+esi_half <- svytable(~esi + half + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(half, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    esi_1 = sum(Freq[esi == 1]),
+    percentage = (esi_1 / total) * 100
+  ) %>%
+  ungroup()
+
+esi_half_plot <- ggplot(esi_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has ESI",
+    x = "Half",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+esi_half_plot
+ggsave("esi_half_plot_south.jpg")
+
+# Uninsured
+uninsured_half <- svytable(~uninsured + half + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(half, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    uninsured_1 = sum(Freq[uninsured == 1]),
+    percentage = (uninsured_1 / total) * 100
+  ) %>%
+  ungroup()
+
+uninsured_half_plot <- ggplot(uninsured_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Uninsured",
+    x = "Half",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+uninsured_half_plot
+ggsave("uninsured_half_plot_south.jpg")
+
+# Employed
+employed_half <- svytable(~employed + half + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(half, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    employed_1 = sum(Freq[employed == 1]),
+    percentage = (employed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+employed_half_plot <- ggplot(employed_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Employed",
+    x = "Half",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+employed_half_plot
+ggsave("employed_half_plot_south.jpg")
+```
+
+# Plot data - years
+```{r}
+# Medicaid coverage
+medicaid_IYEAR <- svytable(~medicaid + IYEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    medicaid_1 = sum(Freq[medicaid == 1]),
+    percentage = (medicaid_1 / total) * 100
+  ) %>%
+  ungroup()
+
+medicaid_IYEAR_plot <- ggplot(medicaid_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has Medicaid",
+    x = "IYEAR",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+medicaid_IYEAR_plot
+ggsave("medicaid_IYEAR_plot.jpg")
+
+# ESI
+esi_IYEAR <- svytable(~esi + IYEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    esi_1 = sum(Freq[esi == 1]),
+    percentage = (esi_1 / total) * 100
+  ) %>%
+  ungroup()
+
+esi_IYEAR_plot <- ggplot(esi_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Has ESI",
+    x = "IYEAR",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+esi_IYEAR_plot
+ggsave("esi_IYEAR_plot.jpg")
+
+# Uninsured
+uninsured_IYEAR <- svytable(~uninsured + IYEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    uninsured_1 = sum(Freq[uninsured == 1]),
+    percentage = (uninsured_1 / total) * 100
+  ) %>%
+  ungroup()
+
+uninsured_IYEAR_plot <- ggplot(uninsured_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Uninsured",
+    x = "IYEAR",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+uninsured_IYEAR_plot
+ggsave("uninsured_IYEAR_plot.jpg")
+
+# Employed
+employed_IYEAR <- svytable(~employed + IYEAR + intervention, eligible) %>%
+  as.data.frame() %>%
+  group_by(IYEAR, intervention) %>%
+  summarize(
+    total = sum(Freq),
+    employed_1 = sum(Freq[employed == 1]),
+    percentage = (employed_1 / total) * 100
+  ) %>%
+  ungroup()
+
+employed_IYEAR_plot <- ggplot(employed_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Employed",
+    x = "IYEAR",
+    y = "Percentage",
+    color = ""
+  ) +
+  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+employed_IYEAR_plot
+ggsave("employed_IYEAR_plot.jpg")
+```
+
+# Test parallel trends
+```{r}
+# Subset to pre-period
+eligible_pre <- eligible %>% subset(post == 0)
+
+# Medicaid
+medicaid_unadj_pttest <- svyglm(medicaid ~ intervention * yearmonth_num, design = eligible_pre)
+summary(medicaid_unadj_pttest)
+
+# Employer-sponsored insurance
+esi_unadj_pttest <- svyglm(esi ~ intervention * yearmonth_num, design = eligible_pre)
+summary(esi_unadj_pttest)
+
+# Employed
+employed_unadj_pttest <- svyglm(employed ~ intervention * yearmonth_num, design = eligible_pre)
+summary(employed_unadj_pttest)
+```
+
+# Unadjusted DID analysis
+```{r}
+# Medicaid
+medicaid_unadj <- svyglm(medicaid ~ intervention * post, design = eligible)
+summary(medicaid_unadj)
+
+# Employer-sponsored insurance
+esi_unadj <- svyglm(esi ~ intervention * post, design = eligible)
+summary(esi_unadj)
+
+# Uninsured
+uninsured_unadj <- svyglm(uninsured ~ intervention * post, design = eligible)
+summary(uninsured_unadj)
+
+# Employed
+employed_unadj <- svyglm(employed ~ intervention * post, design = eligible)
+summary(employed_unadj)
+```
+
+# Adjusted DID analysis
+```{r}
+# Medicaid
+medicaid_adj <- svyglm(medicaid ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+summary(medicaid_adj)
+
+# Employer-sponsored insurance
+esi_adj <- svyglm(esi ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+summary(esi_adj)
+
+# Uninsured
+uninsured_adj <- svyglm(uninsured ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+summary(uninsured_adj)
+
+# Employed
+employed_adj <- svyglm(employed ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+summary(employed_adj)
+```
+
+# Create DID table
+```{r}
+# Define function to fill in diff-in-diff table
+gen_did_tbl <- function(outcome_var, unadj_model, adj_model, survey_design, z_value = 1.96) {
+  # Tabulate the average percentages in the pre and post time periods for intervention == 1
+  tbl_t <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention == 1), svymean, vartype = c("ci"), na.rm = TRUE)
+  
+  # Tabulate the average percentages in the pre and post time periods for intervention == 0
+  tbl_c <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention == 0), svymean, vartype = c("ci"), na.rm = TRUE)
+  
+  # Extract the means and confidence intervals for intervention == 1 
+  pre_mean_t <- tbl_t[tbl_t$post == 0, outcome_var]
+  ci_pre_low_t <- tbl_t[tbl_t$post == 0, "ci_l"]
+  ci_pre_upp_t <- tbl_t[tbl_t$post == 0, "ci_u"]
+  post_mean_t <- tbl_t[tbl_t$post == 1, outcome_var]
+  ci_post_low_t <- tbl_t[tbl_t$post == 1, "ci_l"]
+  ci_post_upp_t <- tbl_t[tbl_t$post == 1, "ci_u"]
+  
+  # Convert to percentage points for intervention == 1
+  pre_mean_percent_t <- pre_mean_t * 100
+  ci_pre_low_percent_t <- ci_pre_low_t * 100
+  ci_pre_upp_percent_t <- ci_pre_upp_t * 100
+  post_mean_percent_t <- post_mean_t * 100
+  ci_post_low_percent_t <- ci_post_low_t * 100
+  ci_post_upp_percent_t <- ci_post_upp_t * 100
+  
+  # Calculate the difference for intervention == 1
+  diff_mean_t <- post_mean_t - pre_mean_t
+  
+  # Calculate the standard error of the difference for intervention == 1
+  diff_se_t <- sqrt((((tbl_t[tbl_t$post == 1, "ci_u"] - post_mean_t))/z_value)^2 + 
+                    (((pre_mean_t - tbl_t[tbl_t$post == 0, "ci_l"]))/z_value)^2)
+  
+  # Calculate the confidence interval for intervention == 1
+  ci_diff_low_t <- diff_mean_t - z_value * diff_se_t
+  ci_diff_upp_t <- diff_mean_t + z_value * diff_se_t
+  
+  # Convert to percentage points for intervention == 1
+  diff_mean_percent_t <- diff_mean_t * 100
+  ci_diff_low_percent_t <- ci_diff_low_t * 100
+  ci_diff_upp_percent_t <- ci_diff_upp_t * 100
+  
+  # Extract the means and confidence intervals for intervention == 0
+  pre_mean_c <- tbl_c[tbl_c$post == 0, outcome_var]
+  ci_pre_low_c <- tbl_c[tbl_c$post == 0, "ci_l"]
+  ci_pre_upp_c <- tbl_c[tbl_c$post == 0, "ci_u"]
+  post_mean_c <- tbl_c[tbl_c$post == 1, outcome_var]
+  ci_post_low_c <- tbl_c[tbl_c$post == 1, "ci_l"]
+  ci_post_upp_c <- tbl_c[tbl_c$post == 1, "ci_u"]
+  
+  # Convert to percentage points for intervention == 0
+  pre_mean_percent_c <- pre_mean_c * 100
+  ci_pre_low_percent_c <- ci_pre_low_c * 100
+  ci_pre_upp_percent_c <- ci_pre_upp_c * 100
+  post_mean_percent_c <- post_mean_c * 100
+  ci_post_low_percent_c <- ci_post_low_c * 100
+  ci_post_upp_percent_c <- ci_post_upp_c * 100
+  
+  # Calculate the difference for intervention == 0
+  diff_mean_c <- post_mean_c - pre_mean_c
+  
+  # Calculate p value for intervention == 1
+  did_ttest_t <- svyttest(as.formula(paste0(outcome_var, " ~ post")), design = subset(survey_design, intervention == 1))
+  did_pval_t <- formatC(did_ttest_t$p.value, format = "f", digits = 4)
+  
+  # Calculate the standard error of the difference for intervention == 0
+  diff_se_c <- sqrt((((tbl_c[tbl_c$post == 1, "ci_u"] - post_mean_c))/z_value)^2 +
+                    (((pre_mean_c - tbl_c[tbl_c$post == 0, "ci_l"]))/z_value)^2)
+  
+  # Calculate the confidence interval for intervention == 0
+  ci_diff_low_c <- diff_mean_c - z_value * diff_se_c
+  ci_diff_upp_c <- diff_mean_c + z_value * diff_se_c
+  
+  # Convert to percentage points for intervention == 0
+  diff_mean_percent_c <- diff_mean_c * 100
+  ci_diff_low_percent_c <- ci_diff_low_c * 100
+  ci_diff_upp_percent_c <- ci_diff_upp_c * 100
+  
+  # Calculate p value for intervention == 0
+  did_ttest_c <- svyttest(as.formula(paste0(outcome_var, " ~ post")), design = subset(survey_design, intervention == 0))
+  did_pval_c <- formatC(did_ttest_c$p.value, format = "f", digits = 4)
+  
+  # Print the results for intervention == 1
+  cat("Intervention group:\n")
+  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_t, format = "f", digits = 2), " (", 
+             formatC(ci_pre_low_percent_t, format = "f", digits = 2), ", ", 
+             formatC(ci_pre_upp_percent_t, format = "f", digits = 2), ")\n"))
+  cat(paste0("Post period mean: ", formatC(post_mean_percent_t, format = "f", digits = 2), " (", 
+             formatC(ci_post_low_percent_t, format = "f", digits = 2), ", ",
+             formatC(ci_post_upp_percent_t, format = "f", digits = 2), ")\n"))
+  cat(paste0("Difference: ", formatC(diff_mean_percent_t, format = "f", digits = 2), " (", 
+             formatC(ci_diff_low_percent_t, format = "f", digits = 2), ", ",
+             formatC(ci_diff_upp_percent_t, format = "f", digits = 2), ")\n"))
+  cat(paste0("P value: ", formatC(did_pval_t, format = "f", digits = 4), "\n\n"))
+  
+  # Print the results for intervention == 0
+  cat("Control group:\n")
+  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_c, format = "f", digits = 2), " (", 
+             formatC(ci_pre_low_percent_c, format = "f", digits = 2), ", ",
+             formatC(ci_pre_upp_percent_c, format = "f", digits = 2), ")\n"))
+  cat(paste0("Post period mean: ", formatC(post_mean_percent_c, format = "f", digits = 2), " (", 
+             formatC(ci_post_low_percent_c, format = "f", digits = 2), ", ",
+             formatC(ci_post_upp_percent_c, format = "f", digits = 2), ")\n"))
+  cat(paste0("Difference: ", formatC(diff_mean_percent_c, format = "f", digits = 2), " (", 
+             formatC(ci_diff_low_percent_c, format = "f", digits = 2), ", ",
+             formatC(ci_diff_upp_percent_c, format = "f", digits = 2), ")\n"))
+  cat(paste0("P value: ", formatC(did_pval_c, format = "f", digits = 4), "\n\n"))
+  
+  # # Difference-in-differences (DiD) calculation
+  # did_diff_mean <- diff_mean_percent_t - diff_mean_percent_c
+  # 
+  # # Standard error of the DiD estimate
+  # did_se <- sqrt(diff_se_t^2 + diff_se_c^2)
+  # 
+  # # Confidence interval for the DiD estimate
+  # ci_did_low <- did_diff_mean - z_value * did_se * 100
+  # ci_did_upp <- did_diff_mean + z_value * did_se * 100
+  # 
+  # # Print the DiD results
+  # cat("Difference-in-Differences (DiD):\n")
+  # cat(paste0("DiD estimate: ", formatC(did_diff_mean, format = "f", digits = 2), " (", 
+  #            formatC(ci_did_low, format = "f", digits = 2), ", ",
+  #            formatC(ci_did_upp, format = "f", digits = 2), ")\n"))
+  
+  # Extract estimates, confidence intervals, and p-values for both models
+  
+  # Unadjusted Model
+  unadj_diff_in_diff <- coef(unadj_model)["intervention:post"] * 100
+  unadj_ci <- confint(unadj_model)["intervention:post", ] * 100
+  unadj_p_value <- summary(unadj_model)$coefficients["intervention:post", "Pr(>|t|)"]
+  
+  # Adjusted Model
+  adj_diff_in_diff <- coef(adj_model)["intervention:post"] * 100
+  adj_ci <- confint(adj_model)["intervention:post", ] * 100
+  adj_p_value <- summary(adj_model)$coefficients["intervention:post", "Pr(>|t|)"]
+  
+  # Print the results for the unadjusted model
+  cat("\nUnadjusted Model:\n")
+  cat(paste0("Difference-in-Difference Estimate: ", formatC(unadj_diff_in_diff, format = "f", digits = 2), " (", 
+      formatC(unadj_ci[1], format = "f", digits = 2), ", ", 
+      formatC(unadj_ci[2], format = "f", digits = 2), ")\n"))
+  cat(paste0("p-value: ", formatC(unadj_p_value, format = "f", digits = 2), "\n"))
+  
+  # Print the results for the adjusted model
+  cat(paste0("\nAdjusted Model:\n"))
+  cat(paste0("Difference-in-Difference Estimate: ", formatC(adj_diff_in_diff, format = "f", digits = 2), " (", 
+      formatC(adj_ci[1], format = "f", digits = 2), ", ", 
+      formatC(adj_ci[2], format = "f", digits = 2), ")\n"))
+  cat(paste0("p-value: ", formatC(adj_p_value, format = "f", digits = 2), "\n"))
+}
+
+# Run on outcomes
+gen_did_tbl("medicaid", medicaid_unadj, medicaid_adj, eligible)
+gen_did_tbl("esi", esi_unadj, esi_adj, eligible)
+gen_did_tbl("uninsured", uninsured_unadj, uninsured_adj, eligible)
+gen_did_tbl("employed", employed_unadj, employed_adj, eligible)
+```
+
+# Create baseline characteristics table
+```{r}
+# Define a function to generate a table and chi-square test
+gen_table_chisq <- function(variable, group_var, survey_design) {
+  # Calculate the weighted percentages and confidence intervals for the input variable by the group variable
+  tbl <- svyby(as.formula(paste("~", variable)), as.formula(paste("~", group_var)), survey_design, svymean, vartype = c("ci"), na.rm = TRUE)
+  
+  # Generate a Chi-square test to compare the input variable across the group variable
+  chi_test <- svychisq(as.formula(paste("~", variable, "+", group_var)), design = survey_design)
+  
+  # Return the table and chi-square test result as a list
+  list(
+    table = tbl,
+    chi_square = chi_test
+  )
+}
+
+# Split sample into pre and post
+eligible_pre <- eligible %>%
+  subset(post == 0)
+
+eligible_post <- eligible %>%
+  subset(post == 1)
+
+# Total study population
+total <- svytable(~intervention, design = eligible) %>% as.data.frame()
+total
+
+# Tabulate weighted respondent characteristics in pre period
+total_tbl_pre_u <- table(eligible_pre$variables$intervention)
+total_tbl_pre_u
+
+total_tbl_pre_w <- svytable(~intervention, design = eligible_pre) %>% as.data.frame()
+total_tbl_pre_w
+
+age_tbl_pre <- svyby(~age, ~intervention, eligible_pre, svymean, vartype = c("se"), na.rm = TRUE)
+age_tbl_pre
+age_tbl_pre_p <- svyttest(age~intervention, eligible_pre)
+age_tbl_pre_p
+
+sex_tbl_pre <- gen_table_chisq("sex_cat", "intervention", eligible_pre)
+sex_tbl_pre$table
+sex_tbl_pre$chi_square
+
+race_tbl_pre <- gen_table_chisq("race_cat", "intervention", eligible_pre)
+race_tbl_pre$table
+race_tbl_pre$chi_square
+
+education_tbl_pre <- gen_table_chisq("education_cat", "intervention", eligible_pre)
+education_tbl_pre$table
+education_tbl_pre$chi_square
+
+dm_tbl_pre <- gen_table_chisq("dm", "intervention", eligible_pre)
+dm_tbl_pre$table
+dm_tbl_pre$chi_square
+
+mi_tbl_pre <- gen_table_chisq("mi", "intervention", eligible_pre)
+mi_tbl_pre$table
+mi_tbl_pre$chi_square
+
+stroke_tbl_pre <- gen_table_chisq("stroke", "intervention", eligible_pre)
+stroke_tbl_pre$table
+stroke_tbl_pre$chi_square
+
+copd_tbl_pre <- gen_table_chisq("copd", "intervention", eligible_pre)
+copd_tbl_pre$table
+copd_tbl_pre$chi_square
+
+cancer_tbl_pre <- gen_table_chisq("cancer", "intervention", eligible_pre)
+cancer_tbl_pre$table
+cancer_tbl_pre$chi_square
+
+# Tabulate weighted respondent characteristics in post periods
+total_tbl_post_u <- table(eligible_post$variables$intervention)
+total_tbl_post_u
+
+total_tbl_post_w <- svytable(~intervention, design = eligible_post) %>% as.data.frame()
+total_tbl_post_w
+
+age_tbl_post <- svyby(~age, ~intervention, eligible_post, svymean, vartype = c("se"), na.rm = TRUE)
+age_tbl_post
+age_tbl_post_p <- svyttest(age~intervention, eligible_post)
+age_tbl_post_p
+
+sex_tbl_post <- gen_table_chisq("sex_cat", "intervention", eligible_post)
+sex_tbl_post$table
+sex_tbl_post$chi_square
+
+race_tbl_post <- gen_table_chisq("race_cat", "intervention", eligible_post)
+race_tbl_post$table
+race_tbl_post$chi_square
+
+education_tbl_post <- gen_table_chisq("education_cat", "intervention", eligible_post)
+education_tbl_post$table
+education_tbl_post$chi_square
+```
