@@ -15,6 +15,7 @@ library(tidyverse)
 library(haven)
 library(summarytools)
 library(survey)
+library(srvyr)
 ```
 
 ## Load data
@@ -154,34 +155,71 @@ data <- data %>%
       !is.na(CYCLE) ~ CYCLE + 63,
       TRUE ~ NA_real_
     ),
-    year = case_when(
-      WEEK >= 41 & WEEK <= 52 & is.na(CYCLE) ~ 2022,
-      WEEK >= 53 & WEEK <= 63 & is.na(CYCLE) ~ 2023,
-      CYCLE >= 1 & CYCLE <= 9 & is.na(WEEK) ~ 2024,
-      TRUE ~ NA_real_
+    date = case_when( # End date of each cycle
+      WEEK == 41 ~ as.Date("2022-01-10"),
+      WEEK == 42 ~ as.Date("2022-02-07"),
+      WEEK == 43 ~ as.Date("2022-03-14"),
+      WEEK == 44 ~ as.Date("2022-04-11"),
+      WEEK == 45 ~ as.Date("2022-05-09"),
+      WEEK == 46 ~ as.Date("2022-06-13"),
+      WEEK == 47 ~ as.Date("2022-07-11"),
+      WEEK == 48 ~ as.Date("2022-08-08"),
+      WEEK == 49 ~ as.Date("2022-09-28"),
+      WEEK == 50 ~ as.Date("2022-10-17"),
+      WEEK == 51 ~ as.Date("2022-11-14"),
+      WEEK == 52 ~ as.Date("2022-12-19"),
+      WEEK == 53 ~ as.Date("2023-01-16"),
+      WEEK == 54 ~ as.Date("2023-02-13"),
+      WEEK == 55 ~ as.Date("2023-03-13"),
+      WEEK == 56 ~ as.Date("2023-04-10"),
+      WEEK == 57 ~ as.Date("2023-05-08"),
+      WEEK == 58 ~ as.Date("2023-06-19"),
+      WEEK == 59 ~ as.Date("2023-07-10"),
+      WEEK == 60 ~ as.Date("2023-08-07"),
+      WEEK == 61 ~ as.Date("2023-09-04"),
+      WEEK == 62 ~ as.Date("2023-10-02"),
+      WEEK == 63 ~ as.Date("2023-10-30"),
+      CYCLE == 1 ~ as.Date("2024-02-05"),
+      CYCLE == 2 ~ as.Date("2024-03-04"),
+      CYCLE == 3 ~ as.Date("2024-04-01"),
+      CYCLE == 4 ~ as.Date("2024-04-29"),
+      CYCLE == 5 ~ as.Date("2024-05-27"),
+      CYCLE == 6 ~ as.Date("2024-06-24"),
+      CYCLE == 7 ~ as.Date("2024-07-22"),
+      CYCLE == 8 ~ as.Date("2024-08-19"),
+      CYCLE == 9 ~ as.Date("2024-09-16"),
+      TRUE ~ NA_Date_
     ),
+    year = year(date),
+    month = month(date),
     quarter = case_when(
-      IYEAR == 2021 & IMONTH %in% c("01", "02", "03") ~ "2021 Q1",
-      IYEAR == 2021 & IMONTH %in% c("04", "05", "06") ~ "2021 Q2",
-      IYEAR == 2021 & IMONTH %in% c("07", "08", "09") ~ "2021 Q3",
-      IYEAR == 2021 & IMONTH %in% c("10", "11", "12") ~ "2021 Q4",
-      IYEAR == 2022 & IMONTH %in% c("01", "02", "03") ~ "2022 Q1",
-      IYEAR == 2022 & IMONTH %in% c("04", "05", "06") ~ "2022 Q2",
-      IYEAR == 2022 & IMONTH %in% c("07", "08", "09") ~ "2022 Q3",
-      IYEAR == 2022 & IMONTH %in% c("10", "11", "12") ~ "2022 Q4",
-      IYEAR == 2023 & IMONTH %in% c("01", "02", "03") ~ "2023 Q1",
-      IYEAR == 2023 & IMONTH %in% c("04", "05", "06") ~ "2023 Q2",
-      IYEAR == 2023 & IMONTH %in% c("07", "08", "09") ~ "2023 Q3",
-      IYEAR == 2023 & IMONTH %in% c("10", "11", "12") ~ "2023 Q4",
+      year == 2021 & month %in% c(01, 02, 03) ~ "2021 Q1",
+      year == 2021 & month %in% c(04, 05, 06) ~ "2021 Q2",
+      year == 2021 & month %in% c(07, 08, 09) ~ "2021 Q3",
+      year == 2021 & month %in% c(10, 11, 12) ~ "2021 Q4",
+      year == 2022 & month %in% c(01, 02, 03) ~ "2022 Q1",
+      year == 2022 & month %in% c(04, 05, 06) ~ "2022 Q2",
+      year == 2022 & month %in% c(07, 08, 09) ~ "2022 Q3",
+      year == 2022 & month %in% c(10, 11, 12) ~ "2022 Q4",
+      year == 2023 & month %in% c(01, 02, 03) ~ "2023 Q1",
+      year == 2023 & month %in% c(04, 05, 06) ~ "2023 Q2",
+      year == 2023 & month %in% c(07, 08, 09) ~ "2023 Q3",
+      year == 2023 & month %in% c(10, 11, 12) ~ "2023 Q4",
+      year == 2024 & month %in% c(01, 02, 03) ~ "2024 Q1",
+      year == 2024 & month %in% c(04, 05, 06) ~ "2024 Q2",
+      year == 2024 & month %in% c(07, 08, 09) ~ "2024 Q3",
+      year == 2024 & month %in% c(10, 11, 12) ~ "2024 Q4",
       TRUE ~ NA_character_
     ),
     half = case_when(
-      IYEAR == 2021 & IMONTH %in% c("01", "02", "03", "04", "05", "06") ~ "2021 H1",
-      IYEAR == 2021 & IMONTH %in% c("07", "08", "09", "10", "11", "12") ~ "2021 H2",
-      IYEAR == 2022 & IMONTH %in% c("01", "02", "03", "04", "05", "06") ~ "2022 H1",
-      IYEAR == 2022 & IMONTH %in% c("07", "08", "09", "10", "11", "12") ~ "2022 H2",
-      IYEAR == 2023 & IMONTH %in% c("01", "02", "03", "04", "05", "06") ~ "2023 H1",
-      IYEAR == 2023 & IMONTH %in% c("07", "08", "09", "10", "11", "12") ~ "2023 H2",
+      year == 2021 & month %in% c(01, 02, 03, 04, 05, 06) ~ "2021 H1",
+      year == 2021 & month %in% c(07, 08, 09, 10, 11, 12) ~ "2021 H2",
+      year == 2022 & month %in% c(01, 02, 03, 04, 05, 06) ~ "2022 H1",
+      year == 2022 & month %in% c(07, 08, 09, 10, 11, 12) ~ "2022 H2",
+      year == 2023 & month %in% c(01, 02, 03, 04, 05, 06) ~ "2023 H1",
+      year == 2023 & month %in% c(07, 08, 09, 10, 11, 12) ~ "2023 H2",
+      year == 2024 & month %in% c(01, 02, 03, 04, 05, 06) ~ "2024 H1",
+      year == 2024 & month %in% c(07, 08, 09, 10, 11, 12) ~ "2024 H2",
       TRUE ~ NA_character_
     ),
     state = case_when(
@@ -307,23 +345,64 @@ data <- data %>%
 # Outcomes
 data <- data %>%
   mutate(
-    medicaid = ifelse(HLTHINS1 != 1 & HLTHINS2 != 1 & HLTHINS3 != 1 & HLTHINS4 == 1 & HLTHINS5 != 1 & HLTHINS6 != 1, 1, 0),
-    esi = ifelse(HLTHINS1 == 1 & HLTHINS2 != 1 & HLTHINS3 != 1 & HLTHINS4 != 1 & HLTHINS5 != 1 & HLTHINS6 != 1, 1, 0),
-    uninsured = ifelse(HLTHINS1 == 2 & HLTHINS2 == 2 & HLTHINS3 == 2 & HLTHINS4 == 2 & HLTHINS5 == 2 & HLTHINS6 == 2, 1, 0),
-    employed = ifelse(ANYWORK == 1, 1, 0)
+    medicaid = case_when(
+      HLTHINS4 == 2 ~ 0,
+      HLTHINS4 == 1 &
+        HLTHINS1 == 2 &
+        HLTHINS2 == 2 &
+        HLTHINS3 == 2 &
+        HLTHINS5 == 2 &
+        HLTHINS6 == 2 ~ 1,
+      TRUE ~ NA_real_
+    ),
+    esi = case_when(
+      HLTHINS1 == 2 ~ 0,
+      HLTHINS1 == 1 &
+        HLTHINS2 == 2 &
+        HLTHINS3 == 2 &
+        HLTHINS4 == 2 &
+        HLTHINS5 == 2 &
+        HLTHINS6 == 2 ~ 1,
+      TRUE ~ NA_real_
+    ),
+    uninsured = case_when(
+      HLTHINS1 == 1 |
+        HLTHINS2 == 1 |
+        HLTHINS3 == 1 |
+        HLTHINS4 == 1 |
+        HLTHINS5 == 1 |
+        HLTHINS6 == 1 ~ 0,
+      HLTHINS1 == 2 &
+        HLTHINS2 == 2 &
+        HLTHINS3 == 2 &
+        HLTHINS4 == 2 &
+        HLTHINS5 == 2 &
+        HLTHINS6 == 2 ~ 1,
+      HLTHINS7 == 1 ~ 1, # Census includes those who have Indian Health Service coverage as uninsured
+      TRUE ~ NA_real_
+    ),
+    employed = case_when(
+      ANYWORK == 1 ~ 1, 
+      ANYWORK == 2 ~ 0, 
+      TRUE ~ NA_real_
+      ),
+    not_missing_hi = case_when(
+      HLTHINS1 %in% c(1, 2) | 
+        HLTHINS2 %in% c(1, 2) | 
+        HLTHINS3 %in% c(1, 2) | 
+        HLTHINS4 %in% c(1, 2) | 
+        HLTHINS5 %in% c(1, 2) | 
+        HLTHINS6 %in% c(1, 2) ~ 1,
+      TRUE ~ NA_real_
+    )
   )
 
 # DID setup
 data <- data %>% 
   mutate(
-    post = case_when(
-      IYEAR == 2021 | IYEAR == 2022 | (IYEAR == 2023 & IMONTH %in% c("01", "02", "03", "04", "05", "06")) ~ 0,
-      IYEAR == 2023 & IMONTH %in% c("08", "09", "10", "11", "12") ~ 1,
-      TRUE ~ NA_real_
-    ),
-    prepost = case_when(
-      IYEAR == 2022 & IMONTH %in% c("01", "02", "03", "04", "05", "06", "07", "08", "09") ~ 0,
-      (IYEAR == 2022 & IMONTH %in% c("10", "11", "12")) | (IYEAR == 2023 & IMONTH %in% c("01", "02", "03", "04", "05", "06")) ~ 1,
+    post = case_when( # Blank out April 1, 2023 - July 31, 2023
+      date < ymd("2023-04-01") ~ 0,
+      date > ymd("2023-07-31") ~ 1,
       TRUE ~ NA_real_
     ),
     intervention = case_when(
@@ -337,39 +416,48 @@ data <- data %>%
 
 # Create survey object
 ```{r}
-# Create survey design object
-survey_2123 <- svydesign(id = ~`_PSU`, strata = ~`_STSTR`, weights = ~`_LLCPWT`, data = merge_2123, nest = TRUE)
-
-# Handle single-PSU strata by treating them as adjusted PSU
-options(survey.lonely.psu = "adjust")
+survey <- data %>%
+  as_survey_rep(
+    repweights = dplyr::matches("PWEIGHT[0-9]+"),
+    weights = PWEIGHT,
+    type = "BRR",
+    mse = TRUE
+  )
 ```
 
 # Select target population
 ```{r}
-eligible <- survey_2123 %>%
+eligible <- survey %>%
   subset(
-    state %in% c("Georgia", "South Dakota") &
-      `_AGE80` >= 19 & `_AGE80` <= 64 & # 19-64 years old
+    intervention %in% c(0, 1) & # Intervention or control group
+      age >= 19 & age <= 64 & # 19-64 years old
       fpg <= 100 & # Income up to 100% FPL
-      (HLTHINS1 %in% c(1, 2) | HLTHINS2 %in% c(1, 2) | HLTHINS3 %in% c(1, 2) | HLTHINS4 %in% c(1, 2) | HLTHINS5 %in% c(1, 2) | HLTHINS6 %in% c(1, 2) | HLTHINS7 %in% c(1, 2) | HLTHINS8 %in% c(1, 2)) & # Health insurance is not missing for all questions
-      ((IYEAR == 2021 & IMONTH %in% c("07", "08", "09", "10", "11", "12")) | IYEAR %in% c(2022,2023))
+      not_missing_hi == 1 & # Health insurance not missing
+      post %in% c(0,1) # Exclude blank period
   )
 
-eligible_raw <- merge_2123 %>%
+eligible_raw <- data %>%
   filter(
-    state %in% c("Georgia", "South Dakota") &
-      `_AGE80` >= 19 & `_AGE80` <= 64 & # 19-64 years old
+    intervention %in% c(0, 1) & # Intervention or control group
+      age >= 19 & age <= 64 & # 19-64 years old
       fpg <= 100 & # Income up to 100% FPL
-      ((IYEAR == 2021 & IMONTH %in% c("07", "08", "09", "10", "11", "12")) | IYEAR %in% c(2022,2023))
+      not_missing_hi == 1 & # Health insurance not missing
+      post %in% c(0,1) # Exclude blank period
   )
+
+# Subset to pre-period
+eligible_pre <- eligible %>% subset(post == 0)
+
+# Subset to post-period
+eligible_post <- eligible %>% subset(post == 1)
 ```
 
-# Plot data - months
+# Plot data - dates
 ```{r}
 # Medicaid coverage
-medicaid_yearmonth <- svytable(~medicaid + yearmonth + intervention, eligible) %>%
+medicaid_date <- svytable(~medicaid + date + intervention, eligible) %>%
   as.data.frame() %>%
-  group_by(yearmonth, intervention) %>%
+  group_by(date, intervention) %>%
   summarize(
     total = sum(Freq),
     medicaid_1 = sum(Freq[medicaid == 1]),
@@ -377,27 +465,26 @@ medicaid_yearmonth <- svytable(~medicaid + yearmonth + intervention, eligible) %
   ) %>%
   ungroup()
 
-medicaid_yearmonth_plot <- ggplot(medicaid_yearmonth, aes(x = yearmonth, y = percentage, color = intervention, group = intervention)) +
+medicaid_date_plot <- ggplot(medicaid_date, aes(x = date, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   labs(
-    title = "Has Medicaid",
-    x = "yearmonth",
+    title = "Medicaid",
+    x = "Date",
     y = "Percentage",
     color = ""
   ) +
-  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-medicaid_yearmonth_plot
-ggsave("medicaid_yearmonth_plot.jpg")
+medicaid_date_plot
+#ggsave("medicaid_date_plot.jpg")
 
 # ESI
-esi_yearmonth <- svytable(~esi + yearmonth + intervention, eligible) %>%
+esi_date <- svytable(~esi + date + intervention, eligible) %>%
   as.data.frame() %>%
-  group_by(yearmonth, intervention) %>%
+  group_by(date, intervention) %>%
   summarize(
     total = sum(Freq),
     esi_1 = sum(Freq[esi == 1]),
@@ -405,27 +492,26 @@ esi_yearmonth <- svytable(~esi + yearmonth + intervention, eligible) %>%
   ) %>%
   ungroup()
 
-esi_yearmonth_plot <- ggplot(esi_yearmonth, aes(x = yearmonth, y = percentage, color = intervention, group = intervention)) +
+esi_date_plot <- ggplot(esi_date, aes(x = date, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   labs(
-    title = "Has employer-sponsored insurance",
-    x = "yearmonth",
+    title = "Employer-sponsored insurance",
+    x = "Date",
     y = "Percentage",
     color = ""
   ) +
-  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-esi_yearmonth_plot
-ggsave("esi_yearmonth_plot.jpg")
+esi_date_plot
+#ggsave("esi_date_plot.jpg")
 
 # Uninsured
-uninsured_yearmonth <- svytable(~uninsured + yearmonth + intervention, eligible) %>%
+uninsured_date <- svytable(~uninsured + date + intervention, eligible) %>%
   as.data.frame() %>%
-  group_by(yearmonth, intervention) %>%
+  group_by(date, intervention) %>%
   summarize(
     total = sum(Freq),
     uninsured_1 = sum(Freq[uninsured == 1]),
@@ -433,27 +519,26 @@ uninsured_yearmonth <- svytable(~uninsured + yearmonth + intervention, eligible)
   ) %>%
   ungroup()
 
-uninsured_yearmonth_plot <- ggplot(uninsured_yearmonth, aes(x = yearmonth, y = percentage, color = intervention, group = intervention)) +
+uninsured_date_plot <- ggplot(uninsured_date, aes(x = date, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   labs(
     title = "Uninsured",
-    x = "yearmonth",
+    x = "Date",
     y = "Percentage",
     color = ""
   ) +
-  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-uninsured_yearmonth_plot
-ggsave("uninsured_yearmonth_plot.jpg")
+uninsured_date_plot
+#ggsave("uninsured_date_plot.jpg")
 
 # Employed
-employed_yearmonth <- svytable(~employed + yearmonth + intervention, eligible) %>%
+employed_date <- svytable(~employed + date + intervention, eligible) %>%
   as.data.frame() %>%
-  group_by(yearmonth, intervention) %>%
+  group_by(date, intervention) %>%
   summarize(
     total = sum(Freq),
     employed_1 = sum(Freq[employed == 1]),
@@ -461,22 +546,21 @@ employed_yearmonth <- svytable(~employed + yearmonth + intervention, eligible) %
   ) %>%
   ungroup()
 
-employed_yearmonth_plot <- ggplot(employed_yearmonth, aes(x = yearmonth, y = percentage, color = intervention, group = intervention)) +
+employed_date_plot <- ggplot(employed_date, aes(x = date, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   labs(
     title = "Employed",
-    x = "yearmonth",
+    x = "Date",
     y = "Percentage",
     color = ""
   ) +
-  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-employed_yearmonth_plot
-ggsave("employed_yearmonth_plot.jpg")
+employed_date_plot
+#ggsave("employed_date_plot.jpg")
 ```
 
 # Plot data - quarters
@@ -496,18 +580,17 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentag
   geom_line() +
   geom_point() +
   labs(
-    title = "Has Medicaid",
+    title = "Medicaid",
     x = "Quarter",
     y = "Percentage",
     color = ""
   ) +
-  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 medicaid_quarter_plot
-ggsave("medicaid_quarter_plot_south.jpg")
+#ggsave("medicaid_quarter_plot.jpg")
 
 # ESI
 esi_quarter <- svytable(~esi + quarter + intervention, eligible) %>%
@@ -524,18 +607,17 @@ esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color =
   geom_line() +
   geom_point() +
   labs(
-    title = "Has employer-sponsored insurance",
+    title = "Employer-sponsored insurance",
     x = "Quarter",
     y = "Percentage",
     color = ""
   ) +
-  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 esi_quarter_plot
-ggsave("esi_quarter_plot_south.jpg")
+#ggsave("esi_quarter_plot.jpg")
 
 # Uninsured
 uninsured_quarter <- svytable(~uninsured + quarter + intervention, eligible) %>%
@@ -557,13 +639,12 @@ uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percent
     y = "Percentage",
     color = ""
   ) +
-  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 uninsured_quarter_plot
-ggsave("uninsured_quarter_plot_south.jpg")
+#ggsave("uninsured_quarter_plot.jpg")
 
 # Employed
 employed_quarter <- svytable(~employed + quarter + intervention, eligible) %>%
@@ -585,13 +666,12 @@ employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentag
     y = "Percentage",
     color = ""
   ) +
-  # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 employed_quarter_plot
-ggsave("employed_quarter_plot_south.jpg")
+#ggsave("employed_quarter_plot.jpg")
 ```
 
 # Plot data - halves
@@ -611,18 +691,17 @@ medicaid_half_plot <- ggplot(medicaid_half, aes(x = half, y = percentage, color 
   geom_line() +
   geom_point() +
   labs(
-    title = "Has Medicaid",
+    title = "Medicaid",
     x = "Half",
     y = "Percentage",
     color = ""
   ) +
-  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 medicaid_half_plot
-ggsave("medicaid_half_plot_south.jpg")
+#ggsave("medicaid_half_plot.jpg")
 
 # ESI
 esi_half <- svytable(~esi + half + intervention, eligible) %>%
@@ -639,18 +718,17 @@ esi_half_plot <- ggplot(esi_half, aes(x = half, y = percentage, color = interven
   geom_line() +
   geom_point() +
   labs(
-    title = "Has ESI",
+    title = "Employer-sponsored insurance",
     x = "Half",
     y = "Percentage",
     color = ""
   ) +
-  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 esi_half_plot
-ggsave("esi_half_plot_south.jpg")
+#ggsave("esi_half_plot.jpg")
 
 # Uninsured
 uninsured_half <- svytable(~uninsured + half + intervention, eligible) %>%
@@ -672,13 +750,12 @@ uninsured_half_plot <- ggplot(uninsured_half, aes(x = half, y = percentage, colo
     y = "Percentage",
     color = ""
   ) +
-  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 uninsured_half_plot
-ggsave("uninsured_half_plot_south.jpg")
+#ggsave("uninsured_half_plot.jpg")
 
 # Employed
 employed_half <- svytable(~employed + half + intervention, eligible) %>%
@@ -700,21 +777,20 @@ employed_half_plot <- ggplot(employed_half, aes(x = half, y = percentage, color 
     y = "Percentage",
     color = ""
   ) +
-  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 employed_half_plot
-ggsave("employed_half_plot_south.jpg")
+#ggsave("employed_half_plot.jpg")
 ```
 
 # Plot data - years
 ```{r}
 # Medicaid coverage
-medicaid_IYEAR <- svytable(~medicaid + IYEAR + intervention, eligible) %>%
+medicaid_year <- svytable(~medicaid + year + intervention, eligible) %>%
   as.data.frame() %>%
-  group_by(IYEAR, intervention) %>%
+  group_by(year, intervention) %>%
   summarize(
     total = sum(Freq),
     medicaid_1 = sum(Freq[medicaid == 1]),
@@ -722,27 +798,26 @@ medicaid_IYEAR <- svytable(~medicaid + IYEAR + intervention, eligible) %>%
   ) %>%
   ungroup()
 
-medicaid_IYEAR_plot <- ggplot(medicaid_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+medicaid_year_plot <- ggplot(medicaid_year, aes(x = year, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   labs(
-    title = "Has Medicaid",
-    x = "IYEAR",
+    title = "Medicaid",
+    x = "Year",
     y = "Percentage",
     color = ""
   ) +
-  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-medicaid_IYEAR_plot
-ggsave("medicaid_IYEAR_plot.jpg")
+medicaid_year_plot
+#ggsave("medicaid_year_plot.jpg")
 
 # ESI
-esi_IYEAR <- svytable(~esi + IYEAR + intervention, eligible) %>%
+esi_year <- svytable(~esi + year + intervention, eligible) %>%
   as.data.frame() %>%
-  group_by(IYEAR, intervention) %>%
+  group_by(year, intervention) %>%
   summarize(
     total = sum(Freq),
     esi_1 = sum(Freq[esi == 1]),
@@ -750,27 +825,26 @@ esi_IYEAR <- svytable(~esi + IYEAR + intervention, eligible) %>%
   ) %>%
   ungroup()
 
-esi_IYEAR_plot <- ggplot(esi_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+esi_year_plot <- ggplot(esi_year, aes(x = year, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   labs(
-    title = "Has ESI",
-    x = "IYEAR",
+    title = "Employer-sponsored insurance",
+    x = "Year",
     y = "Percentage",
     color = ""
   ) +
-  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-esi_IYEAR_plot
-ggsave("esi_IYEAR_plot.jpg")
+esi_year_plot
+#ggsave("esi_year_plot.jpg")
 
 # Uninsured
-uninsured_IYEAR <- svytable(~uninsured + IYEAR + intervention, eligible) %>%
+uninsured_year <- svytable(~uninsured + year + intervention, eligible) %>%
   as.data.frame() %>%
-  group_by(IYEAR, intervention) %>%
+  group_by(year, intervention) %>%
   summarize(
     total = sum(Freq),
     uninsured_1 = sum(Freq[uninsured == 1]),
@@ -778,27 +852,26 @@ uninsured_IYEAR <- svytable(~uninsured + IYEAR + intervention, eligible) %>%
   ) %>%
   ungroup()
 
-uninsured_IYEAR_plot <- ggplot(uninsured_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+uninsured_year_plot <- ggplot(uninsured_year, aes(x = year, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   labs(
     title = "Uninsured",
-    x = "IYEAR",
+    x = "Year",
     y = "Percentage",
     color = ""
   ) +
-  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-uninsured_IYEAR_plot
-ggsave("uninsured_IYEAR_plot.jpg")
+uninsured_year_plot
+#ggsave("uninsured_year_plot.jpg")
 
 # Employed
-employed_IYEAR <- svytable(~employed + IYEAR + intervention, eligible) %>%
+employed_year <- svytable(~employed + year + intervention, eligible) %>%
   as.data.frame() %>%
-  group_by(IYEAR, intervention) %>%
+  group_by(year, intervention) %>%
   summarize(
     total = sum(Freq),
     employed_1 = sum(Freq[employed == 1]),
@@ -806,40 +879,40 @@ employed_IYEAR <- svytable(~employed + IYEAR + intervention, eligible) %>%
   ) %>%
   ungroup()
 
-employed_IYEAR_plot <- ggplot(employed_IYEAR, aes(x = IYEAR, y = percentage, color = intervention, group = intervention)) +
+employed_year_plot <- ggplot(employed_year, aes(x = year, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   labs(
     title = "Employed",
-    x = "IYEAR",
+    x = "Year",
     y = "Percentage",
     color = ""
   ) +
-  # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-employed_IYEAR_plot
-ggsave("employed_IYEAR_plot.jpg")
+employed_year_plot
+#ggsave("employed_year_plot.jpg")
 ```
 
 # Test parallel trends
 ```{r}
-# Subset to pre-period
-eligible_pre <- eligible %>% subset(post == 0)
-
 # Medicaid
-medicaid_unadj_pttest <- svyglm(medicaid ~ intervention * yearmonth_num, design = eligible_pre)
-summary(medicaid_unadj_pttest)
+medicaid_pttest <- svyglm(medicaid ~ intervention * date, design = eligible_pre)
+summary(medicaid_pttest)
 
 # Employer-sponsored insurance
-esi_unadj_pttest <- svyglm(esi ~ intervention * yearmonth_num, design = eligible_pre)
-summary(esi_unadj_pttest)
+esi_pttest <- svyglm(esi ~ intervention * date, design = eligible_pre)
+summary(esi_pttest)
+
+# Uninsured
+uninsured_pttest <- svyglm(uninsured ~ intervention * date, design = eligible_pre)
+summary(uninsured_pttest)
 
 # Employed
-employed_unadj_pttest <- svyglm(employed ~ intervention * yearmonth_num, design = eligible_pre)
-summary(employed_unadj_pttest)
+employed_pttest <- svyglm(employed ~ intervention * date, design = eligible_pre)
+summary(employed_pttest)
 ```
 
 # Unadjusted DID analysis
@@ -864,7 +937,7 @@ summary(employed_unadj)
 # Adjusted DID analysis
 ```{r}
 # Medicaid
-medicaid_adj <- svyglm(medicaid ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+medicaid_adj <- svyglm(medicaid ~ intervention * post + age_cat + sex_cat, design = eligible)
 summary(medicaid_adj)
 
 # Employer-sponsored insurance
@@ -872,11 +945,11 @@ esi_adj <- svyglm(esi ~ intervention * post + age_cat + sex_cat + race_cat, desi
 summary(esi_adj)
 
 # Uninsured
-uninsured_adj <- svyglm(uninsured ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+uninsured_adj <- svyglm(uninsured ~ intervention * post + age_cat + sex_cat, design = eligible)
 summary(uninsured_adj)
 
 # Employed
-employed_adj <- svyglm(employed ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+employed_adj <- svyglm(employed ~ intervention * post + age_cat + sex_cat, design = eligible)
 summary(employed_adj)
 ```
 
