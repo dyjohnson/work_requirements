@@ -407,8 +407,8 @@ data <- data %>%
     ),
     intervention = case_when(
       state == "Georgia" ~ 1,
-      state == "South Dakota" ~ 0,
-      # state %in% c("Alabama", "Florida", "Texas", "Mississippi") ~ 0,
+      # state == "South Dakota" ~ 0,
+      state %in% c("Alabama", "Florida", "Texas", "Mississippi") ~ 0,
       TRUE ~ NA_real_
     )
   )
@@ -432,8 +432,8 @@ eligible <- survey %>%
     intervention %in% c(0, 1) & # Intervention or control group
       age >= 19 & age <= 64 & # 19-64 years old
       fpg <= 100 & # Income up to 100% FPL
-      not_missing_hi == 1 & # Health insurance not missing
-      post %in% c(0,1) # Exclude blank period
+      not_missing_hi == 1 #& # Health insurance not missing
+      # post %in% c(0,1) # Exclude blank period
   )
 
 eligible_raw <- data %>%
@@ -441,8 +441,8 @@ eligible_raw <- data %>%
     intervention %in% c(0, 1) & # Intervention or control group
       age >= 19 & age <= 64 & # 19-64 years old
       fpg <= 100 & # Income up to 100% FPL
-      not_missing_hi == 1 & # Health insurance not missing
-      post %in% c(0,1) # Exclude blank period
+      not_missing_hi == 1 #& # Health insurance not missing
+      # post %in% c(0,1) # Exclude blank period
   )
 
 # Subset to pre-period
@@ -474,12 +474,13 @@ medicaid_date_plot <- ggplot(medicaid_date, aes(x = date, y = percentage, color 
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 medicaid_date_plot
-#ggsave("medicaid_date_plot.jpg")
+ggsave("medicaid_date_plot_south.jpg")
 
 # ESI
 esi_date <- svytable(~esi + date + intervention, eligible) %>%
@@ -501,12 +502,13 @@ esi_date_plot <- ggplot(esi_date, aes(x = date, y = percentage, color = interven
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 esi_date_plot
-#ggsave("esi_date_plot.jpg")
+ggsave("esi_date_plot_south.jpg")
 
 # Uninsured
 uninsured_date <- svytable(~uninsured + date + intervention, eligible) %>%
@@ -528,12 +530,13 @@ uninsured_date_plot <- ggplot(uninsured_date, aes(x = date, y = percentage, colo
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 uninsured_date_plot
-#ggsave("uninsured_date_plot.jpg")
+ggsave("uninsured_date_plot_south.jpg")
 
 # Employed
 employed_date <- svytable(~employed + date + intervention, eligible) %>%
@@ -555,12 +558,13 @@ employed_date_plot <- ggplot(employed_date, aes(x = date, y = percentage, color 
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 employed_date_plot
-#ggsave("employed_date_plot.jpg")
+ggsave("employed_date_plot_south.jpg")
 ```
 
 # Plot data - quarters
@@ -585,12 +589,13 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentag
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 medicaid_quarter_plot
-#ggsave("medicaid_quarter_plot.jpg")
+ggsave("medicaid_quarter_plot_south.jpg")
 
 # ESI
 esi_quarter <- svytable(~esi + quarter + intervention, eligible) %>%
@@ -612,12 +617,13 @@ esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color =
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 esi_quarter_plot
-#ggsave("esi_quarter_plot.jpg")
+ggsave("esi_quarter_plot_south.jpg")
 
 # Uninsured
 uninsured_quarter <- svytable(~uninsured + quarter + intervention, eligible) %>%
@@ -639,12 +645,13 @@ uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percent
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 uninsured_quarter_plot
-#ggsave("uninsured_quarter_plot.jpg")
+ggsave("uninsured_quarter_plot_south.jpg")
 
 # Employed
 employed_quarter <- svytable(~employed + quarter + intervention, eligible) %>%
@@ -666,12 +673,13 @@ employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentag
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 employed_quarter_plot
-#ggsave("employed_quarter_plot.jpg")
+ggsave("employed_quarter_plot_south.jpg")
 ```
 
 # Plot data - halves
@@ -696,12 +704,13 @@ medicaid_half_plot <- ggplot(medicaid_half, aes(x = half, y = percentage, color 
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 medicaid_half_plot
-#ggsave("medicaid_half_plot.jpg")
+ggsave("medicaid_half_plot_south.jpg")
 
 # ESI
 esi_half <- svytable(~esi + half + intervention, eligible) %>%
@@ -723,12 +732,13 @@ esi_half_plot <- ggplot(esi_half, aes(x = half, y = percentage, color = interven
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 esi_half_plot
-#ggsave("esi_half_plot.jpg")
+ggsave("esi_half_plot_south.jpg")
 
 # Uninsured
 uninsured_half <- svytable(~uninsured + half + intervention, eligible) %>%
@@ -750,12 +760,13 @@ uninsured_half_plot <- ggplot(uninsured_half, aes(x = half, y = percentage, colo
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 uninsured_half_plot
-#ggsave("uninsured_half_plot.jpg")
+ggsave("uninsured_half_plot_south.jpg")
 
 # Employed
 employed_half <- svytable(~employed + half + intervention, eligible) %>%
@@ -777,12 +788,13 @@ employed_half_plot <- ggplot(employed_half, aes(x = half, y = percentage, color 
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 employed_half_plot
-#ggsave("employed_half_plot.jpg")
+ggsave("employed_half_plot_south.jpg")
 ```
 
 # Plot data - years
@@ -807,12 +819,13 @@ medicaid_year_plot <- ggplot(medicaid_year, aes(x = year, y = percentage, color 
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 medicaid_year_plot
-#ggsave("medicaid_year_plot.jpg")
+ggsave("medicaid_year_plot_south.jpg")
 
 # ESI
 esi_year <- svytable(~esi + year + intervention, eligible) %>%
@@ -834,12 +847,13 @@ esi_year_plot <- ggplot(esi_year, aes(x = year, y = percentage, color = interven
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 esi_year_plot
-#ggsave("esi_year_plot.jpg")
+ggsave("esi_year_plot_south.jpg")
 
 # Uninsured
 uninsured_year <- svytable(~uninsured + year + intervention, eligible) %>%
@@ -861,12 +875,13 @@ uninsured_year_plot <- ggplot(uninsured_year, aes(x = year, y = percentage, colo
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 uninsured_year_plot
-#ggsave("uninsured_year_plot.jpg")
+ggsave("uninsured_year_plot_south.jpg")
 
 # Employed
 employed_year <- svytable(~employed + year + intervention, eligible) %>%
@@ -888,12 +903,13 @@ employed_year_plot <- ggplot(employed_year, aes(x = year, y = percentage, color 
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 employed_year_plot
-#ggsave("employed_year_plot.jpg")
+ggsave("employed_year_plot_south.jpg")
 ```
 
 # Test parallel trends
