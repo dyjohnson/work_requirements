@@ -404,7 +404,7 @@ merge_2123 <- merge_2123 %>%
       `_STATE` == 56 ~ "Wyoming"
     ),
     post = case_when(
-      IYEAR == 2021 | IYEAR == 2022 | (IYEAR == 2023 & IMONTH %in% c("01", "02", "03", "04", "05", "06")) ~ 0,
+      IYEAR == 2021 | IYEAR == 2022 | (IYEAR == 2023 & IMONTH %in% c("01", "02", "03")) ~ 0,
       IYEAR == 2023 & IMONTH %in% c("08", "09", "10", "11", "12") ~ 1,
       TRUE ~ NA_real_
     ),
@@ -548,10 +548,11 @@ medicaid_yearmonth_plot <- ggplot(medicaid_yearmonth, aes(x = yearmonth, y = per
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 medicaid_yearmonth_plot
-ggsave("medicaid_yearmonth_plot.jpg")
+#ggsave("medicaid_yearmonth_plot.jpg")
 
 # ESI
 esi_yearmonth <- svytable(~esi + yearmonth + intervention, eligible) %>%
@@ -576,10 +577,11 @@ esi_yearmonth_plot <- ggplot(esi_yearmonth, aes(x = yearmonth, y = percentage, c
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 esi_yearmonth_plot
-ggsave("esi_yearmonth_plot.jpg")
+#ggsave("esi_yearmonth_plot.jpg")
 
 # Uninsured
 uninsured_yearmonth <- svytable(~uninsured + yearmonth + intervention, eligible) %>%
@@ -604,10 +606,11 @@ uninsured_yearmonth_plot <- ggplot(uninsured_yearmonth, aes(x = yearmonth, y = p
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 uninsured_yearmonth_plot
-ggsave("uninsured_yearmonth_plot.jpg")
+#ggsave("uninsured_yearmonth_plot.jpg")
 
 # Qualifying activities
 qualifying_yearmonth <- svytable(~qualifying + yearmonth + intervention, eligible) %>%
@@ -632,10 +635,11 @@ qualifying_yearmonth_plot <- ggplot(qualifying_yearmonth, aes(x = yearmonth, y =
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 qualifying_yearmonth_plot
-ggsave("qualifying_yearmonth_plot.jpg")
+#ggsave("qualifying_yearmonth_plot.jpg")
 
 # Employed
 employed_yearmonth <- svytable(~employed + yearmonth + intervention, eligible) %>%
@@ -660,10 +664,11 @@ employed_yearmonth_plot <- ggplot(employed_yearmonth, aes(x = yearmonth, y = per
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 employed_yearmonth_plot
-ggsave("employed_yearmonth_plot.jpg")
+#ggsave("employed_yearmonth_plot.jpg")
 
 # Student
 student_yearmonth <- svytable(~student + yearmonth + intervention, eligible) %>%
@@ -688,10 +693,11 @@ student_yearmonth_plot <- ggplot(student_yearmonth, aes(x = yearmonth, y = perce
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 student_yearmonth_plot
-ggsave("student_yearmonth_plot.jpg")
+#ggsave("student_yearmonth_plot.jpg")
 
 # PCP
 pcp_yearmonth <- svytable(~pcp + yearmonth + intervention, eligible) %>%
@@ -716,10 +722,11 @@ pcp_yearmonth_plot <- ggplot(pcp_yearmonth, aes(x = yearmonth, y = percentage, c
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 pcp_yearmonth_plot
-ggsave("pcp_yearmonth_plot.jpg")
+#ggsave("pcp_yearmonth_plot.jpg")
 
 # Could not afford to see doctor in past 12 months
 not_afford_yearmonth <- svytable(~not_afford + yearmonth + intervention, eligible) %>%
@@ -744,10 +751,11 @@ not_afford_yearmonth_plot <- ggplot(not_afford_yearmonth, aes(x = yearmonth, y =
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 not_afford_yearmonth_plot
-ggsave("not_afford_yearmonth_plot.jpg")
+#ggsave("not_afford_yearmonth_plot.jpg")
 
 # Unemployed
 unemployed_yearmonth <- svytable(~unemployed + yearmonth + intervention, eligible) %>%
@@ -772,10 +780,11 @@ unemployed_yearmonth_plot <- ggplot(unemployed_yearmonth, aes(x = yearmonth, y =
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 unemployed_yearmonth_plot
-ggsave("unemployed_yearmonth_plot.jpg")
+#ggsave("unemployed_yearmonth_plot.jpg")
 ```
 
 # Plot data - quarters
@@ -801,12 +810,13 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentag
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 medicaid_quarter_plot
-ggsave("medicaid_quarter_plot_south.jpg")
+#ggsave("medicaid_quarter_plot_south.jpg")
 
 # ESI
 esi_quarter <- svytable(~esi + quarter + intervention, eligible) %>%
@@ -829,12 +839,13 @@ esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color =
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 esi_quarter_plot
-ggsave("esi_quarter_plot_south.jpg")
+#ggsave("esi_quarter_plot_south.jpg")
 
 # Uninsured
 uninsured_quarter <- svytable(~uninsured + quarter + intervention, eligible) %>%
@@ -857,12 +868,13 @@ uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percent
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 uninsured_quarter_plot
-ggsave("uninsured_quarter_plot_south.jpg")
+#ggsave("uninsured_quarter_plot_south.jpg")
 
 # Qualifying activities
 qualifying_quarter <- svytable(~qualifying + quarter + intervention, eligible) %>%
@@ -885,12 +897,13 @@ qualifying_quarter_plot <- ggplot(qualifying_quarter, aes(x = quarter, y = perce
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 qualifying_quarter_plot
-ggsave("qualifying_quarter_plot_south.jpg")
+#ggsave("qualifying_quarter_plot_south.jpg")
 
 # Employed
 employed_quarter <- svytable(~employed + quarter + intervention, eligible) %>%
@@ -913,12 +926,13 @@ employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentag
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 employed_quarter_plot
-ggsave("employed_quarter_plot_south.jpg")
+#ggsave("employed_quarter_plot_south.jpg")
 
 # Student
 student_quarter <- svytable(~student + quarter + intervention, eligible) %>%
@@ -941,12 +955,13 @@ student_quarter_plot <- ggplot(student_quarter, aes(x = quarter, y = percentage,
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 student_quarter_plot
-ggsave("student_quarter_plot_south.jpg")
+#ggsave("student_quarter_plot_south.jpg")
 
 # PCP
 pcp_quarter <- svytable(~pcp + quarter + intervention, eligible) %>%
@@ -969,12 +984,13 @@ pcp_quarter_plot <- ggplot(pcp_quarter, aes(x = quarter, y = percentage, color =
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 pcp_quarter_plot
-ggsave("pcp_quarter_plot_south.jpg")
+#ggsave("pcp_quarter_plot_south.jpg")
 
 # Could not afford to see doctor in past 12 months
 not_afford_quarter <- svytable(~not_afford + quarter + intervention, eligible) %>%
@@ -997,12 +1013,13 @@ not_afford_quarter_plot <- ggplot(not_afford_quarter, aes(x = quarter, y = perce
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 not_afford_quarter_plot
-ggsave("not_afford_quarter_plot_south.jpg")
+#ggsave("not_afford_quarter_plot_south.jpg")
 
 # Unemployed
 unemployed_quarter <- svytable(~unemployed + quarter + intervention, eligible) %>%
@@ -1025,12 +1042,13 @@ unemployed_quarter_plot <- ggplot(unemployed_quarter, aes(x = quarter, y = perce
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 unemployed_quarter_plot
-ggsave("unemployed_quarter_plot_south.jpg")
+#ggsave("unemployed_quarter_plot_south.jpg")
 ```
 
 # Plot data - halves
@@ -1056,12 +1074,13 @@ medicaid_half_plot <- ggplot(medicaid_half, aes(x = half, y = percentage, color 
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 medicaid_half_plot
-ggsave("medicaid_half_plot_south.jpg")
+#ggsave("medicaid_half_plot_south.jpg")
 
 # ESI
 esi_half <- svytable(~esi + half + intervention, eligible) %>%
@@ -1084,12 +1103,13 @@ esi_half_plot <- ggplot(esi_half, aes(x = half, y = percentage, color = interven
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 esi_half_plot
-ggsave("esi_half_plot_south.jpg")
+#ggsave("esi_half_plot_south.jpg")
 
 # Uninsured
 uninsured_half <- svytable(~uninsured + half + intervention, eligible) %>%
@@ -1112,12 +1132,13 @@ uninsured_half_plot <- ggplot(uninsured_half, aes(x = half, y = percentage, colo
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 uninsured_half_plot
-ggsave("uninsured_half_plot_south.jpg")
+#ggsave("uninsured_half_plot_south.jpg")
 
 # Qualifying activities
 qualifying_half <- svytable(~qualifying + half + intervention, eligible) %>%
@@ -1140,12 +1161,13 @@ qualifying_half_plot <- ggplot(qualifying_half, aes(x = half, y = percentage, co
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 qualifying_half_plot
-ggsave("qualifying_half_plot_south.jpg")
+#ggsave("qualifying_half_plot_south.jpg")
 
 # Employed
 employed_half <- svytable(~employed + half + intervention, eligible) %>%
@@ -1168,12 +1190,13 @@ employed_half_plot <- ggplot(employed_half, aes(x = half, y = percentage, color 
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 employed_half_plot
-ggsave("employed_half_plot_south.jpg")
+#ggsave("employed_half_plot_south.jpg")
 
 # Student
 student_half <- svytable(~student + half + intervention, eligible) %>%
@@ -1196,12 +1219,13 @@ student_half_plot <- ggplot(student_half, aes(x = half, y = percentage, color = 
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 student_half_plot
-ggsave("student_half_plot_south.jpg")
+#ggsave("student_half_plot_south.jpg")
 
 # PCP
 pcp_half <- svytable(~pcp + half + intervention, eligible) %>%
@@ -1224,12 +1248,13 @@ pcp_half_plot <- ggplot(pcp_half, aes(x = half, y = percentage, color = interven
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 pcp_half_plot
-ggsave("pcp_half_plot_south.jpg")
+#ggsave("pcp_half_plot_south.jpg")
 
 # Could not afford to see doctor in past 12 months
 not_afford_half <- svytable(~not_afford + half + intervention, eligible) %>%
@@ -1252,12 +1277,13 @@ not_afford_half_plot <- ggplot(not_afford_half, aes(x = half, y = percentage, co
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 not_afford_half_plot
-ggsave("not_afford_half_plot_south.jpg")
+#ggsave("not_afford_half_plot_south.jpg")
 
 # Unemployed
 unemployed_half <- svytable(~unemployed + half + intervention, eligible) %>%
@@ -1280,12 +1306,13 @@ unemployed_half_plot <- ggplot(unemployed_half, aes(x = half, y = percentage, co
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 unemployed_half_plot
-ggsave("unemployed_half_plot_south.jpg")
+#ggsave("unemployed_half_plot_south.jpg")
 ```
 
 # Plot data - years
@@ -1313,10 +1340,11 @@ medicaid_IYEAR_plot <- ggplot(medicaid_IYEAR, aes(x = IYEAR, y = percentage, col
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 medicaid_IYEAR_plot
-ggsave("medicaid_IYEAR_plot.jpg")
+#ggsave("medicaid_IYEAR_plot.jpg")
 
 # ESI
 esi_IYEAR <- svytable(~esi + IYEAR + intervention, eligible) %>%
@@ -1341,10 +1369,11 @@ esi_IYEAR_plot <- ggplot(esi_IYEAR, aes(x = IYEAR, y = percentage, color = inter
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 esi_IYEAR_plot
-ggsave("esi_IYEAR_plot.jpg")
+#ggsave("esi_IYEAR_plot.jpg")
 
 # Uninsured
 uninsured_IYEAR <- svytable(~uninsured + IYEAR + intervention, eligible) %>%
@@ -1369,10 +1398,11 @@ uninsured_IYEAR_plot <- ggplot(uninsured_IYEAR, aes(x = IYEAR, y = percentage, c
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 uninsured_IYEAR_plot
-ggsave("uninsured_IYEAR_plot.jpg")
+#ggsave("uninsured_IYEAR_plot.jpg")
 
 # Qualifying activities
 qualifying_IYEAR <- svytable(~qualifying + IYEAR + intervention, eligible) %>%
@@ -1397,10 +1427,11 @@ qualifying_IYEAR_plot <- ggplot(qualifying_IYEAR, aes(x = IYEAR, y = percentage,
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 qualifying_IYEAR_plot
-ggsave("qualifying_IYEAR_plot.jpg")
+#ggsave("qualifying_IYEAR_plot.jpg")
 
 # Employed
 employed_IYEAR <- svytable(~employed + IYEAR + intervention, eligible) %>%
@@ -1425,10 +1456,11 @@ employed_IYEAR_plot <- ggplot(employed_IYEAR, aes(x = IYEAR, y = percentage, col
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 employed_IYEAR_plot
-ggsave("employed_IYEAR_plot.jpg")
+#ggsave("employed_IYEAR_plot.jpg")
 
 # Student
 student_IYEAR <- svytable(~student + IYEAR + intervention, eligible) %>%
@@ -1453,10 +1485,11 @@ student_IYEAR_plot <- ggplot(student_IYEAR, aes(x = IYEAR, y = percentage, color
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 student_IYEAR_plot
-ggsave("student_IYEAR_plot.jpg")
+#ggsave("student_IYEAR_plot.jpg")
 
 # PCP
 pcp_IYEAR <- svytable(~pcp + IYEAR + intervention, eligible) %>%
@@ -1481,10 +1514,11 @@ pcp_IYEAR_plot <- ggplot(pcp_IYEAR, aes(x = IYEAR, y = percentage, color = inter
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 pcp_IYEAR_plot
-ggsave("pcp_IYEAR_plot.jpg")
+#ggsave("pcp_IYEAR_plot.jpg")
 
 # Could not afford to see doctor in past 12 months
 not_afford_IYEAR <- svytable(~not_afford + IYEAR + intervention, eligible) %>%
@@ -1509,10 +1543,11 @@ not_afford_IYEAR_plot <- ggplot(not_afford_IYEAR, aes(x = IYEAR, y = percentage,
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 not_afford_IYEAR_plot
-ggsave("not_afford_IYEAR_plot.jpg")
+#ggsave("not_afford_IYEAR_plot.jpg")
 
 # Unemployed
 unemployed_IYEAR <- svytable(~unemployed + IYEAR + intervention, eligible) %>%
@@ -1537,10 +1572,11 @@ unemployed_IYEAR_plot <- ggplot(unemployed_IYEAR, aes(x = IYEAR, y = percentage,
   # scale_x_discrete(labels = c("2022 Jan-June", "2022 July-Dec", "2023 Jan-June", "2023 July-Dec")) +
   scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 unemployed_IYEAR_plot
-ggsave("unemployed_IYEAR_plot.jpg")
+#ggsave("unemployed_IYEAR_plot.jpg")
 ```
 
 # Test parallel trends
@@ -1619,7 +1655,7 @@ summary(not_afford_unadj)
 # Adjusted DID analysis
 ```{r}
 # Medicaid
-medicaid_adj <- svyglm(medicaid ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+medicaid_adj <- svyglm(medicaid ~ intervention * post + age_cat + sex_cat, design = eligible)
 summary(medicaid_adj)
 
 # Employer-sponsored insurance
