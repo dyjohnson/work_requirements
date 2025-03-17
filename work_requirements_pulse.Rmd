@@ -147,6 +147,9 @@ rm("weights")
 
 # Clean data
 ```{r}
+# Divide PWEIGHT by number of cycles
+data$PWEIGHT_divided <- data$PWEIGHT/32
+
 # Clean time and state
 data <- data %>%
   mutate(
@@ -401,26 +404,35 @@ data <- data %>%
 data <- data %>% 
   mutate(
     post = case_when( # Blank out April 1, 2023 - July 31, 2023
-      date < ymd("2023-04-01") ~ 0,
-      date > ymd("2023-07-31") ~ 1,
-      TRUE ~ NA_real_
+      date < ymd("2023-04-01") ~ FALSE,
+      date > ymd("2023-07-31") ~ TRUE,
+      TRUE ~ NA
     ),
     intervention = case_when(
-      state == "Georgia" ~ 1,
-      # state == "South Dakota" ~ 0,
-      state %in% c("Mississippi", "South Carolina", "Tennessee", "Alabama", "Florida", "Texas") ~ 0,
-      TRUE ~ NA_real_
-    )
-  )
-
-# Factor state
-data <- data %>%
-  mutate(
-    state_factor = case_when(
-      state %in% c("Georgia", "Mississippi", "South Carolina", "Tennessee", "Alabama", "Florida", "Texas") ~ as.factor(state),
+      state == "Georgia" ~ TRUE,
+      state == "South Dakota" ~ FALSE,
+      # state %in% c("Alabama", "Florida", "Texas", "Mississippi") ~ FALSE, # Test 1
+      # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 2
+      # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina", "Kansas", "Wyoming") ~ FALSE, # Test 3
+      # state %in% c("Alabama", "Florida", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 4
       TRUE ~ NA
     )
   )
+
+# Factor state and date
+# data <- data %>%
+#   mutate(
+#     state_factor = case_when(
+#       state %in% c("Georgia", "Mississippi", "South Carolina", "Tennessee", "Alabama", "Florida", "Texas") ~ as.factor(state),
+#       TRUE ~ NA
+#     )
+#   )
+
+# data <- data %>%
+#   mutate(
+#     state_factor = as.factor(state),
+#     date_factor = as.factor(date)
+#   )
 ```
 
 # Create survey object
@@ -428,7 +440,7 @@ data <- data %>%
 survey <- data %>%
   as_survey_rep(
     repweights = dplyr::matches("PWEIGHT[0-9]+"),
-    weights = PWEIGHT,
+    weights = PWEIGHT_divided,
     type = "BRR",
     mse = TRUE
   )
@@ -436,35 +448,37 @@ survey <- data %>%
 
 # Select target population
 ```{r}
-eligible <- survey %>%
+sample <- survey %>%
   subset(
-    intervention %in% c(0, 1) & # Intervention or control group
+    intervention %in% c(FALSE, TRUE) & # Intervention or control group
       age >= 19 & age <= 64 & # 19-64 years old
       fpg <= 100 & # Income up to 100% FPL
-      not_missing_hi == 1 #& # Health insurance not missing
-      # post %in% c(0,1) # Exclude blank period
+      not_missing_hi == 1 # Health insurance not missing
   )
 
-eligible_raw <- data %>%
+sample_raw <- data %>%
   filter(
-    intervention %in% c(0, 1) & # Intervention or control group
+    intervention %in% c(FALSE, TRUE) & # Intervention or control group
       age >= 19 & age <= 64 & # 19-64 years old
       fpg <= 100 & # Income up to 100% FPL
-      not_missing_hi == 1 #& # Health insurance not missing
-      # post %in% c(0,1) # Exclude blank period
+      not_missing_hi == 1 # Health insurance not missing
   )
 
 # Subset to pre-period
-eligible_pre <- eligible %>% subset(post == 0)
+sample_pre <- sample %>% subset(post == 0)
 
 # Subset to post-period
-eligible_post <- eligible %>% subset(post == 1)
+sample_post <- sample %>% subset(post == 1)
+
+# Export to Stata file
+sample_df <- sample$variables
+write_dta(sample_df, "georgia_data.dta")
 ```
 
 # Plot data - dates
 ```{r}
 # Medicaid coverage
-medicaid_date <- svytable(~medicaid + date + intervention, eligible) %>%
+medicaid_date <- svytable(~medicaid + date + intervention, sample) %>%
   as.data.frame() %>%
   group_by(date, intervention) %>%
   summarize(
@@ -492,7 +506,7 @@ medicaid_date_plot
 ggsave("medicaid_date_plot_south.jpg")
 
 # ESI
-esi_date <- svytable(~esi + date + intervention, eligible) %>%
+esi_date <- svytable(~esi + date + intervention, sample) %>%
   as.data.frame() %>%
   group_by(date, intervention) %>%
   summarize(
@@ -520,7 +534,7 @@ esi_date_plot
 ggsave("esi_date_plot_south.jpg")
 
 # Uninsured
-uninsured_date <- svytable(~uninsured + date + intervention, eligible) %>%
+uninsured_date <- svytable(~uninsured + date + intervention, sample) %>%
   as.data.frame() %>%
   group_by(date, intervention) %>%
   summarize(
@@ -548,7 +562,7 @@ uninsured_date_plot
 ggsave("uninsured_date_plot_south.jpg")
 
 # Employed
-employed_date <- svytable(~employed + date + intervention, eligible) %>%
+employed_date <- svytable(~employed + date + intervention, sample) %>%
   as.data.frame() %>%
   group_by(date, intervention) %>%
   summarize(
@@ -578,36 +592,41 @@ ggsave("employed_date_plot_south.jpg")
 
 # Plot data - quarters
 ```{r}
-# Medicaid coverage
-medicaid_quarter <- svytable(~medicaid + quarter + intervention, eligible) %>%
+# Medicaid
+medicaid_quarter <- svytable(~medicaid + quarter + intervention, sample_pre) %>%
   as.data.frame() %>%
   group_by(quarter, intervention) %>%
   summarize(
     total = sum(Freq),
     medicaid_1 = sum(Freq[medicaid == 1]),
-    percentage = (medicaid_1 / total) * 100
+    percentage = (medicaid_1 / total) * 100,
+    se = sqrt((percentage / 100) * (1 - (percentage / 100)) / total) * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
   ) %>%
   ungroup()
 
 medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +s
   labs(
-    title = "Medicaid",
     x = "Quarter",
-    y = "Percentage",
-    color = ""
+    y = "Medicaid, %"
   ) +
-  #scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom"
+  ) +
   ylim(0, 100)
 
 medicaid_quarter_plot
-#ggsave("medicaid_quarter_plot_south.jpg")
+ggsave("medicaid_date_plot_test1.jpg")
 
 # ESI
-esi_quarter <- svytable(~esi + quarter + intervention, eligible) %>%
+esi_quarter <- svytable(~esi + quarter + intervention, sample_pre) %>%
   as.data.frame() %>%
   group_by(quarter, intervention) %>%
   summarize(
@@ -635,7 +654,7 @@ esi_quarter_plot
 #ggsave("esi_quarter_plot_south.jpg")
 
 # Uninsured
-uninsured_quarter <- svytable(~uninsured + quarter + intervention, eligible) %>%
+uninsured_quarter <- svytable(~uninsured + quarter + intervention, sample_pre) %>%
   as.data.frame() %>%
   group_by(quarter, intervention) %>%
   summarize(
@@ -663,7 +682,7 @@ uninsured_quarter_plot
 #ggsave("uninsured_quarter_plot_south.jpg")
 
 # Employed
-employed_quarter <- svytable(~employed + quarter + intervention, eligible) %>%
+employed_quarter <- svytable(~employed + quarter + intervention, sample_pre) %>%
   as.data.frame() %>%
   group_by(quarter, intervention) %>%
   summarize(
@@ -694,7 +713,7 @@ employed_quarter_plot
 # Plot data - state quarters
 ```{r}
 # Medicaid coverage
-medicaid_quarter <- svytable(~medicaid + quarter + state, eligible) %>%
+medicaid_quarter <- svytable(~medicaid + quarter + state, sample_pre) %>%
   as.data.frame() %>%
   group_by(quarter, state) %>%
   summarize(
@@ -719,10 +738,10 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentag
   #ylim(0, 100)
 
 medicaid_quarter_plot
-#ggsave("medicaid_quarter_plot_south.jpg")
+ggsave("medicaid_quarter_plot_states.jpg")
 
 # ESI
-esi_quarter <- svytable(~esi + quarter + state, eligible) %>%
+esi_quarter <- svytable(~esi + quarter + state, sample_pre) %>%
   as.data.frame() %>%
   group_by(quarter, state) %>%
   summarize(
@@ -747,10 +766,10 @@ esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color =
   #ylim(0, 100)
 
 esi_quarter_plot
-#ggsave("esi_quarter_plot_south.jpg")
+ggsave("esi_quarter_plot_states.jpg")
 
 # Uninsured
-uninsured_quarter <- svytable(~uninsured + quarter + state, eligible) %>%
+uninsured_quarter <- svytable(~uninsured + quarter + state, sample_pre) %>%
   as.data.frame() %>%
   group_by(quarter, state) %>%
   summarize(
@@ -775,10 +794,10 @@ uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percent
   #ylim(0, 100)
 
 uninsured_quarter_plot
-#ggsave("uninsured_quarter_plot_south.jpg")
+ggsave("uninsured_quarter_plot_states.jpg")
 
 # Employed
-employed_quarter <- svytable(~employed + quarter + state, eligible) %>%
+employed_quarter <- svytable(~employed + quarter + state, sample_pre) %>%
   as.data.frame() %>%
   group_by(quarter, state) %>%
   summarize(
@@ -803,13 +822,13 @@ employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentag
   #ylim(0, 100)
 
 employed_quarter_plot
-#ggsave("employed_quarter_plot_south.jpg")
+ggsave("employed_quarter_plot_states.jpg")
 ```
 
 # Plot data - halves
 ```{r}
 # Medicaid coverage
-medicaid_half <- svytable(~medicaid + half + intervention, eligible) %>%
+medicaid_half <- svytable(~medicaid + half + intervention, sample) %>%
   as.data.frame() %>%
   group_by(half, intervention) %>%
   summarize(
@@ -837,7 +856,7 @@ medicaid_half_plot
 ggsave("medicaid_half_plot_south.jpg")
 
 # ESI
-esi_half <- svytable(~esi + half + intervention, eligible) %>%
+esi_half <- svytable(~esi + half + intervention, sample) %>%
   as.data.frame() %>%
   group_by(half, intervention) %>%
   summarize(
@@ -865,7 +884,7 @@ esi_half_plot
 ggsave("esi_half_plot_south.jpg")
 
 # Uninsured
-uninsured_half <- svytable(~uninsured + half + intervention, eligible) %>%
+uninsured_half <- svytable(~uninsured + half + intervention, sample) %>%
   as.data.frame() %>%
   group_by(half, intervention) %>%
   summarize(
@@ -893,7 +912,7 @@ uninsured_half_plot
 ggsave("uninsured_half_plot_south.jpg")
 
 # Employed
-employed_half <- svytable(~employed + half + intervention, eligible) %>%
+employed_half <- svytable(~employed + half + intervention, sample) %>%
   as.data.frame() %>%
   group_by(half, intervention) %>%
   summarize(
@@ -924,7 +943,7 @@ ggsave("employed_half_plot_south.jpg")
 # Plot data - years
 ```{r}
 # Medicaid coverage
-medicaid_year <- svytable(~medicaid + year + intervention, eligible) %>%
+medicaid_year <- svytable(~medicaid + year + intervention, sample) %>%
   as.data.frame() %>%
   group_by(year, intervention) %>%
   summarize(
@@ -952,7 +971,7 @@ medicaid_year_plot
 ggsave("medicaid_year_plot_south.jpg")
 
 # ESI
-esi_year <- svytable(~esi + year + intervention, eligible) %>%
+esi_year <- svytable(~esi + year + intervention, sample) %>%
   as.data.frame() %>%
   group_by(year, intervention) %>%
   summarize(
@@ -980,7 +999,7 @@ esi_year_plot
 ggsave("esi_year_plot_south.jpg")
 
 # Uninsured
-uninsured_year <- svytable(~uninsured + year + intervention, eligible) %>%
+uninsured_year <- svytable(~uninsured + year + intervention, sample) %>%
   as.data.frame() %>%
   group_by(year, intervention) %>%
   summarize(
@@ -1008,7 +1027,7 @@ uninsured_year_plot
 ggsave("uninsured_year_plot_south.jpg")
 
 # Employed
-employed_year <- svytable(~employed + year + intervention, eligible) %>%
+employed_year <- svytable(~employed + year + intervention, sample) %>%
   as.data.frame() %>%
   group_by(year, intervention) %>%
   summarize(
@@ -1039,57 +1058,57 @@ ggsave("employed_year_plot_south.jpg")
 # Test parallel trends
 ```{r}
 # Medicaid
-medicaid_pttest <- svyglm(medicaid ~ intervention * date, design = eligible_pre)
+medicaid_pttest <- svyglm(medicaid ~ intervention * date, design = sample_pre)
 summary(medicaid_pttest)
 
 # Employer-sponsored insurance
-esi_pttest <- svyglm(esi ~ intervention * date, design = eligible_pre)
+esi_pttest <- svyglm(esi ~ intervention * date, design = sample_pre)
 summary(esi_pttest)
 
 # Uninsured
-uninsured_pttest <- svyglm(uninsured ~ intervention * date, design = eligible_pre)
+uninsured_pttest <- svyglm(uninsured ~ intervention * date, design = sample_pre)
 summary(uninsured_pttest)
 
 # Employed
-employed_pttest <- svyglm(employed ~ intervention * date, design = eligible_pre)
+employed_pttest <- svyglm(employed ~ intervention * date, design = sample_pre)
 summary(employed_pttest)
 ```
 
 # Unadjusted DID analysis
 ```{r}
 # Medicaid
-medicaid_unadj <- svyglm(medicaid ~ intervention * post, design = eligible)
+medicaid_unadj <- svyglm(medicaid ~ intervention * post, design = sample)
 summary(medicaid_unadj)
 
 # Employer-sponsored insurance
-esi_unadj <- svyglm(esi ~ intervention * post, design = eligible)
+esi_unadj <- svyglm(esi ~ intervention * post, design = sample)
 summary(esi_unadj)
 
 # Uninsured
-uninsured_unadj <- svyglm(uninsured ~ intervention * post, design = eligible)
+uninsured_unadj <- svyglm(uninsured ~ intervention * post, design = sample)
 summary(uninsured_unadj)
 
 # Employed
-employed_unadj <- svyglm(employed ~ intervention * post, design = eligible)
+employed_unadj <- svyglm(employed ~ intervention * post, design = sample)
 summary(employed_unadj)
 ```
 
 # Adjusted DID analysis
 ```{r}
 # Medicaid
-medicaid_adj <- svyglm(medicaid ~ intervention * post + age_cat + sex_cat, design = eligible)
+medicaid_adj <- svyglm(medicaid ~ intervention * post + age_cat + sex_cat, design = sample)
 summary(medicaid_adj)
 
 # Employer-sponsored insurance
-esi_adj <- svyglm(esi ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
+esi_adj <- svyglm(esi ~ intervention * post + age_cat + sex_cat + race_cat, design = sample)
 summary(esi_adj)
 
 # Uninsured
-uninsured_adj <- svyglm(uninsured ~ intervention * post + age_cat + sex_cat, design = eligible)
+uninsured_adj <- svyglm(uninsured ~ intervention * post + age_cat + sex_cat, design = sample)
 summary(uninsured_adj)
 
 # Employed
-employed_adj <- svyglm(employed ~ intervention * post + age_cat + sex_cat, design = eligible)
+employed_adj <- svyglm(employed ~ intervention * post + age_cat + sex_cat, design = sample)
 summary(employed_adj)
 ```
 
@@ -1245,10 +1264,10 @@ gen_did_tbl <- function(outcome_var, unadj_model, adj_model, survey_design, z_va
 }
 
 # Run on outcomes
-gen_did_tbl("medicaid", medicaid_unadj, medicaid_adj, eligible)
-gen_did_tbl("esi", esi_unadj, esi_adj, eligible)
-gen_did_tbl("uninsured", uninsured_unadj, uninsured_adj, eligible)
-gen_did_tbl("employed", employed_unadj, employed_adj, eligible)
+gen_did_tbl("medicaid", medicaid_unadj, medicaid_adj, sample)
+gen_did_tbl("esi", esi_unadj, esi_adj, sample)
+gen_did_tbl("uninsured", uninsured_unadj, uninsured_adj, sample)
+gen_did_tbl("employed", employed_unadj, employed_adj, sample)
 ```
 
 # Create baseline characteristics table
@@ -1269,96 +1288,112 @@ gen_table_chisq <- function(variable, group_var, survey_design) {
 }
 
 # Split sample into pre and post
-eligible_pre <- eligible %>%
+sample_pre <- sample %>%
   subset(post == 0)
 
-eligible_post <- eligible %>%
+sample_post <- sample %>%
   subset(post == 1)
 
 # Total study population
-total <- svytable(~intervention, design = eligible) %>% as.data.frame()
+total <- svytable(~intervention, design = sample) %>% as.data.frame()
 total
 
 # Tabulate weighted respondent characteristics in pre period
-total_tbl_pre_u <- table(eligible_pre$variables$intervention)
+total_tbl_pre_u <- table(sample_pre$variables$intervention)
 total_tbl_pre_u
 
-total_tbl_pre_w <- svytable(~intervention, design = eligible_pre) %>% as.data.frame()
+total_tbl_pre_w <- svytable(~intervention, design = sample_pre) %>% as.data.frame()
 total_tbl_pre_w
 
-age_tbl_pre <- svyby(~age, ~intervention, eligible_pre, svymean, vartype = c("se"), na.rm = TRUE)
+age_tbl_pre <- svyby(~age, ~intervention, sample_pre, svymean, vartype = c("se"), na.rm = TRUE)
 age_tbl_pre
-age_tbl_pre_p <- svyttest(age~intervention, eligible_pre)
+age_tbl_pre_p <- svyttest(age~intervention, sample_pre)
 age_tbl_pre_p
 
-sex_tbl_pre <- gen_table_chisq("sex_cat", "intervention", eligible_pre)
+sex_tbl_pre <- gen_table_chisq("sex_cat", "intervention", sample_pre)
 sex_tbl_pre$table
 sex_tbl_pre$chi_square
 
-race_tbl_pre <- gen_table_chisq("race_cat", "intervention", eligible_pre)
+race_tbl_pre <- gen_table_chisq("race_cat", "intervention", sample_pre)
 race_tbl_pre$table
 race_tbl_pre$chi_square
 
-education_tbl_pre <- gen_table_chisq("education_cat", "intervention", eligible_pre)
+education_tbl_pre <- gen_table_chisq("education_cat", "intervention", sample_pre)
 education_tbl_pre$table
 education_tbl_pre$chi_square
 
-dm_tbl_pre <- gen_table_chisq("dm", "intervention", eligible_pre)
+dm_tbl_pre <- gen_table_chisq("dm", "intervention", sample_pre)
 dm_tbl_pre$table
 dm_tbl_pre$chi_square
 
-mi_tbl_pre <- gen_table_chisq("mi", "intervention", eligible_pre)
+mi_tbl_pre <- gen_table_chisq("mi", "intervention", sample_pre)
 mi_tbl_pre$table
 mi_tbl_pre$chi_square
 
-stroke_tbl_pre <- gen_table_chisq("stroke", "intervention", eligible_pre)
+stroke_tbl_pre <- gen_table_chisq("stroke", "intervention", sample_pre)
 stroke_tbl_pre$table
 stroke_tbl_pre$chi_square
 
-copd_tbl_pre <- gen_table_chisq("copd", "intervention", eligible_pre)
+copd_tbl_pre <- gen_table_chisq("copd", "intervention", sample_pre)
 copd_tbl_pre$table
 copd_tbl_pre$chi_square
 
-cancer_tbl_pre <- gen_table_chisq("cancer", "intervention", eligible_pre)
+cancer_tbl_pre <- gen_table_chisq("cancer", "intervention", sample_pre)
 cancer_tbl_pre$table
 cancer_tbl_pre$chi_square
 
 # Tabulate weighted respondent characteristics in post periods
-total_tbl_post_u <- table(eligible_post$variables$intervention)
+total_tbl_post_u <- table(sample_post$variables$intervention)
 total_tbl_post_u
 
-total_tbl_post_w <- svytable(~intervention, design = eligible_post) %>% as.data.frame()
+total_tbl_post_w <- svytable(~intervention, design = sample_post) %>% as.data.frame()
 total_tbl_post_w
 
-age_tbl_post <- svyby(~age, ~intervention, eligible_post, svymean, vartype = c("se"), na.rm = TRUE)
+age_tbl_post <- svyby(~age, ~intervention, sample_post, svymean, vartype = c("se"), na.rm = TRUE)
 age_tbl_post
-age_tbl_post_p <- svyttest(age~intervention, eligible_post)
+age_tbl_post_p <- svyttest(age~intervention, sample_post)
 age_tbl_post_p
 
-sex_tbl_post <- gen_table_chisq("sex_cat", "intervention", eligible_post)
+sex_tbl_post <- gen_table_chisq("sex_cat", "intervention", sample_post)
 sex_tbl_post$table
 sex_tbl_post$chi_square
 
-race_tbl_post <- gen_table_chisq("race_cat", "intervention", eligible_post)
+race_tbl_post <- gen_table_chisq("race_cat", "intervention", sample_post)
 race_tbl_post$table
 race_tbl_post$chi_square
 
-education_tbl_post <- gen_table_chisq("education_cat", "intervention", eligible_post)
+education_tbl_post <- gen_table_chisq("education_cat", "intervention", sample_post)
 education_tbl_post$table
 education_tbl_post$chi_square
 ```
 
 # Playground
 ```{r}
-eligible_medicaid <- subset(eligible, !is.na(medicaid))
+sample_filtered <- update(sample, state_factor2 = as.factor(state))
 
-medicaid_adj2 <- svyglm(medicaid ~ intervention * post + age_cat + sex_cat + state_factor, design = eligible)
+is.factor(sample_filtered$variables$state_factor2)
+
+sample_filtered <- update(sample, date2 = ifelse(!is.na(post), date, NA))
+
+sample_filtered <- update(sample_filtered, date_factor2 = as.factor(date2))
+
+is.factor(sample_filtered$variables$date_factor2)
+
+sample_filtered <- subset(sample_filtered, !is.na(date_factor2))
+
+sample_filtered <- update(sample, state2 = ifelse(!is.na(intervention), state, NA))
+
+sample_filtered <- subset(sample_filtered, !is.na(state) & !is.na(post))
+
+medicaid_adj2 <- svyglm(medicaid ~ intervention * post + as.character(state), design = sample_filtered)
 summary(medicaid_adj2)
+
+
 
 clustered_se <- vcovCL(medicaid_adj2, cluster = ~state_factor, type = "HC0")
 coeftest(medicaid_adj, vcov = clustered_se)
 
-deff_result <- svymean(~medicaid, eligible_medicaid, deff = TRUE)
+deff_result <- svymean(~medicaid, sample_medicaid, deff = TRUE)
 deff_result
 
 # Extract model matrix from `svyglm`
@@ -1374,7 +1409,7 @@ clustered_se <- vcovCL(medicaid_adj, cluster = model_matrix$state_factor, type =
 coeftest(medicaid_adj, vcov = clustered_se)
 
 
-employed_pttest <- svyglm(employed ~ intervention * date, design = eligible_pre)
+employed_pttest <- svyglm(employed ~ intervention * date, design = sample_pre)
 summary(employed_pttest)
 
 # Extract model matrix from `svyglm`
