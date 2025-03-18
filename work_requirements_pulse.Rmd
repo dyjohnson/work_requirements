@@ -410,29 +410,15 @@ data <- data %>%
     ),
     intervention = case_when(
       state == "Georgia" ~ TRUE,
-      state == "South Dakota" ~ FALSE,
-      # state %in% c("Alabama", "Florida", "Texas", "Mississippi") ~ FALSE, # Test 1
+      # state == "South Dakota" ~ FALSE,
+      # state %in% c("Tennessee", "South Carolina") ~ FALSE, # Test 0
+      state %in% c("Alabama", "Florida", "Texas", "Mississippi") ~ FALSE, # Test 1
       # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 2
       # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina", "Kansas", "Wyoming") ~ FALSE, # Test 3
       # state %in% c("Alabama", "Florida", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 4
       TRUE ~ NA
     )
   )
-
-# Factor state and date
-# data <- data %>%
-#   mutate(
-#     state_factor = case_when(
-#       state %in% c("Georgia", "Mississippi", "South Carolina", "Tennessee", "Alabama", "Florida", "Texas") ~ as.factor(state),
-#       TRUE ~ NA
-#     )
-#   )
-
-# data <- data %>%
-#   mutate(
-#     state_factor = as.factor(state),
-#     date_factor = as.factor(date)
-#   )
 ```
 
 # Create survey object
@@ -471,8 +457,8 @@ sample_pre <- sample %>% subset(post == 0)
 sample_post <- sample %>% subset(post == 1)
 
 # Export to Stata file
-sample_df <- sample$variables
-write_dta(sample_df, "georgia_data.dta")
+# sample_df <- sample$variables
+# write_dta(sample_df, "georgia_data.dta")
 ```
 
 # Plot data - dates
@@ -609,7 +595,7 @@ medicaid_quarter <- svytable(~medicaid + quarter + intervention, sample_pre) %>%
 medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +s
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
   labs(
     x = "Quarter",
     y = "Medicaid, %"
@@ -620,10 +606,10 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentag
     axis.text.x = element_text(angle = 45, hjust = 1),
     legend.position = "bottom"
   ) +
-  ylim(0, 100)
+  ylim(0, 60)
 
 medicaid_quarter_plot
-ggsave("medicaid_date_plot_test1.jpg")
+#ggsave("medicaid_date_plot_test1.jpg")
 
 # ESI
 esi_quarter <- svytable(~esi + quarter + intervention, sample_pre) %>%
@@ -632,23 +618,28 @@ esi_quarter <- svytable(~esi + quarter + intervention, sample_pre) %>%
   summarize(
     total = sum(Freq),
     esi_1 = sum(Freq[esi == 1]),
-    percentage = (esi_1 / total) * 100
+    percentage = (esi_1 / total) * 100,
+    se = sqrt((percentage / 100) * (1 - (percentage / 100)) / total) * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
   ) %>%
   ungroup()
 
 esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
   labs(
-    title = "Employer-sponsored insurance",
     x = "Quarter",
-    y = "Percentage",
-    color = ""
+    y = "ESI, %"
   ) +
-  #scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ylim(0, 100)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom"
+  ) +
+  ylim(0, 60)
 
 esi_quarter_plot
 #ggsave("esi_quarter_plot_south.jpg")
@@ -660,23 +651,28 @@ uninsured_quarter <- svytable(~uninsured + quarter + intervention, sample_pre) %
   summarize(
     total = sum(Freq),
     uninsured_1 = sum(Freq[uninsured == 1]),
-    percentage = (uninsured_1 / total) * 100
+    percentage = (uninsured_1 / total) * 100,
+    se = sqrt((percentage / 100) * (1 - (percentage / 100)) / total) * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
   ) %>%
   ungroup()
 
 uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
   labs(
-    title = "Uninsured",
     x = "Quarter",
-    y = "Percentage",
-    color = ""
+    y = "Uninsured, %"
   ) +
-  #scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ylim(0, 100)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom"
+  ) +
+  ylim(0, 60)
 
 uninsured_quarter_plot
 #ggsave("uninsured_quarter_plot_south.jpg")
@@ -688,141 +684,31 @@ employed_quarter <- svytable(~employed + quarter + intervention, sample_pre) %>%
   summarize(
     total = sum(Freq),
     employed_1 = sum(Freq[employed == 1]),
-    percentage = (employed_1 / total) * 100
+    percentage = (employed_1 / total) * 100,
+    se = sqrt((percentage / 100) * (1 - (percentage / 100)) / total) * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
   ) %>%
   ungroup()
 
 employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
   labs(
-    title = "Employed",
     x = "Quarter",
-    y = "Percentage",
-    color = ""
+    y = "Employed, %"
   ) +
-  #scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ylim(0, 100)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom"
+  ) +
+  ylim(0, 60)
 
 employed_quarter_plot
 #ggsave("employed_quarter_plot_south.jpg")
-```
-
-# Plot data - state quarters
-```{r}
-# Medicaid coverage
-medicaid_quarter <- svytable(~medicaid + quarter + state, sample_pre) %>%
-  as.data.frame() %>%
-  group_by(quarter, state) %>%
-  summarize(
-    total = sum(Freq),
-    medicaid_1 = sum(Freq[medicaid == 1]),
-    percentage = (medicaid_1 / total) * 100
-  ) %>%
-  ungroup()
-
-medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentage, color = state, group = state)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Medicaid",
-    x = "Quarter",
-    y = "Percentage",
-    color = ""
-  ) +
-  #scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) #+
-  #ylim(0, 100)
-
-medicaid_quarter_plot
-ggsave("medicaid_quarter_plot_states.jpg")
-
-# ESI
-esi_quarter <- svytable(~esi + quarter + state, sample_pre) %>%
-  as.data.frame() %>%
-  group_by(quarter, state) %>%
-  summarize(
-    total = sum(Freq),
-    esi_1 = sum(Freq[esi == 1]),
-    percentage = (esi_1 / total) * 100
-  ) %>%
-  ungroup()
-
-esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color = state, group = state)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Employer-sponsored insurance",
-    x = "Quarter",
-    y = "Percentage",
-    color = ""
-  ) +
-  #scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) #+
-  #ylim(0, 100)
-
-esi_quarter_plot
-ggsave("esi_quarter_plot_states.jpg")
-
-# Uninsured
-uninsured_quarter <- svytable(~uninsured + quarter + state, sample_pre) %>%
-  as.data.frame() %>%
-  group_by(quarter, state) %>%
-  summarize(
-    total = sum(Freq),
-    uninsured_1 = sum(Freq[uninsured == 1]),
-    percentage = (uninsured_1 / total) * 100
-  ) %>%
-  ungroup()
-
-uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percentage, color = state, group = state)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Uninsured",
-    x = "Quarter",
-    y = "Percentage",
-    color = ""
-  ) +
-  #scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) #+
-  #ylim(0, 100)
-
-uninsured_quarter_plot
-ggsave("uninsured_quarter_plot_states.jpg")
-
-# Employed
-employed_quarter <- svytable(~employed + quarter + state, sample_pre) %>%
-  as.data.frame() %>%
-  group_by(quarter, state) %>%
-  summarize(
-    total = sum(Freq),
-    employed_1 = sum(Freq[employed == 1]),
-    percentage = (employed_1 / total) * 100
-  ) %>%
-  ungroup()
-
-employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentage, color = state, group = state)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Employed",
-    x = "Quarter",
-    y = "Percentage",
-    color = ""
-  ) +
-  #scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) #+
-  #ylim(0, 100)
-
-employed_quarter_plot
-ggsave("employed_quarter_plot_states.jpg")
 ```
 
 # Plot data - halves
@@ -1220,22 +1106,6 @@ gen_did_tbl <- function(outcome_var, unadj_model, adj_model, survey_design, z_va
              formatC(ci_diff_upp_percent_c, format = "f", digits = 2), ")\n"))
   cat(paste0("P value: ", formatC(did_pval_c, format = "f", digits = 4), "\n\n"))
   
-  # # Difference-in-differences (DiD) calculation
-  # did_diff_mean <- diff_mean_percent_t - diff_mean_percent_c
-  # 
-  # # Standard error of the DiD estimate
-  # did_se <- sqrt(diff_se_t^2 + diff_se_c^2)
-  # 
-  # # Confidence interval for the DiD estimate
-  # ci_did_low <- did_diff_mean - z_value * did_se * 100
-  # ci_did_upp <- did_diff_mean + z_value * did_se * 100
-  # 
-  # # Print the DiD results
-  # cat("Difference-in-Differences (DiD):\n")
-  # cat(paste0("DiD estimate: ", formatC(did_diff_mean, format = "f", digits = 2), " (", 
-  #            formatC(ci_did_low, format = "f", digits = 2), ", ",
-  #            formatC(ci_did_upp, format = "f", digits = 2), ")\n"))
-  
   # Extract estimates, confidence intervals, and p-values for both models
   
   # Unadjusted Model
@@ -1365,59 +1235,4 @@ race_tbl_post$chi_square
 education_tbl_post <- gen_table_chisq("education_cat", "intervention", sample_post)
 education_tbl_post$table
 education_tbl_post$chi_square
-```
-
-# Playground
-```{r}
-sample_filtered <- update(sample, state_factor2 = as.factor(state))
-
-is.factor(sample_filtered$variables$state_factor2)
-
-sample_filtered <- update(sample, date2 = ifelse(!is.na(post), date, NA))
-
-sample_filtered <- update(sample_filtered, date_factor2 = as.factor(date2))
-
-is.factor(sample_filtered$variables$date_factor2)
-
-sample_filtered <- subset(sample_filtered, !is.na(date_factor2))
-
-sample_filtered <- update(sample, state2 = ifelse(!is.na(intervention), state, NA))
-
-sample_filtered <- subset(sample_filtered, !is.na(state) & !is.na(post))
-
-medicaid_adj2 <- svyglm(medicaid ~ intervention * post + as.character(state), design = sample_filtered)
-summary(medicaid_adj2)
-
-
-
-clustered_se <- vcovCL(medicaid_adj2, cluster = ~state_factor, type = "HC0")
-coeftest(medicaid_adj, vcov = clustered_se)
-
-deff_result <- svymean(~medicaid, sample_medicaid, deff = TRUE)
-deff_result
-
-# Extract model matrix from `svyglm`
-model_matrix <- model.frame(medicaid_adj)
-
-# Apply clustered standard errors at the state level
-clustered_se <- vcovCL(medicaid_adj, cluster = model_matrix$state_factor, type = "HC0")
-
-# Compute clustered standard errors at the state level
-#clustered_se <- vcovCL(medicaid_adj, cluster = ~state_factor, type = "HC0")
-
-# Get coefficient estimates with clustered standard errors
-coeftest(medicaid_adj, vcov = clustered_se)
-
-
-employed_pttest <- svyglm(employed ~ intervention * date, design = sample_pre)
-summary(employed_pttest)
-
-# Extract model matrix from `svyglm`
-model_matrix <- model.frame(employed_pttest)
-
-# Apply clustered standard errors at the state level
-clustered_se <- vcovCL(employed_pttest, cluster = model_matrix$state_factor, type = "HC0")
-
-# Get coefficient estimates with clustered standard errors
-coeftest(employed_pttest, vcov = clustered_se)
 ```
