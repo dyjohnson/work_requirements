@@ -478,7 +478,9 @@ data <- data %>%
 
 # Export raw data to Stata
 ```{r}
-write_dta(data, "georgia_data.dta")
+write_csv(data, "georgia_data.csv")
+
+# write_dta(data, "georgia_data.dta")
 
 # temp <- read_dta("georgia_data.dta")
 # 
@@ -489,6 +491,17 @@ write_dta(data, "georgia_data.dta")
 # table(temp$intervention1)
 # 
 # rm(temp)
+
+sample <- data %>%
+  filter(
+    (intervention1 %in% c(FALSE, TRUE) | intervention2 %in% c(FALSE, TRUE) | intervention3 %in% c(FALSE, TRUE)) & # Intervention or control group
+      age >= 19 & age <= 64 & # 19-64 years old
+      fpg <= 100 & # Income up to 100% FPL
+      not_missing_hi == TRUE & # Health insurance not missing
+      not_missing_employment == TRUE # Employment not missing
+  )
+
+write.csv(sample, "georgia_data_filtered.csv", row.names = FALSE)
 ```
 
 # Create survey object
@@ -506,16 +519,7 @@ survey <- data %>%
 ```{r}
 sample <- survey %>%
   subset(
-    # intervention %in% c(FALSE, TRUE) & # Intervention or control group
-      age >= 19 & age <= 64 & # 19-64 years old
-      fpg <= 100 & # Income up to 100% FPL
-      not_missing_hi == TRUE & # Health insurance not missing
-      not_missing_employment == TRUE # Employment not missing
-  )
-
-sample_raw <- data %>%
-  filter(
-    intervention %in% c(FALSE, TRUE) & # Intervention or control group
+    (intervention1 %in% c(FALSE, TRUE) | intervention2 %in% c(FALSE, TRUE) | intervention3 %in% c(FALSE, TRUE)) & # Intervention or control group
       age >= 19 & age <= 64 & # 19-64 years old
       fpg <= 100 & # Income up to 100% FPL
       not_missing_hi == TRUE & # Health insurance not missing
@@ -527,6 +531,11 @@ sample_pre <- sample %>% subset(post == FALSE)
 
 # Subset to post-period
 sample_post <- sample %>% subset(post == TRUE)
+
+# Export to Stata
+# sample_df <- sample$variables
+# sample_df$weights <- weights(sample)
+# write.csv(sample_df, "georgia_data_survey.csv", row.names = FALSE)
 ```
 
 # Plot data - dates
