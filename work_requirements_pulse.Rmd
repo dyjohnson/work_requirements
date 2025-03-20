@@ -376,24 +376,24 @@ data <- data %>%
 data <- data %>%
   mutate(
     medicaid = case_when(
-      HLTHINS4 == 1 ~ 1,
+      HLTHINS4 == 1 ~ TRUE,
       HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
           HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
-          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA_real_, # If they didn't answer any of the health insurance questions, assign them NA
+          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
       HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
         HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
-        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA_real_, # If they didn't answer any of the health insurance questions, assign them NA
-      TRUE ~ 0
+        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      TRUE ~ FALSE
     ),
     esi = case_when(
-      HLTHINS1 == 1 ~ 1,
+      HLTHINS1 == 1 ~ TRUE,
       HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
           HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
-          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA_real_, # If they didn't answer any of the health insurance questions, assign them NA
+          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
       HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
         HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
-        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA_real_, # If they didn't answer any of the health insurance questions, assign them NA
-      TRUE ~ 0
+        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      TRUE ~ FALSE
     ),
     uninsured = case_when(
       HLTHINS1 == 1 |
@@ -401,20 +401,20 @@ data <- data %>%
         HLTHINS3 == 1 |
         HLTHINS4 == 1 |
         HLTHINS5 == 1 |
-        HLTHINS6 == 1 ~ 0,
+        HLTHINS6 == 1 ~ FALSE,
       HLTHINS1 == 2 &
         HLTHINS2 == 2 &
         HLTHINS3 == 2 &
         HLTHINS4 == 2 &
         HLTHINS5 == 2 &
-        HLTHINS6 == 2 ~ 1,
-      HLTHINS7 == 1 ~ 1, # Census includes those who have Indian Health Service coverage as uninsured
-      TRUE ~ NA_real_
+        HLTHINS6 == 2 ~ TRUE,
+      HLTHINS7 == 1 ~ TRUE, # Census includes those who have Indian Health Service coverage as uninsured
+      TRUE ~ NA
     ),
     employed = case_when(
-      ANYWORK == 1 ~ 1, 
-      ANYWORK == 2 ~ 0, 
-      TRUE ~ NA_real_
+      ANYWORK == 1 ~ TRUE, 
+      ANYWORK == 2 ~ FALSE, 
+      TRUE ~ NA
       ),
     not_missing_hi = case_when(
       HLTHINS1 %in% c(1, 2) | 
@@ -422,12 +422,12 @@ data <- data %>%
         HLTHINS3 %in% c(1, 2) | 
         HLTHINS4 %in% c(1, 2) | 
         HLTHINS5 %in% c(1, 2) | 
-        HLTHINS6 %in% c(1, 2) ~ 1,
-      TRUE ~ NA_real_
+        HLTHINS6 %in% c(1, 2) ~ TRUE,
+      TRUE ~ NA
     ),
     not_missing_employment = case_when(
-      ANYWORK %in% c(1, 2) ~ 1,
-      TRUE ~ NA_real_
+      ANYWORK %in% c(1, 2) ~ TRUE,
+      TRUE ~ NA
     )
   )
 
@@ -476,6 +476,21 @@ data <- data %>%
   )
 ```
 
+# Export raw data to Stata
+```{r}
+write_dta(data, "georgia_data.dta")
+
+# temp <- read_dta("georgia_data.dta")
+# 
+# table(data$post)
+# table(temp$post)
+# 
+# table(data$intervention1)
+# table(temp$intervention1)
+# 
+# rm(temp)
+```
+
 # Create survey object
 ```{r}
 survey <- data %>%
@@ -491,11 +506,11 @@ survey <- data %>%
 ```{r}
 sample <- survey %>%
   subset(
-    intervention %in% c(FALSE, TRUE) & # Intervention or control group
+    # intervention %in% c(FALSE, TRUE) & # Intervention or control group
       age >= 19 & age <= 64 & # 19-64 years old
       fpg <= 100 & # Income up to 100% FPL
-      not_missing_hi == 1 & # Health insurance not missing
-      not_missing_employment == 1 # Employment not missing
+      not_missing_hi == TRUE & # Health insurance not missing
+      not_missing_employment == TRUE # Employment not missing
   )
 
 sample_raw <- data %>%
@@ -503,19 +518,15 @@ sample_raw <- data %>%
     intervention %in% c(FALSE, TRUE) & # Intervention or control group
       age >= 19 & age <= 64 & # 19-64 years old
       fpg <= 100 & # Income up to 100% FPL
-      not_missing_hi == 1 & # Health insurance not missing
-      not_missing_employment == 1 # Employment not missing
+      not_missing_hi == TRUE & # Health insurance not missing
+      not_missing_employment == TRUE # Employment not missing
   )
 
 # Subset to pre-period
-sample_pre <- sample %>% subset(post == 0)
+sample_pre <- sample %>% subset(post == FALSE)
 
 # Subset to post-period
-sample_post <- sample %>% subset(post == 1)
-
-# Export to Stata file
-sample_df <- sample$variables
-write_dta(sample_df, "georgia_data.dta")
+sample_post <- sample %>% subset(post == TRUE)
 ```
 
 # Plot data - dates
@@ -815,7 +826,7 @@ write_dta(sample_df, "georgia_data.dta")
 # Plot data - quarters
 ```{r}
 # Medicaid
-medicaid_quarter <- svyby(~medicaid, ~quarter + intervention, sample_pre, 
+medicaid_quarter <- svyby(~medicaid, ~quarter + intervention, sample_pre,
                        svymean, vartype = "se", na.rm = TRUE) %>%
   as.data.frame() %>%
   rename(
@@ -837,7 +848,7 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentag
     x = "",
     y = "Medicaid Coverage, %"
   ) +
-  scale_color_discrete(labels = c("Alabama, Florida, Mississippi, South Carolina", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
@@ -846,10 +857,10 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentag
   ylim(0, 100)
 
 medicaid_quarter_plot
-ggsave("medicaid_quarter_plot_test6.jpg")
+#ggsave("medicaid_quarter_plot_test6.jpg")
 
 # ESI
-esi_quarter <- svyby(~esi, ~quarter + intervention, sample_pre, 
+esi_quarter <- svyby(~esi, ~quarter + intervention, sample_pre,
                        svymean, vartype = "se", na.rm = TRUE) %>%
   as.data.frame() %>%
   rename(
@@ -871,7 +882,7 @@ esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color =
     x = "",
     y = "ESI, %"
   ) +
-  scale_color_discrete(labels = c("Alabama, Florida, Mississippi, South Carolina", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
@@ -880,10 +891,10 @@ esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color =
   ylim(0, 100)
 
 esi_quarter_plot
-ggsave("esi_quarter_plot_test6.jpg")
+#ggsave("esi_quarter_plot_test6.jpg")
 
 # Uninsured
-uninsured_quarter <- svyby(~uninsured, ~quarter + intervention, sample_pre, 
+uninsured_quarter <- svyby(~uninsured, ~quarter + intervention, sample_pre,
                        svymean, vartype = "se", na.rm = TRUE) %>%
   as.data.frame() %>%
   rename(
@@ -905,7 +916,7 @@ uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percent
     x = "",
     y = "Uninsured, %"
   ) +
-  scale_color_discrete(labels = c("Alabama, Florida, Mississippi, South Carolina", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
@@ -914,10 +925,10 @@ uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percent
   ylim(0, 100)
 
 uninsured_quarter_plot
-ggsave("uninsured_quarter_plot_test6.jpg")
+#ggsave("uninsured_quarter_plot_test6.jpg")
 
 # Employed
-employed_quarter <- svyby(~employed, ~quarter + intervention, sample_pre, 
+employed_quarter <- svyby(~employed, ~quarter + intervention, sample_pre,
                        svymean, vartype = "se", na.rm = TRUE) %>%
   as.data.frame() %>%
   rename(
@@ -939,7 +950,7 @@ employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentag
     x = "",
     y = "Employed, %"
   ) +
-  scale_color_discrete(labels = c("Alabama, Florida, Mississippi, South Carolina", "Georgia")) +
+  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
@@ -948,7 +959,7 @@ employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentag
   ylim(0, 100)
 
 employed_quarter_plot
-ggsave("employed_quarter_plot_test6.jpg")
+#ggsave("employed_quarter_plot_test6.jpg")
 ```
 
 
@@ -1282,21 +1293,56 @@ ggsave("employed_quarter_plot_test6.jpg")
 
 # Test parallel trends
 ```{r}
-# Medicaid
-medicaid_pttest <- svyglm(medicaid ~ intervention * date, design = sample_pre)
-summary(medicaid_pttest)
+# Georgia vs. South Dakota
+## Medicaid
+medicaid_pttest1 <- svyglm(medicaid ~ intervention1 * date, design = sample_pre)
+summary(medicaid_pttest1)
 
-# Employer-sponsored insurance
-esi_pttest <- svyglm(esi ~ intervention * date, design = sample_pre)
-summary(esi_pttest)
+## Employer-sponsored insurance
+esi_pttest1 <- svyglm(esi ~ intervention1 * date, design = sample_pre)
+summary(esi_pttest1)
 
-# Uninsured
-uninsured_pttest <- svyglm(uninsured ~ intervention * date, design = sample_pre)
-summary(uninsured_pttest)
+## Uninsured
+uninsured_pttest1 <- svyglm(uninsured ~ intervention1 * date, design = sample_pre)
+summary(uninsured_pttest1)
 
-# Employed
-employed_pttest <- svyglm(employed ~ intervention * date, design = sample_pre)
-summary(employed_pttest)
+## Employed
+employed_pttest1 <- svyglm(employed ~ intervention1 * date, design = sample_pre)
+summary(employed_pttest1)
+
+# Georgia vs. Alabama, Florida, Texas, Mississippi
+## Medicaid
+medicaid_pttest2 <- svyglm(medicaid ~ intervention2 * date, design = sample_pre)
+summary(medicaid_pttest2)
+
+## Employer-sponsored insurance
+esi_pttest2 <- svyglm(esi ~ intervention2 * date, design = sample_pre)
+summary(esi_pttest2)
+
+## Uninsured
+uninsured_pttest2 <- svyglm(uninsured ~ intervention2 * date, design = sample_pre)
+summary(uninsured_pttest2)
+
+## Employed
+employed_pttest2 <- svyglm(employed ~ intervention2 * date, design = sample_pre)
+summary(employed_pttest2)
+
+# Georgia vs. Alabama, Florida, Mississippi, Texas, South Carolina
+## Medicaid
+medicaid_pttest3 <- svyglm(medicaid ~ intervention3 * date, design = sample_pre)
+summary(medicaid_pttest3)
+
+## Employer-sponsored insurance
+esi_pttest3 <- svyglm(esi ~ intervention3 * date, design = sample_pre)
+summary(esi_pttest3)
+
+## Uninsured
+uninsured_pttest3 <- svyglm(uninsured ~ intervention3 * date, design = sample_pre)
+summary(uninsured_pttest3)
+
+## Employed
+employed_pttest3 <- svyglm(employed ~ intervention3 * date, design = sample_pre)
+summary(employed_pttest3)
 ```
 
 # Unadjusted DID analysis
