@@ -195,6 +195,33 @@ data <- data %>%
     ),
     year = year(date),
     month = month(date),
+    bimonth = case_when(
+      year == 2021 & month %in% c(01, 02) ~ "2021 B1",
+      year == 2021 & month %in% c(03, 04) ~ "2021 B2",
+      year == 2021 & month %in% c(05, 06) ~ "2021 B3",
+      year == 2021 & month %in% c(07, 08) ~ "2021 B4",
+      year == 2021 & month %in% c(09, 10) ~ "2021 B5",
+      year == 2021 & month %in% c(11, 12) ~ "2021 B6",
+      year == 2022 & month %in% c(01, 02) ~ "2022 B1",
+      year == 2022 & month %in% c(03, 04) ~ "2022 B2",
+      year == 2022 & month %in% c(05, 06) ~ "2022 B3",
+      year == 2022 & month %in% c(07, 08) ~ "2022 B4",
+      year == 2022 & month %in% c(09, 10) ~ "2022 B5",
+      year == 2022 & month %in% c(11, 12) ~ "2022 B6",
+      year == 2023 & month %in% c(01, 02) ~ "2023 B1",
+      year == 2023 & month %in% c(03, 04) ~ "2023 B2",
+      year == 2023 & month %in% c(05, 06) ~ "2023 B3",
+      year == 2023 & month %in% c(07, 08) ~ "2023 B4",
+      year == 2023 & month %in% c(09, 10) ~ "2023 B5",
+      year == 2023 & month %in% c(11, 12) ~ "2023 B6",
+      year == 2024 & month %in% c(01, 02) ~ "2024 B1",
+      year == 2024 & month %in% c(03, 04) ~ "2024 B2",
+      year == 2024 & month %in% c(05, 06) ~ "2024 B3",
+      year == 2024 & month %in% c(07, 08) ~ "2024 B4",
+      year == 2024 & month %in% c(09, 10) ~ "2024 B5",
+      year == 2024 & month %in% c(11, 12) ~ "2024 B6",
+      TRUE ~ NA_character_
+    ),
     quarter = case_when(
       year == 2021 & month %in% c(01, 02, 03) ~ "2021 Q1",
       year == 2021 & month %in% c(04, 05, 06) ~ "2021 Q2",
@@ -328,10 +355,10 @@ data <- data %>%
       RRACE == 4 ~ "Other",
       TRUE ~ NA_character_
     ),
-    eth_cat = case_when(
-      RHISPANIC == 1 ~ "Non-Hispanic",
+    race_cat = case_when( # Note: Hispanic ethnicity overrides all other race variables
+      RHISPANIC == 1 ~ race_cat,
       RHISPANIC == 2 ~ "Hispanic",
-      TRUE ~ NA_character_
+      TRUE ~ race_cat
     ),
     edu_cat = case_when(
       EEDUC == 1 ~ "Less than high school",
@@ -349,24 +376,24 @@ data <- data %>%
 data <- data %>%
   mutate(
     medicaid = case_when(
-      HLTHINS4 == 2 ~ 0,
-      HLTHINS4 == 1 &
-        HLTHINS1 == 2 &
-        HLTHINS2 == 2 &
-        HLTHINS3 == 2 &
-        HLTHINS5 == 2 &
-        HLTHINS6 == 2 ~ 1,
-      TRUE ~ NA_real_
+      HLTHINS4 == 1 ~ 1,
+      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
+          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
+          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA_real_, # If they didn't answer any of the health insurance questions, assign them NA
+      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
+        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
+        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA_real_, # If they didn't answer any of the health insurance questions, assign them NA
+      TRUE ~ 0
     ),
     esi = case_when(
-      HLTHINS1 == 2 ~ 0,
-      HLTHINS1 == 1 &
-        HLTHINS2 == 2 &
-        HLTHINS3 == 2 &
-        HLTHINS4 == 2 &
-        HLTHINS5 == 2 &
-        HLTHINS6 == 2 ~ 1,
-      TRUE ~ NA_real_
+      HLTHINS1 == 1 ~ 1,
+      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
+          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
+          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA_real_, # If they didn't answer any of the health insurance questions, assign them NA
+      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
+        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
+        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA_real_, # If they didn't answer any of the health insurance questions, assign them NA
+      TRUE ~ 0
     ),
     uninsured = case_when(
       HLTHINS1 == 1 |
@@ -397,6 +424,10 @@ data <- data %>%
         HLTHINS5 %in% c(1, 2) | 
         HLTHINS6 %in% c(1, 2) ~ 1,
       TRUE ~ NA_real_
+    ),
+    not_missing_employment = case_when(
+      ANYWORK %in% c(1, 2) ~ 1,
+      TRUE ~ NA_real_
     )
   )
 
@@ -408,14 +439,38 @@ data <- data %>%
       date > ymd("2023-07-31") ~ TRUE,
       TRUE ~ NA
     ),
-    intervention = case_when(
+    intervention1 = case_when(
+      state == "Georgia" ~ TRUE,
+      state == "South Dakota" ~ FALSE,
+      # state %in% c("Alabama", "Florida", "Texas", "Mississippi") ~ FALSE, # Test 1
+      # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 2
+      # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina", "Kansas", "Wyoming") ~ FALSE, # Test 3
+      # state %in% c("Alabama", "Florida", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 4 best so far
+      # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "South Carolina") ~ FALSE, # Test 5
+      # state %in% c("Alabama", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 6
+      TRUE ~ NA
+    ),
+    intervention2 = case_when(
       state == "Georgia" ~ TRUE,
       # state == "South Dakota" ~ FALSE,
-      # state %in% c("Tennessee", "South Carolina") ~ FALSE, # Test 0
       state %in% c("Alabama", "Florida", "Texas", "Mississippi") ~ FALSE, # Test 1
       # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 2
       # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina", "Kansas", "Wyoming") ~ FALSE, # Test 3
-      # state %in% c("Alabama", "Florida", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 4
+      # state %in% c("Alabama", "Florida", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 4 best so far
+      # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "South Carolina") ~ FALSE, # Test 5
+      # state %in% c("Alabama", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 6
+      TRUE ~ NA
+    ),
+    ,
+    intervention3 = case_when(
+      state == "Georgia" ~ TRUE,
+      # state == "South Dakota" ~ FALSE,
+      # state %in% c("Alabama", "Florida", "Texas", "Mississippi") ~ FALSE, # Test 1
+      # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 2
+      # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina", "Kansas", "Wyoming") ~ FALSE, # Test 3
+      # state %in% c("Alabama", "Florida", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 4 best so far
+      state %in% c("Alabama", "Florida", "Texas", "Mississippi", "South Carolina") ~ FALSE, # Test 5
+      # state %in% c("Alabama", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 6
       TRUE ~ NA
     )
   )
@@ -432,14 +487,15 @@ survey <- data %>%
   )
 ```
 
-# Select target population
+# Select sample
 ```{r}
 sample <- survey %>%
   subset(
     intervention %in% c(FALSE, TRUE) & # Intervention or control group
       age >= 19 & age <= 64 & # 19-64 years old
       fpg <= 100 & # Income up to 100% FPL
-      not_missing_hi == 1 # Health insurance not missing
+      not_missing_hi == 1 & # Health insurance not missing
+      not_missing_employment == 1 # Employment not missing
   )
 
 sample_raw <- data %>%
@@ -447,7 +503,8 @@ sample_raw <- data %>%
     intervention %in% c(FALSE, TRUE) & # Intervention or control group
       age >= 19 & age <= 64 & # 19-64 years old
       fpg <= 100 & # Income up to 100% FPL
-      not_missing_hi == 1 # Health insurance not missing
+      not_missing_hi == 1 & # Health insurance not missing
+      not_missing_employment == 1 # Employment not missing
   )
 
 # Subset to pre-period
@@ -457,488 +514,770 @@ sample_pre <- sample %>% subset(post == 0)
 sample_post <- sample %>% subset(post == 1)
 
 # Export to Stata file
-# sample_df <- sample$variables
-# write_dta(sample_df, "georgia_data.dta")
+sample_df <- sample$variables
+write_dta(sample_df, "georgia_data.dta")
 ```
 
 # Plot data - dates
 ```{r}
-# Medicaid coverage
-medicaid_date <- svytable(~medicaid + date + intervention, sample) %>%
-  as.data.frame() %>%
-  group_by(date, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    medicaid_1 = sum(Freq[medicaid == 1]),
-    percentage = (medicaid_1 / total) * 100
-  ) %>%
-  ungroup()
+# # Medicaid
+# medicaid_date <- svyby(~medicaid, ~date + intervention, sample,
+#                        svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = medicaid,
+#     se = se
+#   ) %>%
+#   mutate(
+#     percentage = percentage * 100,
+#     se = se * 100,
+#     lower = pmax(percentage - 1.96 * se, 0),
+#     upper = pmin(percentage + 1.96 * se, 100)
+#   )
+# 
+# medicaid_date_plot <- ggplot(medicaid_date, aes(x = date, y = percentage, color = intervention, group = intervention)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+#   labs(
+#     x = "Date",
+#     y = "Medicaid Coverage, %"
+#   ) +
+#   scale_x_date(
+#     date_labels = "%b %Y",
+#     date_breaks = "3 month"
+#   ) +
+#   scale_color_discrete(labels = c("Southern states", "Georgia")) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.position = "bottom"
+#   ) +
+#   ylim(0, 100)
+# 
+# medicaid_date_plot
+# #ggsave("medicaid_date_plot_test1.jpg")
+# 
+# # ESI
+# esi_date <- svyby(~esi, ~date + intervention, sample,
+#                        svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = esi,
+#     se = se
+#   ) %>%
+#   mutate(
+#     percentage = percentage * 100,
+#     se = se * 100,
+#     lower = pmax(percentage - 1.96 * se, 0),
+#     upper = pmin(percentage + 1.96 * se, 100)
+#   )
+# 
+# esi_date_plot <- ggplot(esi_date, aes(x = date, y = percentage, color = intervention, group = intervention)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+#   labs(
+#     x = "Date",
+#     y = "ESI, %"
+#   ) +
+#   scale_x_date(
+#     date_labels = "%b %Y",
+#     date_breaks = "3 month"
+#   ) +
+#   scale_color_discrete(labels = c("Southern states", "Georgia")) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.position = "bottom"
+#   ) +
+#   ylim(0, 100)
+# 
+# esi_date_plot
+# #ggsave("esi_date_plot_south.jpg")
+# 
+# # Uninsured
+# uninsured_date <- svyby(~uninsured, ~date + intervention, sample,
+#                        svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = uninsured,
+#     se = se
+#   ) %>%
+#   mutate(
+#     percentage = percentage * 100,
+#     se = se * 100,
+#     lower = pmax(percentage - 1.96 * se, 0),
+#     upper = pmin(percentage + 1.96 * se, 100)
+#   )
+# 
+# uninsured_date_plot <- ggplot(uninsured_date, aes(x = date, y = percentage, color = intervention, group = intervention)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+#   labs(
+#     x = "Date",
+#     y = "Uninsured, %"
+#   ) +
+#   scale_x_date(
+#     date_labels = "%b %Y",
+#     date_breaks = "3 month"
+#   ) +
+#   scale_color_discrete(labels = c("Southern states", "Georgia")) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.position = "bottom"
+#   ) +
+#   ylim(0, 100)
+# 
+# uninsured_date_plot
+# #ggsave("uninsured_date_plot_south.jpg")
+# 
+# # Employed
+# employed_date <- svyby(~employed, ~date + intervention, sample,
+#                        svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = employed,
+#     se = se
+#   ) %>%
+#   mutate(
+#     percentage = percentage * 100,
+#     se = se * 100,
+#     lower = pmax(percentage - 1.96 * se, 0),
+#     upper = pmin(percentage + 1.96 * se, 100)
+#   )
+# 
+# employed_date_plot <- ggplot(employed_date, aes(x = date, y = percentage, color = intervention, group = intervention)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+#   labs(
+#     x = "Date",
+#     y = "Employed, %"
+#   ) +
+#   scale_x_date(
+#     date_labels = "%b %Y",
+#     date_breaks = "3 month"
+#   ) +
+#   scale_color_discrete(labels = c("Southern states", "Georgia")) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.position = "bottom"
+#   ) +
+#   ylim(0, 100)
+# 
+# employed_date_plot
+# #ggsave("employed_date_plot_south.jpg")
+```
 
-medicaid_date_plot <- ggplot(medicaid_date, aes(x = date, y = percentage, color = intervention, group = intervention)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Medicaid",
-    x = "Date",
-    y = "Percentage",
-    color = ""
-  ) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ylim(0, 100)
-
-medicaid_date_plot
-ggsave("medicaid_date_plot_south.jpg")
-
-# ESI
-esi_date <- svytable(~esi + date + intervention, sample) %>%
-  as.data.frame() %>%
-  group_by(date, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    esi_1 = sum(Freq[esi == 1]),
-    percentage = (esi_1 / total) * 100
-  ) %>%
-  ungroup()
-
-esi_date_plot <- ggplot(esi_date, aes(x = date, y = percentage, color = intervention, group = intervention)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Employer-sponsored insurance",
-    x = "Date",
-    y = "Percentage",
-    color = ""
-  ) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ylim(0, 100)
-
-esi_date_plot
-ggsave("esi_date_plot_south.jpg")
-
-# Uninsured
-uninsured_date <- svytable(~uninsured + date + intervention, sample) %>%
-  as.data.frame() %>%
-  group_by(date, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    uninsured_1 = sum(Freq[uninsured == 1]),
-    percentage = (uninsured_1 / total) * 100
-  ) %>%
-  ungroup()
-
-uninsured_date_plot <- ggplot(uninsured_date, aes(x = date, y = percentage, color = intervention, group = intervention)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Uninsured",
-    x = "Date",
-    y = "Percentage",
-    color = ""
-  ) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ylim(0, 100)
-
-uninsured_date_plot
-ggsave("uninsured_date_plot_south.jpg")
-
-# Employed
-employed_date <- svytable(~employed + date + intervention, sample) %>%
-  as.data.frame() %>%
-  group_by(date, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    employed_1 = sum(Freq[employed == 1]),
-    percentage = (employed_1 / total) * 100
-  ) %>%
-  ungroup()
-
-employed_date_plot <- ggplot(employed_date, aes(x = date, y = percentage, color = intervention, group = intervention)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Employed",
-    x = "Date",
-    y = "Percentage",
-    color = ""
-  ) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ylim(0, 100)
-
-employed_date_plot
-ggsave("employed_date_plot_south.jpg")
+# Plot data - bimonthly
+```{r}
+# # Medicaid
+# medicaid_bimonth <- svyby(~medicaid, ~bimonth + intervention, sample, 
+#                        svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = medicaid,
+#     se = se
+#   ) %>%
+#   mutate(
+#     percentage = percentage * 100,
+#     se = se * 100,
+#     lower = pmax(percentage - 1.96 * se, 0),
+#     upper = pmin(percentage + 1.96 * se, 100)
+#   )
+# 
+# medicaid_bimonth_plot <- ggplot(medicaid_bimonth, aes(x = bimonth, y = percentage, color = intervention, group = intervention)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+#   labs(
+#     x = "bimonth",
+#     y = "Medicaid Coverage, %"
+#   ) +
+#   scale_color_discrete(labels = c("Southern states", "Georgia")) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.position = "bottom"
+#   ) +
+#   ylim(0, 100)
+# 
+# medicaid_bimonth_plot
+# #ggsave("medicaid_bimonth_plot_test1.jpg")
+# 
+# # ESI
+# esi_bimonth <- svyby(~esi, ~bimonth + intervention, sample, 
+#                        svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = esi,
+#     se = se
+#   ) %>%
+#   mutate(
+#     percentage = percentage * 100,
+#     se = se * 100,
+#     lower = pmax(percentage - 1.96 * se, 0),
+#     upper = pmin(percentage + 1.96 * se, 100)
+#   )
+# 
+# esi_bimonth_plot <- ggplot(esi_bimonth, aes(x = bimonth, y = percentage, color = intervention, group = intervention)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+#   labs(
+#     x = "bimonth",
+#     y = "ESI, %"
+#   ) +
+#   scale_color_discrete(labels = c("Southern states", "Georgia")) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.position = "bottom"
+#   ) +
+#   ylim(0, 100)
+# 
+# esi_bimonth_plot
+# #ggsave("esi_bimonth_plot_south.jpg")
+# 
+# # Uninsured
+# uninsured_bimonth <- svyby(~uninsured, ~bimonth + intervention, sample, 
+#                        svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = uninsured,
+#     se = se
+#   ) %>%
+#   mutate(
+#     percentage = percentage * 100,
+#     se = se * 100,
+#     lower = pmax(percentage - 1.96 * se, 0),
+#     upper = pmin(percentage + 1.96 * se, 100)
+#   )
+# 
+# uninsured_bimonth_plot <- ggplot(uninsured_bimonth, aes(x = bimonth, y = percentage, color = intervention, group = intervention)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+#   labs(
+#     x = "bimonth",
+#     y = "Uninsured, %"
+#   ) +
+#   scale_color_discrete(labels = c("Southern states", "Georgia")) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.position = "bottom"
+#   ) +
+#   ylim(0, 100)
+# 
+# uninsured_bimonth_plot
+# #ggsave("uninsured_bimonth_plot_south.jpg")
+# 
+# # Employed
+# employed_bimonth <- svyby(~employed, ~bimonth + intervention, sample, 
+#                        svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = employed,
+#     se = se
+#   ) %>%
+#   mutate(
+#     percentage = percentage * 100,
+#     se = se * 100,
+#     lower = pmax(percentage - 1.96 * se, 0),
+#     upper = pmin(percentage + 1.96 * se, 100)
+#   )
+# 
+# employed_bimonth_plot <- ggplot(employed_bimonth, aes(x = bimonth, y = percentage, color = intervention, group = intervention)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+#   labs(
+#     x = "bimonth",
+#     y = "Employed, %"
+#   ) +
+#   scale_color_discrete(labels = c("Southern states", "Georgia")) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.position = "bottom"
+#   ) +
+#   ylim(0, 100)
+# 
+# employed_bimonth_plot
+# #ggsave("employed_bimonth_plot_south.jpg")
 ```
 
 # Plot data - quarters
 ```{r}
 # Medicaid
-medicaid_quarter <- svytable(~medicaid + quarter + intervention, sample_pre) %>%
+medicaid_quarter <- svyby(~medicaid, ~quarter + intervention, sample_pre, 
+                       svymean, vartype = "se", na.rm = TRUE) %>%
   as.data.frame() %>%
-  group_by(quarter, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    medicaid_1 = sum(Freq[medicaid == 1]),
-    percentage = (medicaid_1 / total) * 100,
-    se = sqrt((percentage / 100) * (1 - (percentage / 100)) / total) * 100,
+  rename(
+    percentage = medicaid,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
     lower = pmax(percentage - 1.96 * se, 0),
     upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  ungroup()
+  )
 
 medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
   labs(
-    x = "Quarter",
-    y = "Medicaid, %"
+    x = "",
+    y = "Medicaid Coverage, %"
   ) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("Alabama, Florida, Mississippi, South Carolina", "Georgia")) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     legend.position = "bottom"
   ) +
-  ylim(0, 60)
+  ylim(0, 100)
 
 medicaid_quarter_plot
-#ggsave("medicaid_date_plot_test1.jpg")
+ggsave("medicaid_quarter_plot_test6.jpg")
 
 # ESI
-esi_quarter <- svytable(~esi + quarter + intervention, sample_pre) %>%
+esi_quarter <- svyby(~esi, ~quarter + intervention, sample_pre, 
+                       svymean, vartype = "se", na.rm = TRUE) %>%
   as.data.frame() %>%
-  group_by(quarter, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    esi_1 = sum(Freq[esi == 1]),
-    percentage = (esi_1 / total) * 100,
-    se = sqrt((percentage / 100) * (1 - (percentage / 100)) / total) * 100,
+  rename(
+    percentage = esi,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
     lower = pmax(percentage - 1.96 * se, 0),
     upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  ungroup()
+  )
 
 esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
   labs(
-    x = "Quarter",
+    x = "",
     y = "ESI, %"
   ) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("Alabama, Florida, Mississippi, South Carolina", "Georgia")) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     legend.position = "bottom"
   ) +
-  ylim(0, 60)
+  ylim(0, 100)
 
 esi_quarter_plot
-#ggsave("esi_quarter_plot_south.jpg")
+ggsave("esi_quarter_plot_test6.jpg")
 
 # Uninsured
-uninsured_quarter <- svytable(~uninsured + quarter + intervention, sample_pre) %>%
+uninsured_quarter <- svyby(~uninsured, ~quarter + intervention, sample_pre, 
+                       svymean, vartype = "se", na.rm = TRUE) %>%
   as.data.frame() %>%
-  group_by(quarter, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    uninsured_1 = sum(Freq[uninsured == 1]),
-    percentage = (uninsured_1 / total) * 100,
-    se = sqrt((percentage / 100) * (1 - (percentage / 100)) / total) * 100,
+  rename(
+    percentage = uninsured,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
     lower = pmax(percentage - 1.96 * se, 0),
     upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  ungroup()
+  )
 
 uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
   labs(
-    x = "Quarter",
+    x = "",
     y = "Uninsured, %"
   ) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("Alabama, Florida, Mississippi, South Carolina", "Georgia")) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     legend.position = "bottom"
   ) +
-  ylim(0, 60)
+  ylim(0, 100)
 
 uninsured_quarter_plot
-#ggsave("uninsured_quarter_plot_south.jpg")
+ggsave("uninsured_quarter_plot_test6.jpg")
 
 # Employed
-employed_quarter <- svytable(~employed + quarter + intervention, sample_pre) %>%
+employed_quarter <- svyby(~employed, ~quarter + intervention, sample_pre, 
+                       svymean, vartype = "se", na.rm = TRUE) %>%
   as.data.frame() %>%
-  group_by(quarter, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    employed_1 = sum(Freq[employed == 1]),
-    percentage = (employed_1 / total) * 100,
-    se = sqrt((percentage / 100) * (1 - (percentage / 100)) / total) * 100,
+  rename(
+    percentage = employed,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
     lower = pmax(percentage - 1.96 * se, 0),
     upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  ungroup()
+  )
 
 employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter, y = percentage, color = intervention, group = intervention)) +
   geom_line() +
   geom_point() +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
   labs(
-    x = "Quarter",
+    x = "",
     y = "Employed, %"
   ) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
+  scale_color_discrete(labels = c("Alabama, Florida, Mississippi, South Carolina", "Georgia")) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     legend.position = "bottom"
   ) +
-  ylim(0, 60)
+  ylim(0, 100)
 
 employed_quarter_plot
-#ggsave("employed_quarter_plot_south.jpg")
+ggsave("employed_quarter_plot_test6.jpg")
 ```
 
+
+# Plot data - differences by quarter
+```{r}
+# # Compute weighted percentages and standard errors
+# medicaid_weighted <- svyby(~medicaid, ~half + intervention, sample, 
+#                            svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = medicaid,  # Weighted proportion
+#     se = se                 # Weighted standard error
+#   ) %>%
+#   mutate(percentage = percentage * 100, se = se * 100)  # Convert to percentage scale
+# 
+# # Reshape the data to calculate differences
+# medicaid_diff <- medicaid_weighted %>%
+#   pivot_wider(names_from = intervention, values_from = c(percentage, se), names_prefix = "group_") %>%
+#   rename(
+#     percentage_control = percentage_group_FALSE,  # Control group (AL, FL, TX, MS)
+#     percentage_treatment = percentage_group_TRUE, # Treatment group (Georgia)
+#     se_control = se_group_FALSE,
+#     se_treatment = se_group_TRUE
+#   ) %>%
+#   mutate(
+#     diff_percentage = percentage_treatment - percentage_control,  # Difference: Georgia - Control states
+#     diff_se = sqrt(se_treatment^2 + se_control^2),  # Weighted SE using delta method
+#     lower = diff_percentage - 1.96 * diff_se,  # Lower bound of 95% CI
+#     upper = diff_percentage + 1.96 * diff_se   # Upper bound of 95% CI
+#   )
+# 
+# # Plot the difference with weighted error bars
+# medicaid_diff_plot <- ggplot(medicaid_diff, aes(x = half, y = diff_percentage)) +
+#   geom_line(color = "blue") +
+#   geom_point(color = "blue") +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "blue") +
+#   labs(
+#     x = "half",
+#     y = "Difference in Medicaid Coverage (%)"
+#   ) +
+#   # scale_x_half(
+#   #   half_labels = "%b %Y",
+#   #   half_breaks = "3 month"
+#   # ) +
+#   theme_minimal() +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+#   ylim(min(medicaid_diff$lower, na.rm = TRUE), max(medicaid_diff$upper, na.rm = TRUE))
+# 
+# medicaid_diff_plot
+# 
+# 
+
+```
 # Plot data - halves
 ```{r}
-# Medicaid coverage
-medicaid_half <- svytable(~medicaid + half + intervention, sample) %>%
-  as.data.frame() %>%
-  group_by(half, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    medicaid_1 = sum(Freq[medicaid == 1]),
-    percentage = (medicaid_1 / total) * 100
-  ) %>%
-  ungroup()
-
-medicaid_half_plot <- ggplot(medicaid_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Medicaid",
-    x = "Half",
-    y = "Percentage",
-    color = ""
-  ) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ylim(0, 100)
-
-medicaid_half_plot
-ggsave("medicaid_half_plot_south.jpg")
-
-# ESI
-esi_half <- svytable(~esi + half + intervention, sample) %>%
-  as.data.frame() %>%
-  group_by(half, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    esi_1 = sum(Freq[esi == 1]),
-    percentage = (esi_1 / total) * 100
-  ) %>%
-  ungroup()
-
-esi_half_plot <- ggplot(esi_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Employer-sponsored insurance",
-    x = "Half",
-    y = "Percentage",
-    color = ""
-  ) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ylim(0, 100)
-
-esi_half_plot
-ggsave("esi_half_plot_south.jpg")
-
-# Uninsured
-uninsured_half <- svytable(~uninsured + half + intervention, sample) %>%
-  as.data.frame() %>%
-  group_by(half, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    uninsured_1 = sum(Freq[uninsured == 1]),
-    percentage = (uninsured_1 / total) * 100
-  ) %>%
-  ungroup()
-
-uninsured_half_plot <- ggplot(uninsured_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Uninsured",
-    x = "Half",
-    y = "Percentage",
-    color = ""
-  ) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ylim(0, 100)
-
-uninsured_half_plot
-ggsave("uninsured_half_plot_south.jpg")
-
-# Employed
-employed_half <- svytable(~employed + half + intervention, sample) %>%
-  as.data.frame() %>%
-  group_by(half, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    employed_1 = sum(Freq[employed == 1]),
-    percentage = (employed_1 / total) * 100
-  ) %>%
-  ungroup()
-
-employed_half_plot <- ggplot(employed_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Employed",
-    x = "Half",
-    y = "Percentage",
-    color = ""
-  ) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ylim(0, 100)
-
-employed_half_plot
-ggsave("employed_half_plot_south.jpg")
+# # Medicaid
+# medicaid_half <- svyby(~medicaid, ~half + intervention, sample, 
+#                        svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = medicaid,
+#     se = se
+#   ) %>%
+#   mutate(
+#     percentage = percentage * 100,
+#     se = se * 100,
+#     lower = pmax(percentage - 1.96 * se, 0),
+#     upper = pmin(percentage + 1.96 * se, 100)
+#   )
+# 
+# medicaid_half_plot <- ggplot(medicaid_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+#   labs(
+#     x = "half",
+#     y = "Medicaid Coverage, %"
+#   ) +
+#   scale_color_discrete(labels = c("Southern states", "Georgia")) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.position = "bottom"
+#   ) +
+#   ylim(0, 100)
+# 
+# medicaid_half_plot
+# #ggsave("medicaid_half_plot_test1.jpg")
+# 
+# # ESI
+# esi_half <- svyby(~esi, ~half + intervention, sample, 
+#                        svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = esi,
+#     se = se
+#   ) %>%
+#   mutate(
+#     percentage = percentage * 100,
+#     se = se * 100,
+#     lower = pmax(percentage - 1.96 * se, 0),
+#     upper = pmin(percentage + 1.96 * se, 100)
+#   )
+# 
+# esi_half_plot <- ggplot(esi_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+#   labs(
+#     x = "half",
+#     y = "ESI, %"
+#   ) +
+#   scale_color_discrete(labels = c("Southern states", "Georgia")) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.position = "bottom"
+#   ) +
+#   ylim(0, 100)
+# 
+# esi_half_plot
+# #ggsave("esi_half_plot_south.jpg")
+# 
+# # Uninsured
+# uninsured_half <- svyby(~uninsured, ~half + intervention, sample, 
+#                        svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = uninsured,
+#     se = se
+#   ) %>%
+#   mutate(
+#     percentage = percentage * 100,
+#     se = se * 100,
+#     lower = pmax(percentage - 1.96 * se, 0),
+#     upper = pmin(percentage + 1.96 * se, 100)
+#   )
+# 
+# uninsured_half_plot <- ggplot(uninsured_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+#   labs(
+#     x = "half",
+#     y = "Uninsured, %"
+#   ) +
+#   scale_color_discrete(labels = c("Southern states", "Georgia")) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.position = "bottom"
+#   ) +
+#   ylim(0, 100)
+# 
+# uninsured_half_plot
+# #ggsave("uninsured_half_plot_south.jpg")
+# 
+# # Employed
+# employed_half <- svyby(~employed, ~half + intervention, sample, 
+#                        svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = employed,
+#     se = se
+#   ) %>%
+#   mutate(
+#     percentage = percentage * 100,
+#     se = se * 100,
+#     lower = pmax(percentage - 1.96 * se, 0),
+#     upper = pmin(percentage + 1.96 * se, 100)
+#   )
+# 
+# employed_half_plot <- ggplot(employed_half, aes(x = half, y = percentage, color = intervention, group = intervention)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+#   labs(
+#     x = "half",
+#     y = "Employed, %"
+#   ) +
+#   scale_color_discrete(labels = c("Southern states", "Georgia")) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.position = "bottom"
+#   ) +
+#   ylim(0, 100)
+# 
+# employed_half_plot
+# #ggsave("employed_half_plot_south.jpg")
 ```
 
 # Plot data - years
 ```{r}
-# Medicaid coverage
-medicaid_year <- svytable(~medicaid + year + intervention, sample) %>%
-  as.data.frame() %>%
-  group_by(year, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    medicaid_1 = sum(Freq[medicaid == 1]),
-    percentage = (medicaid_1 / total) * 100
-  ) %>%
-  ungroup()
-
-medicaid_year_plot <- ggplot(medicaid_year, aes(x = year, y = percentage, color = intervention, group = intervention)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Medicaid",
-    x = "Year",
-    y = "Percentage",
-    color = ""
-  ) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ylim(0, 100)
-
-medicaid_year_plot
-ggsave("medicaid_year_plot_south.jpg")
-
-# ESI
-esi_year <- svytable(~esi + year + intervention, sample) %>%
-  as.data.frame() %>%
-  group_by(year, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    esi_1 = sum(Freq[esi == 1]),
-    percentage = (esi_1 / total) * 100
-  ) %>%
-  ungroup()
-
-esi_year_plot <- ggplot(esi_year, aes(x = year, y = percentage, color = intervention, group = intervention)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Employer-sponsored insurance",
-    x = "Year",
-    y = "Percentage",
-    color = ""
-  ) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ylim(0, 100)
-
-esi_year_plot
-ggsave("esi_year_plot_south.jpg")
-
-# Uninsured
-uninsured_year <- svytable(~uninsured + year + intervention, sample) %>%
-  as.data.frame() %>%
-  group_by(year, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    uninsured_1 = sum(Freq[uninsured == 1]),
-    percentage = (uninsured_1 / total) * 100
-  ) %>%
-  ungroup()
-
-uninsured_year_plot <- ggplot(uninsured_year, aes(x = year, y = percentage, color = intervention, group = intervention)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Uninsured",
-    x = "Year",
-    y = "Percentage",
-    color = ""
-  ) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ylim(0, 100)
-
-uninsured_year_plot
-ggsave("uninsured_year_plot_south.jpg")
-
-# Employed
-employed_year <- svytable(~employed + year + intervention, sample) %>%
-  as.data.frame() %>%
-  group_by(year, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    employed_1 = sum(Freq[employed == 1]),
-    percentage = (employed_1 / total) * 100
-  ) %>%
-  ungroup()
-
-employed_year_plot <- ggplot(employed_year, aes(x = year, y = percentage, color = intervention, group = intervention)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "Employed",
-    x = "Year",
-    y = "Percentage",
-    color = ""
-  ) +
-  scale_color_discrete(labels = c("AL, FL, TX, MS", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ylim(0, 100)
-
-employed_year_plot
-ggsave("employed_year_plot_south.jpg")
+# # Medicaid
+# medicaid_year <- svyby(~medicaid, ~year + intervention, sample, 
+#                        svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = medicaid,
+#     se = se
+#   ) %>%
+#   mutate(
+#     percentage = percentage * 100,
+#     se = se * 100,
+#     lower = pmax(percentage - 1.96 * se, 0),
+#     upper = pmin(percentage + 1.96 * se, 100)
+#   )
+# 
+# medicaid_year_plot <- ggplot(medicaid_year, aes(x = year, y = percentage, color = intervention, group = intervention)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+#   labs(
+#     x = "year",
+#     y = "Medicaid Coverage, %"
+#   ) +
+#   scale_color_discrete(labels = c("Southern states", "Georgia")) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.position = "bottom"
+#   ) +
+#   ylim(0, 100)
+# 
+# medicaid_year_plot
+# #ggsave("medicaid_year_plot_test1.jpg")
+# 
+# # ESI
+# esi_year <- svyby(~esi, ~year + intervention, sample, 
+#                        svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = esi,
+#     se = se
+#   ) %>%
+#   mutate(
+#     percentage = percentage * 100,
+#     se = se * 100,
+#     lower = pmax(percentage - 1.96 * se, 0),
+#     upper = pmin(percentage + 1.96 * se, 100)
+#   )
+# 
+# esi_year_plot <- ggplot(esi_year, aes(x = year, y = percentage, color = intervention, group = intervention)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+#   labs(
+#     x = "year",
+#     y = "ESI, %"
+#   ) +
+#   scale_color_discrete(labels = c("Southern states", "Georgia")) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.position = "bottom"
+#   ) +
+#   ylim(0, 100)
+# 
+# esi_year_plot
+# #ggsave("esi_year_plot_south.jpg")
+# 
+# # Uninsured
+# uninsured_year <- svyby(~uninsured, ~year + intervention, sample, 
+#                        svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = uninsured,
+#     se = se
+#   ) %>%
+#   mutate(
+#     percentage = percentage * 100,
+#     se = se * 100,
+#     lower = pmax(percentage - 1.96 * se, 0),
+#     upper = pmin(percentage + 1.96 * se, 100)
+#   )
+# 
+# uninsured_year_plot <- ggplot(uninsured_year, aes(x = year, y = percentage, color = intervention, group = intervention)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+#   labs(
+#     x = "year",
+#     y = "Uninsured, %"
+#   ) +
+#   scale_color_discrete(labels = c("Southern states", "Georgia")) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.position = "bottom"
+#   ) +
+#   ylim(0, 100)
+# 
+# uninsured_year_plot
+# #ggsave("uninsured_year_plot_south.jpg")
+# 
+# # Employed
+# employed_year <- svyby(~employed, ~year + intervention, sample, 
+#                        svymean, vartype = "se", na.rm = TRUE) %>%
+#   as.data.frame() %>%
+#   rename(
+#     percentage = employed,
+#     se = se
+#   ) %>%
+#   mutate(
+#     percentage = percentage * 100,
+#     se = se * 100,
+#     lower = pmax(percentage - 1.96 * se, 0),
+#     upper = pmin(percentage + 1.96 * se, 100)
+#   )
+# 
+# employed_year_plot <- ggplot(employed_year, aes(x = year, y = percentage, color = intervention, group = intervention)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+#   labs(
+#     x = "year",
+#     y = "Employed, %"
+#   ) +
+#   scale_color_discrete(labels = c("Southern states", "Georgia")) +
+#   theme_minimal() +
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.position = "bottom"
+#   ) +
+#   ylim(0, 100)
+# 
+# employed_year_plot
+# #ggsave("employed_year_plot_south.jpg")
 ```
 
 # Test parallel trends
@@ -962,21 +1301,21 @@ summary(employed_pttest)
 
 # Unadjusted DID analysis
 ```{r}
-# Medicaid
-medicaid_unadj <- svyglm(medicaid ~ intervention * post, design = sample)
-summary(medicaid_unadj)
-
-# Employer-sponsored insurance
-esi_unadj <- svyglm(esi ~ intervention * post, design = sample)
-summary(esi_unadj)
-
-# Uninsured
-uninsured_unadj <- svyglm(uninsured ~ intervention * post, design = sample)
-summary(uninsured_unadj)
-
-# Employed
-employed_unadj <- svyglm(employed ~ intervention * post, design = sample)
-summary(employed_unadj)
+# # Medicaid
+# medicaid_unadj <- svyglm(medicaid ~ intervention * post, design = sample)
+# summary(medicaid_unadj)
+# 
+# # Employer-sponsored insurance
+# esi_unadj <- svyglm(esi ~ intervention * post, design = sample)
+# summary(esi_unadj)
+# 
+# # Uninsured
+# uninsured_unadj <- svyglm(uninsured ~ intervention * post, design = sample)
+# summary(uninsured_unadj)
+# 
+# # Employed
+# employed_unadj <- svyglm(employed ~ intervention * post, design = sample)
+# summary(employed_unadj)
 ```
 
 # Adjusted DID analysis
@@ -986,7 +1325,7 @@ medicaid_adj <- svyglm(medicaid ~ intervention * post + age_cat + sex_cat, desig
 summary(medicaid_adj)
 
 # Employer-sponsored insurance
-esi_adj <- svyglm(esi ~ intervention * post + age_cat + sex_cat + race_cat, design = sample)
+esi_adj <- svyglm(esi ~ intervention * post + age_cat + sex_cat, design = sample)
 summary(esi_adj)
 
 # Uninsured
@@ -1000,239 +1339,321 @@ summary(employed_adj)
 
 # Create DID table
 ```{r}
-# Define function to fill in diff-in-diff table
-gen_did_tbl <- function(outcome_var, unadj_model, adj_model, survey_design, z_value = 1.96) {
-  # Tabulate the average percentages in the pre and post time periods for intervention == 1
-  tbl_t <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention == 1), svymean, vartype = c("ci"), na.rm = TRUE)
-  
-  # Tabulate the average percentages in the pre and post time periods for intervention == 0
-  tbl_c <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention == 0), svymean, vartype = c("ci"), na.rm = TRUE)
-  
-  # Extract the means and confidence intervals for intervention == 1 
-  pre_mean_t <- tbl_t[tbl_t$post == 0, outcome_var]
-  ci_pre_low_t <- tbl_t[tbl_t$post == 0, "ci_l"]
-  ci_pre_upp_t <- tbl_t[tbl_t$post == 0, "ci_u"]
-  post_mean_t <- tbl_t[tbl_t$post == 1, outcome_var]
-  ci_post_low_t <- tbl_t[tbl_t$post == 1, "ci_l"]
-  ci_post_upp_t <- tbl_t[tbl_t$post == 1, "ci_u"]
-  
-  # Convert to percentage points for intervention == 1
-  pre_mean_percent_t <- pre_mean_t * 100
-  ci_pre_low_percent_t <- ci_pre_low_t * 100
-  ci_pre_upp_percent_t <- ci_pre_upp_t * 100
-  post_mean_percent_t <- post_mean_t * 100
-  ci_post_low_percent_t <- ci_post_low_t * 100
-  ci_post_upp_percent_t <- ci_post_upp_t * 100
-  
-  # Calculate the difference for intervention == 1
-  diff_mean_t <- post_mean_t - pre_mean_t
-  
-  # Calculate the standard error of the difference for intervention == 1
-  diff_se_t <- sqrt((((tbl_t[tbl_t$post == 1, "ci_u"] - post_mean_t))/z_value)^2 + 
-                    (((pre_mean_t - tbl_t[tbl_t$post == 0, "ci_l"]))/z_value)^2)
-  
-  # Calculate the confidence interval for intervention == 1
-  ci_diff_low_t <- diff_mean_t - z_value * diff_se_t
-  ci_diff_upp_t <- diff_mean_t + z_value * diff_se_t
-  
-  # Convert to percentage points for intervention == 1
-  diff_mean_percent_t <- diff_mean_t * 100
-  ci_diff_low_percent_t <- ci_diff_low_t * 100
-  ci_diff_upp_percent_t <- ci_diff_upp_t * 100
-  
-  # Extract the means and confidence intervals for intervention == 0
-  pre_mean_c <- tbl_c[tbl_c$post == 0, outcome_var]
-  ci_pre_low_c <- tbl_c[tbl_c$post == 0, "ci_l"]
-  ci_pre_upp_c <- tbl_c[tbl_c$post == 0, "ci_u"]
-  post_mean_c <- tbl_c[tbl_c$post == 1, outcome_var]
-  ci_post_low_c <- tbl_c[tbl_c$post == 1, "ci_l"]
-  ci_post_upp_c <- tbl_c[tbl_c$post == 1, "ci_u"]
-  
-  # Convert to percentage points for intervention == 0
-  pre_mean_percent_c <- pre_mean_c * 100
-  ci_pre_low_percent_c <- ci_pre_low_c * 100
-  ci_pre_upp_percent_c <- ci_pre_upp_c * 100
-  post_mean_percent_c <- post_mean_c * 100
-  ci_post_low_percent_c <- ci_post_low_c * 100
-  ci_post_upp_percent_c <- ci_post_upp_c * 100
-  
-  # Calculate the difference for intervention == 0
-  diff_mean_c <- post_mean_c - pre_mean_c
-  
-  # Calculate p value for intervention == 1
-  did_ttest_t <- svyttest(as.formula(paste0(outcome_var, " ~ post")), design = subset(survey_design, intervention == 1))
-  did_pval_t <- formatC(did_ttest_t$p.value, format = "f", digits = 4)
-  
-  # Calculate the standard error of the difference for intervention == 0
-  diff_se_c <- sqrt((((tbl_c[tbl_c$post == 1, "ci_u"] - post_mean_c))/z_value)^2 +
-                    (((pre_mean_c - tbl_c[tbl_c$post == 0, "ci_l"]))/z_value)^2)
-  
-  # Calculate the confidence interval for intervention == 0
-  ci_diff_low_c <- diff_mean_c - z_value * diff_se_c
-  ci_diff_upp_c <- diff_mean_c + z_value * diff_se_c
-  
-  # Convert to percentage points for intervention == 0
-  diff_mean_percent_c <- diff_mean_c * 100
-  ci_diff_low_percent_c <- ci_diff_low_c * 100
-  ci_diff_upp_percent_c <- ci_diff_upp_c * 100
-  
-  # Calculate p value for intervention == 0
-  did_ttest_c <- svyttest(as.formula(paste0(outcome_var, " ~ post")), design = subset(survey_design, intervention == 0))
-  did_pval_c <- formatC(did_ttest_c$p.value, format = "f", digits = 4)
-  
-  # Print the results for intervention == 1
-  cat("Intervention group:\n")
-  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_t, format = "f", digits = 2), " (", 
-             formatC(ci_pre_low_percent_t, format = "f", digits = 2), ", ", 
-             formatC(ci_pre_upp_percent_t, format = "f", digits = 2), ")\n"))
-  cat(paste0("Post period mean: ", formatC(post_mean_percent_t, format = "f", digits = 2), " (", 
-             formatC(ci_post_low_percent_t, format = "f", digits = 2), ", ",
-             formatC(ci_post_upp_percent_t, format = "f", digits = 2), ")\n"))
-  cat(paste0("Difference: ", formatC(diff_mean_percent_t, format = "f", digits = 2), " (", 
-             formatC(ci_diff_low_percent_t, format = "f", digits = 2), ", ",
-             formatC(ci_diff_upp_percent_t, format = "f", digits = 2), ")\n"))
-  cat(paste0("P value: ", formatC(did_pval_t, format = "f", digits = 4), "\n\n"))
-  
-  # Print the results for intervention == 0
-  cat("Control group:\n")
-  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_c, format = "f", digits = 2), " (", 
-             formatC(ci_pre_low_percent_c, format = "f", digits = 2), ", ",
-             formatC(ci_pre_upp_percent_c, format = "f", digits = 2), ")\n"))
-  cat(paste0("Post period mean: ", formatC(post_mean_percent_c, format = "f", digits = 2), " (", 
-             formatC(ci_post_low_percent_c, format = "f", digits = 2), ", ",
-             formatC(ci_post_upp_percent_c, format = "f", digits = 2), ")\n"))
-  cat(paste0("Difference: ", formatC(diff_mean_percent_c, format = "f", digits = 2), " (", 
-             formatC(ci_diff_low_percent_c, format = "f", digits = 2), ", ",
-             formatC(ci_diff_upp_percent_c, format = "f", digits = 2), ")\n"))
-  cat(paste0("P value: ", formatC(did_pval_c, format = "f", digits = 4), "\n\n"))
-  
-  # Extract estimates, confidence intervals, and p-values for both models
-  
-  # Unadjusted Model
-  unadj_diff_in_diff <- coef(unadj_model)["intervention:post"] * 100
-  unadj_ci <- confint(unadj_model)["intervention:post", ] * 100
-  unadj_p_value <- summary(unadj_model)$coefficients["intervention:post", "Pr(>|t|)"]
-  
-  # Adjusted Model
-  adj_diff_in_diff <- coef(adj_model)["intervention:post"] * 100
-  adj_ci <- confint(adj_model)["intervention:post", ] * 100
-  adj_p_value <- summary(adj_model)$coefficients["intervention:post", "Pr(>|t|)"]
-  
-  # Print the results for the unadjusted model
-  cat("\nUnadjusted Model:\n")
-  cat(paste0("Difference-in-Difference Estimate: ", formatC(unadj_diff_in_diff, format = "f", digits = 2), " (", 
-      formatC(unadj_ci[1], format = "f", digits = 2), ", ", 
-      formatC(unadj_ci[2], format = "f", digits = 2), ")\n"))
-  cat(paste0("p-value: ", formatC(unadj_p_value, format = "f", digits = 2), "\n"))
-  
-  # Print the results for the adjusted model
-  cat(paste0("\nAdjusted Model:\n"))
-  cat(paste0("Difference-in-Difference Estimate: ", formatC(adj_diff_in_diff, format = "f", digits = 2), " (", 
-      formatC(adj_ci[1], format = "f", digits = 2), ", ", 
-      formatC(adj_ci[2], format = "f", digits = 2), ")\n"))
-  cat(paste0("p-value: ", formatC(adj_p_value, format = "f", digits = 2), "\n"))
-}
-
-# Run on outcomes
-gen_did_tbl("medicaid", medicaid_unadj, medicaid_adj, sample)
-gen_did_tbl("esi", esi_unadj, esi_adj, sample)
-gen_did_tbl("uninsured", uninsured_unadj, uninsured_adj, sample)
-gen_did_tbl("employed", employed_unadj, employed_adj, sample)
+# # Define function to fill in diff-in-diff table
+# gen_did_tbl <- function(outcome_var, unadj_model, adj_model, survey_design, z_value = 1.96) {
+#   # Tabulate the average percentages in the pre and post time periods for intervention == 1
+#   tbl_t <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention == 1), svymean, vartype = c("ci"), na.rm = TRUE)
+#   
+#   # Tabulate the average percentages in the pre and post time periods for intervention == 0
+#   tbl_c <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention == 0), svymean, vartype = c("ci"), na.rm = TRUE)
+#   
+#   # Extract the means and confidence intervals for intervention == 1 
+#   pre_mean_t <- tbl_t[tbl_t$post == 0, outcome_var]
+#   ci_pre_low_t <- tbl_t[tbl_t$post == 0, "ci_l"]
+#   ci_pre_upp_t <- tbl_t[tbl_t$post == 0, "ci_u"]
+#   post_mean_t <- tbl_t[tbl_t$post == 1, outcome_var]
+#   ci_post_low_t <- tbl_t[tbl_t$post == 1, "ci_l"]
+#   ci_post_upp_t <- tbl_t[tbl_t$post == 1, "ci_u"]
+#   
+#   # Convert to percentage points for intervention == 1
+#   pre_mean_percent_t <- pre_mean_t * 100
+#   ci_pre_low_percent_t <- ci_pre_low_t * 100
+#   ci_pre_upp_percent_t <- ci_pre_upp_t * 100
+#   post_mean_percent_t <- post_mean_t * 100
+#   ci_post_low_percent_t <- ci_post_low_t * 100
+#   ci_post_upp_percent_t <- ci_post_upp_t * 100
+#   
+#   # Calculate the difference for intervention == 1
+#   diff_mean_t <- post_mean_t - pre_mean_t
+#   
+#   # Calculate the standard error of the difference for intervention == 1
+#   diff_se_t <- sqrt((((tbl_t[tbl_t$post == 1, "ci_u"] - post_mean_t))/z_value)^2 + 
+#                     (((pre_mean_t - tbl_t[tbl_t$post == 0, "ci_l"]))/z_value)^2)
+#   
+#   # Calculate the confidence interval for intervention == 1
+#   ci_diff_low_t <- diff_mean_t - z_value * diff_se_t
+#   ci_diff_upp_t <- diff_mean_t + z_value * diff_se_t
+#   
+#   # Convert to percentage points for intervention == 1
+#   diff_mean_percent_t <- diff_mean_t * 100
+#   ci_diff_low_percent_t <- ci_diff_low_t * 100
+#   ci_diff_upp_percent_t <- ci_diff_upp_t * 100
+#   
+#   # Extract the means and confidence intervals for intervention == 0
+#   pre_mean_c <- tbl_c[tbl_c$post == 0, outcome_var]
+#   ci_pre_low_c <- tbl_c[tbl_c$post == 0, "ci_l"]
+#   ci_pre_upp_c <- tbl_c[tbl_c$post == 0, "ci_u"]
+#   post_mean_c <- tbl_c[tbl_c$post == 1, outcome_var]
+#   ci_post_low_c <- tbl_c[tbl_c$post == 1, "ci_l"]
+#   ci_post_upp_c <- tbl_c[tbl_c$post == 1, "ci_u"]
+#   
+#   # Convert to percentage points for intervention == 0
+#   pre_mean_percent_c <- pre_mean_c * 100
+#   ci_pre_low_percent_c <- ci_pre_low_c * 100
+#   ci_pre_upp_percent_c <- ci_pre_upp_c * 100
+#   post_mean_percent_c <- post_mean_c * 100
+#   ci_post_low_percent_c <- ci_post_low_c * 100
+#   ci_post_upp_percent_c <- ci_post_upp_c * 100
+#   
+#   # Calculate the difference for intervention == 0
+#   diff_mean_c <- post_mean_c - pre_mean_c
+#   
+#   # Calculate p value for intervention == 1
+#   did_ttest_t <- svyttest(as.formula(paste0(outcome_var, " ~ post")), design = subset(survey_design, intervention == 1))
+#   did_pval_t <- formatC(did_ttest_t$p.value, format = "f", digits = 4)
+#   
+#   # Calculate the standard error of the difference for intervention == 0
+#   diff_se_c <- sqrt((((tbl_c[tbl_c$post == 1, "ci_u"] - post_mean_c))/z_value)^2 +
+#                     (((pre_mean_c - tbl_c[tbl_c$post == 0, "ci_l"]))/z_value)^2)
+#   
+#   # Calculate the confidence interval for intervention == 0
+#   ci_diff_low_c <- diff_mean_c - z_value * diff_se_c
+#   ci_diff_upp_c <- diff_mean_c + z_value * diff_se_c
+#   
+#   # Convert to percentage points for intervention == 0
+#   diff_mean_percent_c <- diff_mean_c * 100
+#   ci_diff_low_percent_c <- ci_diff_low_c * 100
+#   ci_diff_upp_percent_c <- ci_diff_upp_c * 100
+#   
+#   # Calculate p value for intervention == 0
+#   did_ttest_c <- svyttest(as.formula(paste0(outcome_var, " ~ post")), design = subset(survey_design, intervention == 0))
+#   did_pval_c <- formatC(did_ttest_c$p.value, format = "f", digits = 4)
+#   
+#   # Print the results for intervention == 1
+#   cat("Intervention group:\n")
+#   cat(paste0("Pre period mean: ", formatC(pre_mean_percent_t, format = "f", digits = 2), " (", 
+#              formatC(ci_pre_low_percent_t, format = "f", digits = 2), ", ", 
+#              formatC(ci_pre_upp_percent_t, format = "f", digits = 2), ")\n"))
+#   cat(paste0("Post period mean: ", formatC(post_mean_percent_t, format = "f", digits = 2), " (", 
+#              formatC(ci_post_low_percent_t, format = "f", digits = 2), ", ",
+#              formatC(ci_post_upp_percent_t, format = "f", digits = 2), ")\n"))
+#   cat(paste0("Difference: ", formatC(diff_mean_percent_t, format = "f", digits = 2), " (", 
+#              formatC(ci_diff_low_percent_t, format = "f", digits = 2), ", ",
+#              formatC(ci_diff_upp_percent_t, format = "f", digits = 2), ")\n"))
+#   cat(paste0("P value: ", formatC(did_pval_t, format = "f", digits = 4), "\n\n"))
+#   
+#   # Print the results for intervention == 0
+#   cat("Control group:\n")
+#   cat(paste0("Pre period mean: ", formatC(pre_mean_percent_c, format = "f", digits = 2), " (", 
+#              formatC(ci_pre_low_percent_c, format = "f", digits = 2), ", ",
+#              formatC(ci_pre_upp_percent_c, format = "f", digits = 2), ")\n"))
+#   cat(paste0("Post period mean: ", formatC(post_mean_percent_c, format = "f", digits = 2), " (", 
+#              formatC(ci_post_low_percent_c, format = "f", digits = 2), ", ",
+#              formatC(ci_post_upp_percent_c, format = "f", digits = 2), ")\n"))
+#   cat(paste0("Difference: ", formatC(diff_mean_percent_c, format = "f", digits = 2), " (", 
+#              formatC(ci_diff_low_percent_c, format = "f", digits = 2), ", ",
+#              formatC(ci_diff_upp_percent_c, format = "f", digits = 2), ")\n"))
+#   cat(paste0("P value: ", formatC(did_pval_c, format = "f", digits = 4), "\n\n"))
+#   
+#   # Extract estimates, confidence intervals, and p-values for both models
+#   
+#   # Unadjusted Model
+#   unadj_diff_in_diff <- coef(unadj_model)["intervention:post"] * 100
+#   unadj_ci <- confint(unadj_model)["intervention:post", ] * 100
+#   unadj_p_value <- summary(unadj_model)$coefficients["intervention:post", "Pr(>|t|)"]
+#   
+#   # Adjusted Model
+#   adj_diff_in_diff <- coef(adj_model)["intervention:post"] * 100
+#   adj_ci <- confint(adj_model)["intervention:post", ] * 100
+#   adj_p_value <- summary(adj_model)$coefficients["intervention:post", "Pr(>|t|)"]
+#   
+#   # Print the results for the unadjusted model
+#   cat("\nUnadjusted Model:\n")
+#   cat(paste0("Difference-in-Difference Estimate: ", formatC(unadj_diff_in_diff, format = "f", digits = 2), " (", 
+#       formatC(unadj_ci[1], format = "f", digits = 2), ", ", 
+#       formatC(unadj_ci[2], format = "f", digits = 2), ")\n"))
+#   cat(paste0("p-value: ", formatC(unadj_p_value, format = "f", digits = 2), "\n"))
+#   
+#   # Print the results for the adjusted model
+#   cat(paste0("\nAdjusted Model:\n"))
+#   cat(paste0("Difference-in-Difference Estimate: ", formatC(adj_diff_in_diff, format = "f", digits = 2), " (", 
+#       formatC(adj_ci[1], format = "f", digits = 2), ", ", 
+#       formatC(adj_ci[2], format = "f", digits = 2), ")\n"))
+#   cat(paste0("p-value: ", formatC(adj_p_value, format = "f", digits = 2), "\n"))
+# }
+# 
+# # Run on outcomes
+# gen_did_tbl("medicaid", medicaid_unadj, medicaid_adj, sample)
+# gen_did_tbl("esi", esi_unadj, esi_adj, sample)
+# gen_did_tbl("uninsured", uninsured_unadj, uninsured_adj, sample)
+# gen_did_tbl("employed", employed_unadj, employed_adj, sample)
 ```
 
 # Create baseline characteristics table
 ```{r}
-# Define a function to generate a table and chi-square test
-gen_table_chisq <- function(variable, group_var, survey_design) {
-  # Calculate the weighted percentages and confidence intervals for the input variable by the group variable
-  tbl <- svyby(as.formula(paste("~", variable)), as.formula(paste("~", group_var)), survey_design, svymean, vartype = c("ci"), na.rm = TRUE)
-  
-  # Generate a Chi-square test to compare the input variable across the group variable
-  chi_test <- svychisq(as.formula(paste("~", variable, "+", group_var)), design = survey_design)
-  
-  # Return the table and chi-square test result as a list
-  list(
-    table = tbl,
-    chi_square = chi_test
-  )
-}
+# # Define a function to generate a table and chi-square test
+# gen_table_chisq <- function(variable, group_var, survey_design) {
+#   # Calculate the weighted percentages and confidence intervals for the input variable by the group variable
+#   tbl <- svyby(as.formula(paste("~", variable)), as.formula(paste("~", group_var)), survey_design, svymean, vartype = c("ci"), na.rm = TRUE)
+#   
+#   # Generate a Chi-square test to compare the input variable across the group variable
+#   chi_test <- svychisq(as.formula(paste("~", variable, "+", group_var)), design = survey_design)
+#   
+#   # Return the table and chi-square test result as a list
+#   list(
+#     table = tbl,
+#     chi_square = chi_test
+#   )
+# }
+# 
+# # Split sample into pre and post
+# sample_pre <- sample %>%
+#   subset(post == 0)
+# 
+# sample_post <- sample %>%
+#   subset(post == 1)
+# 
+# # Total study population
+# total <- svytable(~intervention, design = sample) %>% as.data.frame()
+# total
+# 
+# # Tabulate weighted respondent characteristics in pre period
+# total_tbl_pre_u <- table(sample_pre$variables$intervention)
+# total_tbl_pre_u
+# 
+# total_tbl_pre_w <- svytable(~intervention, design = sample_pre) %>% as.data.frame()
+# total_tbl_pre_w
+# 
+# age_tbl_pre <- svyby(~age, ~intervention, sample_pre, svymean, vartype = c("se"), na.rm = TRUE)
+# age_tbl_pre
+# age_tbl_pre_p <- svyttest(age~intervention, sample_pre)
+# age_tbl_pre_p
+# 
+# sex_tbl_pre <- gen_table_chisq("sex_cat", "intervention", sample_pre)
+# sex_tbl_pre$table
+# sex_tbl_pre$chi_square
+# 
+# race_tbl_pre <- gen_table_chisq("race_cat", "intervention", sample_pre)
+# race_tbl_pre$table
+# race_tbl_pre$chi_square
+# 
+# education_tbl_pre <- gen_table_chisq("education_cat", "intervention", sample_pre)
+# education_tbl_pre$table
+# education_tbl_pre$chi_square
+# 
+# dm_tbl_pre <- gen_table_chisq("dm", "intervention", sample_pre)
+# dm_tbl_pre$table
+# dm_tbl_pre$chi_square
+# 
+# mi_tbl_pre <- gen_table_chisq("mi", "intervention", sample_pre)
+# mi_tbl_pre$table
+# mi_tbl_pre$chi_square
+# 
+# stroke_tbl_pre <- gen_table_chisq("stroke", "intervention", sample_pre)
+# stroke_tbl_pre$table
+# stroke_tbl_pre$chi_square
+# 
+# copd_tbl_pre <- gen_table_chisq("copd", "intervention", sample_pre)
+# copd_tbl_pre$table
+# copd_tbl_pre$chi_square
+# 
+# cancer_tbl_pre <- gen_table_chisq("cancer", "intervention", sample_pre)
+# cancer_tbl_pre$table
+# cancer_tbl_pre$chi_square
+# 
+# # Tabulate weighted respondent characteristics in post periods
+# total_tbl_post_u <- table(sample_post$variables$intervention)
+# total_tbl_post_u
+# 
+# total_tbl_post_w <- svytable(~intervention, design = sample_post) %>% as.data.frame()
+# total_tbl_post_w
+# 
+# age_tbl_post <- svyby(~age, ~intervention, sample_post, svymean, vartype = c("se"), na.rm = TRUE)
+# age_tbl_post
+# age_tbl_post_p <- svyttest(age~intervention, sample_post)
+# age_tbl_post_p
+# 
+# sex_tbl_post <- gen_table_chisq("sex_cat", "intervention", sample_post)
+# sex_tbl_post$table
+# sex_tbl_post$chi_square
+# 
+# race_tbl_post <- gen_table_chisq("race_cat", "intervention", sample_post)
+# race_tbl_post$table
+# race_tbl_post$chi_square
+# 
+# education_tbl_post <- gen_table_chisq("education_cat", "intervention", sample_post)
+# education_tbl_post$table
+# education_tbl_post$chi_square
+```
 
-# Split sample into pre and post
-sample_pre <- sample %>%
-  subset(post == 0)
-
-sample_post <- sample %>%
-  subset(post == 1)
-
-# Total study population
-total <- svytable(~intervention, design = sample) %>% as.data.frame()
-total
-
-# Tabulate weighted respondent characteristics in pre period
-total_tbl_pre_u <- table(sample_pre$variables$intervention)
-total_tbl_pre_u
-
-total_tbl_pre_w <- svytable(~intervention, design = sample_pre) %>% as.data.frame()
-total_tbl_pre_w
-
-age_tbl_pre <- svyby(~age, ~intervention, sample_pre, svymean, vartype = c("se"), na.rm = TRUE)
-age_tbl_pre
-age_tbl_pre_p <- svyttest(age~intervention, sample_pre)
-age_tbl_pre_p
-
-sex_tbl_pre <- gen_table_chisq("sex_cat", "intervention", sample_pre)
-sex_tbl_pre$table
-sex_tbl_pre$chi_square
-
-race_tbl_pre <- gen_table_chisq("race_cat", "intervention", sample_pre)
-race_tbl_pre$table
-race_tbl_pre$chi_square
-
-education_tbl_pre <- gen_table_chisq("education_cat", "intervention", sample_pre)
-education_tbl_pre$table
-education_tbl_pre$chi_square
-
-dm_tbl_pre <- gen_table_chisq("dm", "intervention", sample_pre)
-dm_tbl_pre$table
-dm_tbl_pre$chi_square
-
-mi_tbl_pre <- gen_table_chisq("mi", "intervention", sample_pre)
-mi_tbl_pre$table
-mi_tbl_pre$chi_square
-
-stroke_tbl_pre <- gen_table_chisq("stroke", "intervention", sample_pre)
-stroke_tbl_pre$table
-stroke_tbl_pre$chi_square
-
-copd_tbl_pre <- gen_table_chisq("copd", "intervention", sample_pre)
-copd_tbl_pre$table
-copd_tbl_pre$chi_square
-
-cancer_tbl_pre <- gen_table_chisq("cancer", "intervention", sample_pre)
-cancer_tbl_pre$table
-cancer_tbl_pre$chi_square
-
-# Tabulate weighted respondent characteristics in post periods
-total_tbl_post_u <- table(sample_post$variables$intervention)
-total_tbl_post_u
-
-total_tbl_post_w <- svytable(~intervention, design = sample_post) %>% as.data.frame()
-total_tbl_post_w
-
-age_tbl_post <- svyby(~age, ~intervention, sample_post, svymean, vartype = c("se"), na.rm = TRUE)
-age_tbl_post
-age_tbl_post_p <- svyttest(age~intervention, sample_post)
-age_tbl_post_p
-
-sex_tbl_post <- gen_table_chisq("sex_cat", "intervention", sample_post)
-sex_tbl_post$table
-sex_tbl_post$chi_square
-
-race_tbl_post <- gen_table_chisq("race_cat", "intervention", sample_post)
-race_tbl_post$table
-race_tbl_post$chi_square
-
-education_tbl_post <- gen_table_chisq("education_cat", "intervention", sample_post)
-education_tbl_post$table
-education_tbl_post$chi_square
+# Playground
+```{r}
+# table(data$medicaid, data$medicaid2)
+# 
+# table(data$medicaid, data$state)
+# 
+# georgia <- data %>% filter(state == "Georgia")
+# 
+# table(georgia$medicaid)
+# 
+# svytable(~medicaid2 + year + state, survey)
+# 
+# 
+# 
+# georgia <- survey %>%
+#   subset(
+#     state == "Georgia"
+#   )
+# 
+# svytable(~medicaid + year, georgia)
+# 164437.59 / (164437.59 + 3183231.13)
+# 
+# svytable(~medicaid2 + year, georgia)
+# 440619.47 / (440619.47 + 2849981.11)
+# 
+# # Step 1: Fit survey-weighted logistic regression model for Medicaid coverage
+# medicaid_model <- svyglm(medicaid ~ quarter * intervention + age_cat, 
+#                          design = sample_pre)
+# 
+# # Step 2: Create a dataset for prediction (marginal means by quarter & intervention)
+# new_data <- expand.grid(
+#   quarter = unique(sample_pre$variables$quarter),
+#   intervention = c(TRUE, FALSE),
+#   age_cat = unique(sample_pre$variables$age_cat)#,  # Use all valid levels of age_cat
+#   # sex_cat = unique(sample_pre$variables$sex_cat)   # Use all valid levels of sex_cat
+# )
+# 
+# # Step 3: Predict adjusted Medicaid probabilities with standard errors
+# preds <- predict(medicaid_model, newdata = new_data, type = "response", se.fit = TRUE)
+# 
+# # Step 4: Store results in a dataframe
+# medicaid_adjusted <- new_data %>%
+#   mutate(
+#     percentage = preds$fit * 100,   # Convert probability to percentage
+#     se = preds$se.fit * 100,        # Convert SE to percentage
+#     lower = percentage - 1.96 * se, # 95% CI Lower Bound
+#     upper = percentage + 1.96 * se  # 95% CI Upper Bound
+#   )
+# 
+# # Step 5: Compute adjusted difference between groups
+# medicaid_diff_adjusted <- medicaid_adjusted %>%
+#   pivot_wider(names_from = intervention, values_from = c(percentage, se), names_prefix = "group_") %>%
+#   rename(
+#     percentage_control = group_FALSE,  
+#     percentage_treatment = group_TRUE, 
+#     se_control = group_se_FALSE,
+#     se_treatment = group_se_TRUE
+#   ) %>%
+#   mutate(
+#     diff_percentage = percentage_treatment - percentage_control,
+#     diff_se = sqrt(se_treatment^2 + se_control^2),  # Delta method for SE
+#     lower = diff_percentage - 1.96 * diff_se,
+#     upper = diff_percentage + 1.96 * diff_se
+#   )
+# 
+# # Step 6: Plot adjusted differences over time
+# medicaid_diff_plot <- ggplot(medicaid_diff_adjusted, aes(x = quarter, y = diff_percentage)) +
+#   geom_line(color = "blue") +
+#   geom_point(color = "blue") +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "blue") +
+#   labs(
+#     title = "Adjusted Difference in Medicaid Coverage (Age & Sex Adjusted)",
+#     x = "Quarter",
+#     y = "Difference in Medicaid Coverage (%)"
+#   ) +
+#   theme_minimal() +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+#   ylim(min(medicaid_diff_adjusted$lower, na.rm = TRUE), max(medicaid_diff_adjusted$upper, na.rm = TRUE))
+# 
+# medicaid_diff_plot
 ```
