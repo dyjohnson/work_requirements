@@ -426,48 +426,15 @@ data <- data %>%
     intervention = case_when(
       state == "Georgia" ~ TRUE,
       # state == "South Dakota" ~ FALSE,
-      # state %in% c("Alabama", "Florida", "Texas", "Mississippi") ~ FALSE, # Test 1
-      # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 2
-      # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina", "Kansas", "Wyoming") ~ FALSE, # Test 3
-      # state %in% c("Alabama", "Florida", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 4 best so far
-      state %in% c("Alabama", "Florida", "Texas", "Mississippi", "South Carolina") ~ FALSE, # Test 5
-      # state %in% c("Alabama", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 6
+      state %in% c("Alabama", "Florida", "Texas", "Mississippi", "South Carolina") ~ FALSE,
       TRUE ~ NA
     ),
-    # intervention1 = case_when(
-    #   state == "Georgia" ~ TRUE,
-    #   state == "South Dakota" ~ FALSE,
-    #   # state %in% c("Alabama", "Florida", "Texas", "Mississippi") ~ FALSE, # Test 1
-    #   # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 2
-    #   # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina", "Kansas", "Wyoming") ~ FALSE, # Test 3
-    #   # state %in% c("Alabama", "Florida", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 4 best so far
-    #   # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "South Carolina") ~ FALSE, # Test 5
-    #   # state %in% c("Alabama", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 6
-    #   TRUE ~ NA
-    # ),
-    # intervention2 = case_when(
-    #   state == "Georgia" ~ TRUE,
-    #   # state == "South Dakota" ~ FALSE,
-    #   state %in% c("Alabama", "Florida", "Texas", "Mississippi") ~ FALSE, # Test 1
-    #   # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 2
-    #   # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina", "Kansas", "Wyoming") ~ FALSE, # Test 3
-    #   # state %in% c("Alabama", "Florida", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 4 best so far
-    #   # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "South Carolina") ~ FALSE, # Test 5
-    #   # state %in% c("Alabama", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 6
-    #   TRUE ~ NA
-    # ),
-    # ,
-    # intervention3 = case_when(
-    #   state == "Georgia" ~ TRUE,
-    #   # state == "South Dakota" ~ FALSE,
-    #   # state %in% c("Alabama", "Florida", "Texas", "Mississippi") ~ FALSE, # Test 1
-    #   # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 2
-    #   # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "Tennessee", "South Carolina", "Kansas", "Wyoming") ~ FALSE, # Test 3
-    #   # state %in% c("Alabama", "Florida", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 4 best so far
-    #   state %in% c("Alabama", "Florida", "Texas", "Mississippi", "South Carolina") ~ FALSE, # Test 5
-    #   # state %in% c("Alabama", "Mississippi", "Tennessee", "South Carolina") ~ FALSE, # Test 6
-    #   TRUE ~ NA
-    # )
+    group = case_when(
+      state == "Georgia" ~ "Georgia",
+      state == "South Dakota" ~ "South Dakota",
+      state %in% c("Alabama", "Florida", "Texas", "Mississippi", "South Carolina") ~ "Medicaid Non-expansion States",
+      TRUE ~ NA
+    )
   )
 ```
 
@@ -569,7 +536,7 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = pe
                               "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
                               "Mar 2024", "Jun 2024", "Sep 2024"),
                    drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  scale_color_brewer(palette = "Set1", labels = c("Medicaid Non-expansion States", "Georgia")) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
@@ -579,7 +546,7 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = pe
   ylim(0, 100)
 
 medicaid_quarter_plot
-ggsave("medicaid_quarter_plot.jpg")
+ggsave("medicaid_quarter_plot_south.jpg")
 
 # ESI
 esi_quarter <- svyby(~esi, ~quarter_factor + intervention, sample,
@@ -612,7 +579,7 @@ esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter_factor, y = percentage, 
                               "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
                               "Mar 2024", "Jun 2024", "Sep 2024"),
                    drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  scale_color_brewer(palette = "Set1", labels = c("Medicaid Non-expansion States", "Georgia")) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
@@ -622,7 +589,7 @@ esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter_factor, y = percentage, 
   ylim(0, 100)
 
 esi_quarter_plot
-ggsave("esi_quarter_plot.jpg")
+ggsave("esi_quarter_plot_south.jpg")
 
 # Uninsured
 uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention, sample,
@@ -655,7 +622,7 @@ uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = 
                               "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
                               "Mar 2024", "Jun 2024", "Sep 2024"),
                    drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  scale_color_brewer(palette = "Set1", labels = c("Medicaid Non-expansion States", "Georgia")) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
@@ -665,7 +632,7 @@ uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = 
   ylim(0, 100)
 
 uninsured_quarter_plot
-ggsave("uninsured_quarter_plot.jpg")
+ggsave("uninsured_quarter_plot_south.jpg")
 
 # Employed
 employed_quarter <- svyby(~employed, ~quarter_factor + intervention, sample,
@@ -698,7 +665,7 @@ employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = pe
                               "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
                               "Mar 2024", "Jun 2024", "Sep 2024"),
                    drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  scale_color_brewer(palette = "Set1", labels = c("Medicaid Non-expansion States", "Georgia")) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
@@ -708,7 +675,7 @@ employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = pe
   ylim(0, 100)
 
 employed_quarter_plot
-ggsave("employed_quarter_plot.jpg")
+ggsave("employed_quarter_plot_south.jpg")
 ```
 
 # Test parallel trends
