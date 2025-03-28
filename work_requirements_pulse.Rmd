@@ -196,33 +196,6 @@ data <- data %>%
     ),
     year = year(date),
     month = month(date),
-    bimonth = case_when(
-      year == 2021 & month %in% c(01, 02) ~ "2021 B1",
-      year == 2021 & month %in% c(03, 04) ~ "2021 B2",
-      year == 2021 & month %in% c(05, 06) ~ "2021 B3",
-      year == 2021 & month %in% c(07, 08) ~ "2021 B4",
-      year == 2021 & month %in% c(09, 10) ~ "2021 B5",
-      year == 2021 & month %in% c(11, 12) ~ "2021 B6",
-      year == 2022 & month %in% c(01, 02) ~ "2022 B1",
-      year == 2022 & month %in% c(03, 04) ~ "2022 B2",
-      year == 2022 & month %in% c(05, 06) ~ "2022 B3",
-      year == 2022 & month %in% c(07, 08) ~ "2022 B4",
-      year == 2022 & month %in% c(09, 10) ~ "2022 B5",
-      year == 2022 & month %in% c(11, 12) ~ "2022 B6",
-      year == 2023 & month %in% c(01, 02) ~ "2023 B1",
-      year == 2023 & month %in% c(03, 04) ~ "2023 B2",
-      year == 2023 & month %in% c(05, 06) ~ "2023 B3",
-      year == 2023 & month %in% c(07, 08) ~ "2023 B4",
-      year == 2023 & month %in% c(09, 10) ~ "2023 B5",
-      year == 2023 & month %in% c(11, 12) ~ "2023 B6",
-      year == 2024 & month %in% c(01, 02) ~ "2024 B1",
-      year == 2024 & month %in% c(03, 04) ~ "2024 B2",
-      year == 2024 & month %in% c(05, 06) ~ "2024 B3",
-      year == 2024 & month %in% c(07, 08) ~ "2024 B4",
-      year == 2024 & month %in% c(09, 10) ~ "2024 B5",
-      year == 2024 & month %in% c(11, 12) ~ "2024 B6",
-      TRUE ~ NA_character_
-    ),
     quarter = as.yearqtr(date),
     quarter_factor = factor(quarter),
     half = case_when(
@@ -305,7 +278,7 @@ data <- data %>%
       INCOME == 8 ~ 250000,
       TRUE ~ NA_real_
     ),
-    fpg = case_when(
+    fpg = case_when( # Federal poverty guidelines
       year == 2022 & state != "Alaska" & state != "Hawaii" ~ 100 * (income_num / (8870 + 4720 * THHLD_NUMPER)),
       year == 2022 & state == "Alaska" ~ 100 * (income_num / (11090 + 5900 * THHLD_NUMPER)),
       year == 2022 & state == "Hawaii" ~ 100 * (income_num / (10200 + 5430 * THHLD_NUMPER)),
@@ -359,6 +332,36 @@ data <- data %>%
 # Outcomes
 data <- data %>%
   mutate(
+    esi = case_when(
+      HLTHINS1 == 1 ~ 1,
+      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
+          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
+          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
+        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
+        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      TRUE ~ 0
+    ),
+    marketplace = case_when(
+      HLTHINS2 == 1 ~ 1,
+      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
+          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
+          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
+        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
+        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      TRUE ~ 0
+    ),
+    medicare = case_when(
+      HLTHINS3 == 1 ~ 1,
+      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
+          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
+          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
+        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
+        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      TRUE ~ 0
+    ),
     medicaid = case_when(
       HLTHINS4 == 1 ~ 1,
       HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
@@ -369,8 +372,38 @@ data <- data %>%
         HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
       TRUE ~ 0
     ),
-    esi = case_when(
-      HLTHINS1 == 1 ~ 1,
+    tricare = case_when(
+      HLTHINS5 == 1 ~ 1,
+      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
+          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
+          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
+        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
+        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      TRUE ~ 0
+    ),
+    va = case_when(
+      HLTHINS6 == 1 ~ 1,
+      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
+          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
+          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
+        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
+        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      TRUE ~ 0
+    ),
+    ihs = case_when(
+      HLTHINS7 == 1 ~ 1,
+      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
+          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
+          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
+        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
+        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      TRUE ~ 0
+    ),
+    other_hi = case_when(
+      HLTHINS8 == 1 ~ 1,
       HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
           HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
           HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
@@ -419,14 +452,14 @@ data <- data %>%
 data <- data %>% 
   mutate(
     post = case_when( # Blank out April 1, 2023 - July 31, 2023
-      date < ymd("2023-04-01") ~ 0,
-      date > ymd("2023-07-31") ~ 1,
+      date < ymd("2023-04-01") ~ FALSE,
+      date > ymd("2023-07-31") ~ TRUE,
       TRUE ~ NA
     ),
     intervention = case_when(
       state == "Georgia" ~ TRUE,
-      # state == "South Dakota" ~ FALSE,
-      state %in% c("Alabama", "Florida", "Texas", "Mississippi", "South Carolina") ~ FALSE,
+      state == "South Dakota" ~ FALSE,
+      # state %in% c("Alabama", "Florida", "Texas", "Mississippi", "South Carolina") ~ FALSE,
       TRUE ~ NA
     ),
     group = case_when(
@@ -482,9 +515,7 @@ survey <- data %>%
 ```{r}
 sample <- survey %>%
   subset(
-    # post %in% c(FALSE, TRUE) & # Exclude blanked period
-      # intervention %in% c(FALSE, TRUE) & # Intervention or control group
-    !is.na(group_factor) &
+    intervention %in% c(FALSE, TRUE) & # Intervention or control group
     # (intervention1 %in% c(FALSE, TRUE) | intervention2 %in% c(FALSE, TRUE) | intervention3 %in% c(FALSE, TRUE)) & # Intervention or control group
       age >= 19 & age <= 64 & # 19-64 years old
       fpg <= 100 & # Income up to 100% FPL
@@ -532,7 +563,7 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = pe
   geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
   labs(
     x = "Date",
-    y = "Medicaid, %"
+    y = "Medicaid coverage, %"
   ) +
   scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
                               "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
@@ -575,7 +606,7 @@ esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter_factor, y = percentage, 
   geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
   labs(
     x = "Date",
-    y = "Employer-sponsored insurance, %"
+    y = "Employer-sponsored insurance coverage, %"
   ) +
   scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
                               "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
@@ -618,7 +649,7 @@ uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = 
   geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
   labs(
     x = "Date",
-    y = "Uninsured, %"
+    y = "Uninsured rate, %"
   ) +
   scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
                               "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
@@ -661,7 +692,7 @@ employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = pe
   geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
   labs(
     x = "Date",
-    y = "Employed, %"
+    y = "Employment, %"
   ) +
   scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
                               "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
@@ -682,22 +713,481 @@ ggsave("employed_quarter_plot_south.jpg")
 
 # Test parallel trends
 ```{r}
-## Medicaid
+# Medicaid
 medicaid_pttest <- svyglm(medicaid ~ intervention * date, design = sample_pre)
 summary(medicaid_pttest)
 
-## Employer-sponsored insurance
+# Employer-sponsored insurance
 esi_pttest <- svyglm(esi ~ intervention * date, design = sample_pre)
 summary(esi_pttest)
 
-## Uninsured
+# Uninsured
 uninsured_pttest <- svyglm(uninsured ~ intervention * date, design = sample_pre)
 summary(uninsured_pttest)
 
-## Employed
+# Employed
 employed_pttest <- svyglm(employed ~ intervention * date, design = sample_pre)
 summary(employed_pttest)
+```
 
+# Unadjusted DID analysis
+```{r}
+# Medicaid
+medicaid_unadj <- svyglm(medicaid ~ intervention * post, design = sample)
+summary(medicaid_unadj)
+
+# Employer-sponsored insurance
+esi_unadj <- svyglm(esi ~ intervention * post, design = sample)
+summary(esi_unadj)
+
+# Uninsured
+uninsured_unadj <- svyglm(uninsured ~ intervention * post, design = sample)
+summary(uninsured_unadj)
+
+# Employed
+employed_unadj <- svyglm(employed ~ intervention * post, design = sample)
+summary(employed_unadj)
+```
+
+# Adjusted DID analysis
+```{r}
+# Medicaid
+medicaid_adj <- svyglm(medicaid ~ intervention * post + age_cat + sex_cat, design = sample)
+summary(medicaid_adj)
+
+# Employer-sponsored insurance
+esi_adj <- svyglm(esi ~ intervention * post + age_cat + sex_cat, design = sample)
+summary(esi_adj)
+
+# Uninsured
+uninsured_adj <- svyglm(uninsured ~ intervention * post + age_cat + sex_cat, design = sample)
+summary(uninsured_adj)
+
+# Employed
+employed_adj <- svyglm(employed ~ intervention * post + age_cat + sex_cat, design = sample)
+summary(employed_adj)
+```
+
+# Create DID table
+```{r}
+# Define function to fill in diff-in-diff table
+gen_did_tbl <- function(outcome_var, survey_design, z_value = 1.96) {
+  # Tabulate the average percentages in the pre and post time periods for intervention == TRUE
+  tbl_t <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention == TRUE), svymean, vartype = c("ci"), na.rm = TRUE)
+
+  # Tabulate the average percentages in the pre and post time periods for intervention == FALSE
+  tbl_c <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention == FALSE), svymean, vartype = c("ci"), na.rm = TRUE)
+
+  # Extract the means and confidence intervals for intervention == TRUE
+  pre_mean_t <- tbl_t[tbl_t$post == FALSE, outcome_var]
+  ci_pre_low_t <- tbl_t[tbl_t$post == FALSE, "ci_l"]
+  ci_pre_upp_t <- tbl_t[tbl_t$post == FALSE, "ci_u"]
+  post_mean_t <- tbl_t[tbl_t$post == TRUE, outcome_var]
+  ci_post_low_t <- tbl_t[tbl_t$post == TRUE, "ci_l"]
+  ci_post_upp_t <- tbl_t[tbl_t$post == TRUE, "ci_u"]
+
+  # Convert to percentage points for intervention == TRUE
+  pre_mean_percent_t <- pre_mean_t * 100
+  ci_pre_low_percent_t <- ci_pre_low_t * 100
+  ci_pre_upp_percent_t <- ci_pre_upp_t * 100
+  post_mean_percent_t <- post_mean_t * 100
+  ci_post_low_percent_t <- ci_post_low_t * 100
+  ci_post_upp_percent_t <- ci_post_upp_t * 100
+
+  # Calculate the difference for intervention == TRUE
+  diff_mean_t <- post_mean_t - pre_mean_t
+
+  # Calculate the standard error of the difference for intervention == TRUE
+  diff_se_t <- sqrt((((tbl_t[tbl_t$post == TRUE, "ci_u"] - post_mean_t))/z_value)^2 +
+                    (((pre_mean_t - tbl_t[tbl_t$post == FALSE, "ci_l"]))/z_value)^2)
+
+  # Calculate the confidence interval for intervention == TRUE
+  ci_diff_low_t <- diff_mean_t - z_value * diff_se_t
+  ci_diff_upp_t <- diff_mean_t + z_value * diff_se_t
+
+  # Convert to percentage points for intervention == TRUE
+  diff_mean_percent_t <- diff_mean_t * 100
+  ci_diff_low_percent_t <- ci_diff_low_t * 100
+  ci_diff_upp_percent_t <- ci_diff_upp_t * 100
+
+  # Extract the means and confidence intervals for intervention == FALSE
+  pre_mean_c <- tbl_c[tbl_c$post == FALSE, outcome_var]
+  ci_pre_low_c <- tbl_c[tbl_c$post == FALSE, "ci_l"]
+  ci_pre_upp_c <- tbl_c[tbl_c$post == FALSE, "ci_u"]
+  post_mean_c <- tbl_c[tbl_c$post == TRUE, outcome_var]
+  ci_post_low_c <- tbl_c[tbl_c$post == TRUE, "ci_l"]
+  ci_post_upp_c <- tbl_c[tbl_c$post == TRUE, "ci_u"]
+
+  # Convert to percentage points for intervention == FALSE
+  pre_mean_percent_c <- pre_mean_c * 100
+  ci_pre_low_percent_c <- ci_pre_low_c * 100
+  ci_pre_upp_percent_c <- ci_pre_upp_c * 100
+  post_mean_percent_c <- post_mean_c * 100
+  ci_post_low_percent_c <- ci_post_low_c * 100
+  ci_post_upp_percent_c <- ci_post_upp_c * 100
+
+  # Calculate the difference for intervention == FALSE
+  diff_mean_c <- post_mean_c - pre_mean_c
+
+  # Calculate p value for intervention == TRUE
+  did_ttest_t <- svyttest(as.formula(paste0(outcome_var, " ~ post")), design = subset(survey_design, intervention == TRUE))
+  did_pval_t <- formatC(did_ttest_t$p.value, format = "f", digits = 4)
+
+  # Calculate the standard error of the difference for intervention == FALSE
+  diff_se_c <- sqrt((((tbl_c[tbl_c$post == TRUE, "ci_u"] - post_mean_c))/z_value)^2 +
+                    (((pre_mean_c - tbl_c[tbl_c$post == FALSE, "ci_l"]))/z_value)^2)
+
+  # Calculate the confidence interval for intervention == FALSE
+  ci_diff_low_c <- diff_mean_c - z_value * diff_se_c
+  ci_diff_upp_c <- diff_mean_c + z_value * diff_se_c
+
+  # Convert to percentage points for intervention == FALSE
+  diff_mean_percent_c <- diff_mean_c * 100
+  ci_diff_low_percent_c <- ci_diff_low_c * 100
+  ci_diff_upp_percent_c <- ci_diff_upp_c * 100
+
+  # Calculate p value for intervention == FALSE
+  did_ttest_c <- svyttest(as.formula(paste0(outcome_var, " ~ post")), design = subset(survey_design, intervention == FALSE))
+  did_pval_c <- formatC(did_ttest_c$p.value, format = "f", digits = 4)
+
+  # Print the results for intervention == TRUE
+  cat("Intervention group:\n")
+  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_t, format = "f", digits = 1), " (",
+             formatC(ci_pre_low_percent_t, format = "f", digits = 1), ", ",
+             formatC(ci_pre_upp_percent_t, format = "f", digits = 1), ")\n"))
+  cat(paste0("Post period mean: ", formatC(post_mean_percent_t, format = "f", digits = 1), " (",
+             formatC(ci_post_low_percent_t, format = "f", digits = 1), ", ",
+             formatC(ci_post_upp_percent_t, format = "f", digits = 1), ")\n"))
+  cat(paste0("Difference: ", formatC(diff_mean_percent_t, format = "f", digits = 1), " (",
+             formatC(ci_diff_low_percent_t, format = "f", digits = 1), ", ",
+             formatC(ci_diff_upp_percent_t, format = "f", digits = 1), ")\n"))
+  cat(paste0("P value: ", formatC(did_pval_t, format = "f", digits = 4), "\n\n"))
+
+  # Print the results for intervention == FALSE
+  cat("Control group:\n")
+  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_c, format = "f", digits = 1), " (",
+             formatC(ci_pre_low_percent_c, format = "f", digits = 1), ", ",
+             formatC(ci_pre_upp_percent_c, format = "f", digits = 1), ")\n"))
+  cat(paste0("Post period mean: ", formatC(post_mean_percent_c, format = "f", digits = 1), " (",
+             formatC(ci_post_low_percent_c, format = "f", digits = 1), ", ",
+             formatC(ci_post_upp_percent_c, format = "f", digits = 1), ")\n"))
+  cat(paste0("Difference: ", formatC(diff_mean_percent_c, format = "f", digits = 1), " (",
+             formatC(ci_diff_low_percent_c, format = "f", digits = 1), ", ",
+             formatC(ci_diff_upp_percent_c, format = "f", digits = 1), ")\n"))
+  cat(paste0("P value: ", formatC(did_pval_c, format = "f", digits = 4), "\n\n"))
+}
+
+# Run on outcomes
+gen_did_tbl("medicaid", sample)
+gen_did_tbl("esi", sample)
+gen_did_tbl("uninsured", sample)
+gen_did_tbl("employed", sample)
+```
+
+# Calculate N's
+```{r}
+# Tabulate weighted respondent characteristics in pre period
+total_tbl_pre_u <- table(sample_pre$variables$intervention)
+total_tbl_pre_u
+
+total_tbl_pre_w <- svytable(~intervention, design = sample_pre) %>% as.data.frame()
+total_tbl_pre_w
+
+# Tabulate weighted respondent characteristics in post periods
+total_tbl_post_u <- table(sample_post$variables$intervention)
+total_tbl_post_u
+
+total_tbl_post_w <- svytable(~intervention, design = sample_post) %>% as.data.frame()
+total_tbl_post_w
+```
+
+# Create forest plot
+```{r}
+# Load necessary package
+library(forestplot)
+
+data_sd <- tibble::tibble(mean  = c(-13.1, -5.8, 5.4, -0.3),
+                            lower = c(-21.0, -17.0, -4.6, -10.4),
+                            upper = c(-5.2, 5.5, 15.3, 9.8),
+                            outcome = c("Medicaid", "Employer-sponsored \ninsurance", "Uninsured", "Employed"),
+                            ga_pre = c("35.1 \n(32.0, 38.2)", "32.7 \n(29.0, 36.4)", "28.2 \n(24.7, 31.7)", "46.9 \n(42.7, 51.0)"),
+                            ga_post = c("32.4 \n(29.0, 35.8)", "29.1 \n(25.7, 32.6)", "25.9 \n(22.5, 29.3)", "46.6 \n(42.7, 50.5)"),
+                            ga_diff = c("-2.7 \n(-7.3, 1.9)", "-3.6 \n(-8.6, 1.5)", "-2.3 \n(-7.2, 2.5)", "-0.2 \n(-5.9, 5.4)"),
+                            blank1 = c(NA, NA, NA, NA),
+                            sd_pre = c("34.8 \n(30.6, 39.1)", "29.9 \n(24.8, 34.9)", "26.5 \n(21.0, 32.1)", "52.1 \n(46.6, 57.7)"),
+                            sd_post = c("44.6 \n(38.9, 50.3)", "32.1 \n(25.7, 38.5)", "19.2 \n(13.3, 25.0)", "52.9 \n(46.7, 59.2)"),
+                            sd_diff = c("9.8 \n(2.7, 16.9)", "2.2 \n(-5.9, 10.4)", "-7.4 \n(-15.5, 0.7)", "0.8 \n(-7.6, 9.2)"),
+                            blank2 = c(NA, NA, NA, NA),
+                            did = c("-13.1 \n(-21.0, -5.2)", "-5.8 \n(-17.0, 5.5)", "5.4 \n(-4.6, 15.3)", "-0.3 \n(-10.4, 9.8)"))
+
+png("forest_sd.jpg", width = 2500, height = 1000, res = 150)
+
+data_sd %>%
+  forestplot(
+    labeltext = c(
+      outcome,
+      ga_pre,
+      ga_post,
+      ga_diff,
+      blank1,
+      sd_pre,
+      sd_post,
+      sd_diff,
+      blank2,
+      did
+    ),
+    boxsize = .05,
+    txt_gp = fpTxtGp(ticks = gpar(cex = 1), xlab = gpar(cex = 1.2)),
+    xticks = c(-25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25),
+    xlab = "Adjusted difference-in-differences (95% CI)",
+    # graphwidth = unit(100, "mm"),
+    colgap = unit(1, "mm")
+  ) %>%
+  fp_set_style(
+    box = "royalblue",
+    line = "darkblue",
+    summary = "royalblue",
+    align = "lcccccccccc",
+    hrz_lines = "#999999"
+  ) %>%
+  fp_add_header(
+    outcome = c("Outcome"),
+    ga_pre = expression(bold("Pre-Period")^"a"),
+    ga_post = expression(bold("Post-Period")^"b"),
+    ga_diff = "Difference",
+    blank1 = "    ",
+    sd_pre = expression(bold("Pre-Period")^"a"),
+    sd_post = expression(bold("Post-Period")^"b"),
+    sd_diff = "Difference",
+    blank2 = "    ",
+    # did = fp_par(expression(bold("Adjusted\ndifference-in-\ndifferences\n(95% CI)")^"c"), fp_align_center())
+    did = expression(bold("Adjusted DID")^"c"~bold("(95% CI)"))
+  ) %>%
+  fp_add_header(ga_post = "Georgia, % (95% CI) \n(n = 3,331)", sd_post = "South Dakota, % (95% CI) \n(n = 1,191)")  %>%
+  fp_add_lines(
+    "2" = gpar(
+      lwd = 1.5,
+      col = "#999999",
+      columns = c(2:4, 6:8)
+    ),
+    "3" = gpar(lwd = 1.5, col = "#999999")
+  )
+
+dev.off()
+
+data_south <- tibble::tibble(mean  = c(-4.2, -3.4, -0.8, -1.8),
+                            lower = c(-8.6, -9.5, -5.6, -9.1),
+                            upper = c(0.2, 2.7, 4.0, 5.5),
+                            outcome = c("Medicaid", "Employer-sponsored \ninsurance", "Uninsured", "Employed"),
+                            ga_pre = c("35.1 \n(32.0, 38.2)", "32.7 \n(29.0, 36.4)", "28.2 \n(24.7, 31.7)", "46.9 \n(42.7, 51.0)"),
+                            ga_post = c("32.4 \n(29.0, 35.8)", "29.1 \n(25.7, 32.6)", "25.9 \n(22.5, 29.3)", "46.6 \n(42.7, 50.5)"),
+                            ga_diff = c("-2.7 \n(-7.3, 1.9)", "-3.6 \n(-8.6, 1.5)", "-2.3 \n(-7.2, 2.5)", "-0.2 \n(-5.9, 5.4)"),
+                            blank1 = c(NA, NA, NA, NA),
+                            south_pre = c("35.4 \n(33.5, 37.3)", "30.4 \n(28.5, 32.2)", "28.0 \n(26.3, 29.7)", "45.9 \n(43.9, 47.9)"),
+                            south_post = c("36.3 \n(34.4, 38.1)", "30.1 \n(28.4, 31.9)", "26.7 \n(25.1, 28.4)", "47.0 \n(45.2, 48.9)"),
+                            south_diff = c("0.9 \n(-1.8, 3.5)", "-0.2 \n(-2.8, 2.3)", "-1.2 \n(-3.6, 1.1)", "1.2 \n(-1.5, 3.8)"),
+                            blank2 = c(NA, NA, NA, NA),
+                            did = c("-4.2 \n(-8.6, 0.2)", "-3.4 \n(-9.5, 2.7)", "-0.8 \n(-5.6, 4.0)", "-1.8 \n(-9.1, 5.5)"))
+
+png("forest_south.jpg", width = 2500, height = 1250, res = 150)
+
+data_south %>%
+  forestplot(
+    labeltext = c(
+      outcome,
+      ga_pre,
+      ga_post,
+      ga_diff,
+      blank1,
+      south_pre,
+      south_post,
+      south_diff,
+      blank2,
+      did
+    ),
+    boxsize = .05,
+    txt_gp = fpTxtGp(ticks = gpar(cex = 1), xlab = gpar(cex = 1.2)),
+    xticks = c(-25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25),
+    xlab = "Adjusted difference-in-differences (95% CI)",
+    # graphwidth = unit(100, "mm"),
+    colgap = unit(1, "mm")
+  ) %>%
+  fp_set_style(
+    box = "royalblue",
+    line = "darkblue",
+    summary = "royalblue",
+    align = "lcccccccccc",
+    hrz_lines = "#999999"
+  ) %>%
+  fp_add_header(
+    outcome = c("Outcome"),
+    ga_pre = expression(bold("Pre-Period")^"a"),
+    ga_post = expression(bold("Post-Period")^"b"),
+    ga_diff = "Difference",
+    blank1 = "    ",
+    south_pre = expression(bold("Pre-Period")^"a"),
+    south_post = expression(bold("Post-Period")^"b"),
+    south_diff = "Difference",
+    blank2 = "    ",
+    # did = fp_par(expression(bold("Adjusted\ndifference-in-\ndifferences\n(95% CI)")^"c"), fp_align_center())
+    did = expression(bold("Adjusted DID")^"c"~bold("(95% CI)"))
+  ) %>%
+  fp_add_header(ga_post = "Georgia, % (95% CI) \n(n = 3,331)", south_post = "Medicaid\nNon-expansion\nStates, % (95% CI) \n(n = 17,364)")  %>%
+  fp_add_lines(
+    "2" = gpar(
+      lwd = 1.5,
+      col = "#999999",
+      columns = c(2:4, 6:8)
+    ),
+    "3" = gpar(lwd = 1.5, col = "#999999")
+  )
+
+dev.off()
+
+```
+
+# Playground
+```{r}
+sample_raw <- data %>%
+  mutate(
+    intervention = case_when(
+      state == "Georgia" ~ TRUE,
+      # state == "South Dakota" ~ FALSE,
+      state %in% c("Alabama", "Florida", "Texas", "Mississippi", "South Carolina") ~ FALSE,
+      TRUE ~ NA
+    )
+  ) %>%
+  filter(
+    intervention %in% c(FALSE, TRUE) & # Intervention or control group
+      age >= 19 & age <= 64 & # 19-64 years old
+      fpg <= 100 & # Income up to 100% FPL
+      not_missing_hi == TRUE & # Health insurance not missing
+      not_missing_employment == TRUE # Employment not missing
+  ) %>%
+  mutate(
+    state_factor = as.factor(state),
+    date_factor = as.factor(date)
+  )
+
+sample_raw_pre <- sample_raw %>%
+  filter(
+    post == 0
+  )
+
+library(sandwich)
+library(lmtest)
+
+# Parallel trends
+## Medicaid
+medicaid_pttest <- lm(medicaid ~ intervention * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
+medicaid_pttest_se <- vcovCL(medicaid_pttest, cluster = ~ state_factor)
+medicaid_pttest_coef <- coeftest(medicaid_pttest, vcov = medicaid_pttest_se)
+medicaid_pttest_coef
+confint(medicaid_pttest_coef)
+
+## Employer-sponsored insurance
+esi_pttest <- lm(esi ~ intervention * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
+esi_pttest_se <- vcovCL(esi_pttest, cluster = ~ state_factor)
+esi_pttest_coef <- coeftest(esi_pttest, vcov = esi_pttest_se)
+esi_pttest_coef
+confint(esi_pttest_coef)
+
+## Uninsured
+uninsured_pttest <- lm(uninsured ~ intervention * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
+uninsured_pttest_se <- vcovCL(uninsured_pttest, cluster = ~ state_factor)
+uninsured_pttest_coef <- coeftest(uninsured_pttest, vcov = uninsured_pttest_se)
+uninsured_pttest_coef
+confint(uninsured_pttest_coef)
+
+## Employed
+employed_pttest <- lm(employed ~ intervention * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
+employed_pttest_se <- vcovCL(employed_pttest, cluster = ~ state_factor)
+employed_pttest_coef <- coeftest(employed_pttest, vcov = employed_pttest_se)
+employed_pttest_coef
+confint(employed_pttest_coef)
+
+## Unadjusted DID
+# Medicaid
+medicaid_unadj <- lm(medicaid ~ intervention * post + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+medicaid_unadj_se <- vcovCL(medicaid_unadj, cluster = ~ state_factor)
+medicaid_unadj_coef <- coeftest(medicaid_unadj, vcov = medicaid_unadj_se)
+medicaid_unadj_coef
+confint(medicaid_unadj_coef)
+
+# Employer-sponsored insurance
+esi_unadj <- lm(esi ~ intervention * post + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+esi_unadj_se <- vcovCL(esi_unadj, cluster = ~ state_factor)
+esi_unadj_coef <- coeftest(esi_unadj, vcov = esi_unadj_se)
+esi_unadj_coef
+confint(esi_unadj_coef)
+
+# Uninsured
+uninsured_unadj <- lm(uninsured ~ intervention * post + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+uninsured_unadj_se <- vcovCL(uninsured_unadj, cluster = ~ state_factor)
+uninsured_unadj_coef <- coeftest(uninsured_unadj, vcov = uninsured_unadj_se)
+uninsured_unadj_coef
+confint(uninsured_unadj_coef)
+
+# Employed
+employed_unadj <- lm(employed ~ intervention * post + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+employed_unadj_se <- vcovCL(employed_unadj, cluster = ~ state_factor)
+employed_unadj_coef <- coeftest(employed_unadj, vcov = employed_unadj_se)
+employed_unadj_coef
+confint(employed_unadj_coef)
+
+## Adjusted DID
+# Medicaid
+medicaid_adj <- lm(medicaid ~ intervention * post + age_cat + sex_cat + race_cat + edu_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+summary(medicaid_adj)
+
+# medicaid_adj_se <- vcovCL(medicaid_adj, cluster = ~ state_factor)
+# medicaid_adj_coef <- coeftest(medicaid_adj, vcov = medicaid_adj_se)
+# medicaid_adj_coef
+# confint(medicaid_adj_coef)
+
+# Employer-sponsored insurance
+esi_adj <- lm(esi ~ intervention * post + age_cat + sex_cat + race_cat + edu_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+summary(esi_adj)
+
+# esi_adj_se <- vcovCL(esi_adj, cluster = ~ state_factor)
+# esi_adj_coef <- coeftest(esi_adj, vcov = esi_adj_se)
+# esi_adj_coef
+# confint(esi_adj_coef)
+
+# Uninsured
+uninsured_adj <- lm(uninsured ~ intervention * post + age_cat + sex_cat + race_cat + edu_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+summary(uninsured_adj)
+
+# uninsured_adj_se <- vcovCL(uninsured_adj, cluster = ~ state_factor)
+# uninsured_adj_coef <- coeftest(uninsured_adj, vcov = uninsured_adj_se)
+# uninsured_adj_coef
+# confint(uninsured_adj_coef)
+
+# Employed
+employed_adj <- lm(employed ~ intervention * post + age_cat + sex_cat + race_cat + edu_cat + + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+summary(employed_adj)
+
+# employed_adj_se <- vcovCL(employed_adj, cluster = ~ state_factor)
+# employed_adj_coef <- coeftest(employed_adj, vcov = employed_adj_se)
+# employed_adj_coef
+# confint(employed_adj_coef)
+
+####################################
+gen_did_tbl("medicaid", sample)
+gen_did_tbl("esi", sample)
+gen_did_tbl("marketplace", sample)
+gen_did_tbl("medicare", sample)
+gen_did_tbl("tricare", sample)
+gen_did_tbl("va", sample)
+gen_did_tbl("ihs", sample)
+gen_did_tbl("other_hi", sample)
+gen_did_tbl("uninsured", sample)
+```
+
+# Code for Michael
+```{r}
+# # Parallel trends testing
+# 
 # # Georgia vs. South Dakota
 # ## Medicaid
 # medicaid_pttest1 <- svyglm(medicaid ~ intervention1 * date, design = sample_pre)
@@ -748,287 +1238,7 @@ summary(employed_pttest)
 # ## Employed
 # employed_pttest3 <- svyglm(employed ~ intervention3 * date, design = sample_pre)
 # summary(employed_pttest3)
-```
 
-# Unadjusted DID analysis
-```{r}
-# Medicaid
-medicaid_unadj <- svyglm(medicaid ~ intervention * post, design = sample)
-summary(medicaid_unadj)
-
-# Employer-sponsored insurance
-esi_unadj <- svyglm(esi ~ intervention * post, design = sample)
-summary(esi_unadj)
-
-# Uninsured
-uninsured_unadj <- svyglm(uninsured ~ intervention * post, design = sample)
-summary(uninsured_unadj)
-
-# Employed
-employed_unadj <- svyglm(employed ~ intervention * post, design = sample)
-summary(employed_unadj)
-```
-
-# Adjusted DID analysis
-```{r}
-# Medicaid
-medicaid_adj <- svyglm(medicaid ~ intervention * post + age_cat + sex_cat, design = sample)
-summary(medicaid_adj)
-
-# Employer-sponsored insurance
-esi_adj <- svyglm(esi ~ intervention * post + age_cat + sex_cat, design = sample)
-summary(esi_adj)
-
-# Uninsured
-uninsured_adj <- svyglm(uninsured ~ intervention * post + age_cat + sex_cat, design = sample)
-summary(uninsured_adj)
-
-# Employed
-employed_adj <- svyglm(employed ~ intervention * post + age_cat + sex_cat, design = sample)
-summary(employed_adj)
-```
-
-# Create DID table
-```{r}
-# Define function to fill in diff-in-diff table
-gen_did_tbl <- function(outcome_var, unadj_model, adj_model, survey_design, z_value = 1.96) {
-  # Tabulate the average percentages in the pre and post time periods for intervention == 1
-  tbl_t <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention == 1), svymean, vartype = c("ci"), na.rm = TRUE)
-
-  # Tabulate the average percentages in the pre and post time periods for intervention == 0
-  tbl_c <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention == 0), svymean, vartype = c("ci"), na.rm = TRUE)
-
-  # Extract the means and confidence intervals for intervention == 1
-  pre_mean_t <- tbl_t[tbl_t$post == 0, outcome_var]
-  ci_pre_low_t <- tbl_t[tbl_t$post == 0, "ci_l"]
-  ci_pre_upp_t <- tbl_t[tbl_t$post == 0, "ci_u"]
-  post_mean_t <- tbl_t[tbl_t$post == 1, outcome_var]
-  ci_post_low_t <- tbl_t[tbl_t$post == 1, "ci_l"]
-  ci_post_upp_t <- tbl_t[tbl_t$post == 1, "ci_u"]
-
-  # Convert to percentage points for intervention == 1
-  pre_mean_percent_t <- pre_mean_t * 100
-  ci_pre_low_percent_t <- ci_pre_low_t * 100
-  ci_pre_upp_percent_t <- ci_pre_upp_t * 100
-  post_mean_percent_t <- post_mean_t * 100
-  ci_post_low_percent_t <- ci_post_low_t * 100
-  ci_post_upp_percent_t <- ci_post_upp_t * 100
-
-  # Calculate the difference for intervention == 1
-  diff_mean_t <- post_mean_t - pre_mean_t
-
-  # Calculate the standard error of the difference for intervention == 1
-  diff_se_t <- sqrt((((tbl_t[tbl_t$post == 1, "ci_u"] - post_mean_t))/z_value)^2 +
-                    (((pre_mean_t - tbl_t[tbl_t$post == 0, "ci_l"]))/z_value)^2)
-
-  # Calculate the confidence interval for intervention == 1
-  ci_diff_low_t <- diff_mean_t - z_value * diff_se_t
-  ci_diff_upp_t <- diff_mean_t + z_value * diff_se_t
-
-  # Convert to percentage points for intervention == 1
-  diff_mean_percent_t <- diff_mean_t * 100
-  ci_diff_low_percent_t <- ci_diff_low_t * 100
-  ci_diff_upp_percent_t <- ci_diff_upp_t * 100
-
-  # Extract the means and confidence intervals for intervention == 0
-  pre_mean_c <- tbl_c[tbl_c$post == 0, outcome_var]
-  ci_pre_low_c <- tbl_c[tbl_c$post == 0, "ci_l"]
-  ci_pre_upp_c <- tbl_c[tbl_c$post == 0, "ci_u"]
-  post_mean_c <- tbl_c[tbl_c$post == 1, outcome_var]
-  ci_post_low_c <- tbl_c[tbl_c$post == 1, "ci_l"]
-  ci_post_upp_c <- tbl_c[tbl_c$post == 1, "ci_u"]
-
-  # Convert to percentage points for intervention == 0
-  pre_mean_percent_c <- pre_mean_c * 100
-  ci_pre_low_percent_c <- ci_pre_low_c * 100
-  ci_pre_upp_percent_c <- ci_pre_upp_c * 100
-  post_mean_percent_c <- post_mean_c * 100
-  ci_post_low_percent_c <- ci_post_low_c * 100
-  ci_post_upp_percent_c <- ci_post_upp_c * 100
-
-  # Calculate the difference for intervention == 0
-  diff_mean_c <- post_mean_c - pre_mean_c
-
-  # Calculate p value for intervention == 1
-  did_ttest_t <- svyttest(as.formula(paste0(outcome_var, " ~ post")), design = subset(survey_design, intervention == 1))
-  did_pval_t <- formatC(did_ttest_t$p.value, format = "f", digits = 4)
-
-  # Calculate the standard error of the difference for intervention == 0
-  diff_se_c <- sqrt((((tbl_c[tbl_c$post == 1, "ci_u"] - post_mean_c))/z_value)^2 +
-                    (((pre_mean_c - tbl_c[tbl_c$post == 0, "ci_l"]))/z_value)^2)
-
-  # Calculate the confidence interval for intervention == 0
-  ci_diff_low_c <- diff_mean_c - z_value * diff_se_c
-  ci_diff_upp_c <- diff_mean_c + z_value * diff_se_c
-
-  # Convert to percentage points for intervention == 0
-  diff_mean_percent_c <- diff_mean_c * 100
-  ci_diff_low_percent_c <- ci_diff_low_c * 100
-  ci_diff_upp_percent_c <- ci_diff_upp_c * 100
-
-  # Calculate p value for intervention == 0
-  did_ttest_c <- svyttest(as.formula(paste0(outcome_var, " ~ post")), design = subset(survey_design, intervention == 0))
-  did_pval_c <- formatC(did_ttest_c$p.value, format = "f", digits = 4)
-
-  # Print the results for intervention == 1
-  cat("Intervention group:\n")
-  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_t, format = "f", digits = 1), " (",
-             formatC(ci_pre_low_percent_t, format = "f", digits = 1), ", ",
-             formatC(ci_pre_upp_percent_t, format = "f", digits = 1), ")\n"))
-  cat(paste0("Post period mean: ", formatC(post_mean_percent_t, format = "f", digits = 1), " (",
-             formatC(ci_post_low_percent_t, format = "f", digits = 1), ", ",
-             formatC(ci_post_upp_percent_t, format = "f", digits = 1), ")\n"))
-  cat(paste0("Difference: ", formatC(diff_mean_percent_t, format = "f", digits = 1), " (",
-             formatC(ci_diff_low_percent_t, format = "f", digits = 1), ", ",
-             formatC(ci_diff_upp_percent_t, format = "f", digits = 1), ")\n"))
-  cat(paste0("P value: ", formatC(did_pval_t, format = "f", digits = 4), "\n\n"))
-
-  # Print the results for intervention == 0
-  cat("Control group:\n")
-  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_c, format = "f", digits = 1), " (",
-             formatC(ci_pre_low_percent_c, format = "f", digits = 1), ", ",
-             formatC(ci_pre_upp_percent_c, format = "f", digits = 1), ")\n"))
-  cat(paste0("Post period mean: ", formatC(post_mean_percent_c, format = "f", digits = 1), " (",
-             formatC(ci_post_low_percent_c, format = "f", digits = 1), ", ",
-             formatC(ci_post_upp_percent_c, format = "f", digits = 1), ")\n"))
-  cat(paste0("Difference: ", formatC(diff_mean_percent_c, format = "f", digits = 1), " (",
-             formatC(ci_diff_low_percent_c, format = "f", digits = 1), ", ",
-             formatC(ci_diff_upp_percent_c, format = "f", digits = 1), ")\n"))
-  cat(paste0("P value: ", formatC(did_pval_c, format = "f", digits = 4), "\n\n"))
-
-  # Extract estimates, confidence intervals, and p-values for both models
-
-  # Unadjusted Model
-  unadj_diff_in_diff <- coef(unadj_model)["intervention:post"] * 100
-  unadj_ci <- confint(unadj_model)["intervention:post", ] * 100
-  unadj_p_value <- summary(unadj_model)$coefficients["intervention:post", "Pr(>|t|)"]
-
-  # Adjusted Model
-  adj_diff_in_diff <- coef(adj_model)["intervention:post"] * 100
-  adj_ci <- confint(adj_model)["intervention:post", ] * 100
-  adj_p_value <- summary(adj_model)$coefficients["intervention:post", "Pr(>|t|)"]
-
-  # Print the results for the unadjusted model
-  cat("\nUnadjusted Model:\n")
-  cat(paste0("Difference-in-Difference Estimate: ", formatC(unadj_diff_in_diff, format = "f", digits = 1), " (",
-      formatC(unadj_ci[1], format = "f", digits = 1), ", ",
-      formatC(unadj_ci[2], format = "f", digits = 1), ")\n"))
-  cat(paste0("p-value: ", formatC(unadj_p_value, format = "f", digits = 1), "\n"))
-
-  # Print the results for the adjusted model
-  cat(paste0("\nAdjusted Model:\n"))
-  cat(paste0("Difference-in-Difference Estimate: ", formatC(adj_diff_in_diff, format = "f", digits = 1), " (",
-      formatC(adj_ci[1], format = "f", digits = 1), ", ",
-      formatC(adj_ci[2], format = "f", digits = 1), ")\n"))
-  cat(paste0("p-value: ", formatC(adj_p_value, format = "f", digits = 1), "\n"))
-}
-
-# Run on outcomes
-gen_did_tbl("medicaid", medicaid_unadj, medicaid_adj, sample)
-gen_did_tbl("esi", esi_unadj, esi_adj, sample)
-gen_did_tbl("uninsured", uninsured_unadj, uninsured_adj, sample)
-gen_did_tbl("employed", employed_unadj, employed_adj, sample)
-```
-
-# Create baseline characteristics table
-```{r}
-# # Define a function to generate a table and chi-square test
-# gen_table_chisq <- function(variable, group_var, survey_design) {
-#   # Calculate the weighted percentages and confidence intervals for the input variable by the group variable
-#   tbl <- svyby(as.formula(paste("~", variable)), as.formula(paste("~", group_var)), survey_design, svymean, vartype = c("ci"), na.rm = TRUE)
-# 
-#   # Generate a Chi-square test to compare the input variable across the group variable
-#   chi_test <- svychisq(as.formula(paste("~", variable, "+", group_var)), design = survey_design)
-# 
-#   # Return the table and chi-square test result as a list
-#   list(
-#     table = tbl,
-#     chi_square = chi_test
-#   )
-# }
-# 
-# # Split sample into pre and post
-# sample_pre <- sample %>%
-#   subset(post == 0)
-# 
-# sample_post <- sample %>%
-#   subset(post == 1)
-# 
-# # Total study population
-# total <- svytable(~intervention, design = sample) %>% as.data.frame()
-# total
-
-# Tabulate weighted respondent characteristics in pre period
-total_tbl_pre_u <- table(sample_pre$variables$intervention)
-total_tbl_pre_u
-
-total_tbl_pre_w <- svytable(~intervention, design = sample_pre) %>% as.data.frame()
-total_tbl_pre_w
-
-# age_tbl_pre <- svyby(~age, ~intervention, sample_pre, svymean, vartype = c("se"), na.rm = TRUE)
-# age_tbl_pre
-# age_tbl_pre_p <- svyttest(age~intervention, sample_pre)
-# age_tbl_pre_p
-# 
-# sex_tbl_pre <- gen_table_chisq("sex_cat", "intervention", sample_pre)
-# sex_tbl_pre$table
-# sex_tbl_pre$chi_square
-# 
-# race_tbl_pre <- gen_table_chisq("race_cat", "intervention", sample_pre)
-# race_tbl_pre$table
-# race_tbl_pre$chi_square
-# 
-# education_tbl_pre <- gen_table_chisq("education_cat", "intervention", sample_pre)
-# education_tbl_pre$table
-# education_tbl_pre$chi_square
-# 
-# dm_tbl_pre <- gen_table_chisq("dm", "intervention", sample_pre)
-# dm_tbl_pre$table
-# dm_tbl_pre$chi_square
-# 
-# mi_tbl_pre <- gen_table_chisq("mi", "intervention", sample_pre)
-# mi_tbl_pre$table
-# mi_tbl_pre$chi_square
-# 
-# stroke_tbl_pre <- gen_table_chisq("stroke", "intervention", sample_pre)
-# stroke_tbl_pre$table
-# stroke_tbl_pre$chi_square
-# 
-# copd_tbl_pre <- gen_table_chisq("copd", "intervention", sample_pre)
-# copd_tbl_pre$table
-# copd_tbl_pre$chi_square
-# 
-# cancer_tbl_pre <- gen_table_chisq("cancer", "intervention", sample_pre)
-# cancer_tbl_pre$table
-# cancer_tbl_pre$chi_square
-
-# Tabulate weighted respondent characteristics in post periods
-total_tbl_post_u <- table(sample_post$variables$intervention)
-total_tbl_post_u
-
-total_tbl_post_w <- svytable(~intervention, design = sample_post) %>% as.data.frame()
-total_tbl_post_w
-
-# age_tbl_post <- svyby(~age, ~intervention, sample_post, svymean, vartype = c("se"), na.rm = TRUE)
-# age_tbl_post
-# age_tbl_post_p <- svyttest(age~intervention, sample_post)
-# age_tbl_post_p
-# 
-# sex_tbl_post <- gen_table_chisq("sex_cat", "intervention", sample_post)
-# sex_tbl_post$table
-# sex_tbl_post$chi_square
-# 
-# race_tbl_post <- gen_table_chisq("race_cat", "intervention", sample_post)
-# race_tbl_post$table
-# race_tbl_post$chi_square
-# 
-# education_tbl_post <- gen_table_chisq("education_cat", "intervention", sample_post)
-# education_tbl_post$table
-# education_tbl_post$chi_square
-```
-
-# Playground
-```{r}
 # # Georgia vs. South Dakota
 # 
 # # Unadjusted DID analysis
