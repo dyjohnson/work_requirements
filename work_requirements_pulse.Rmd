@@ -428,61 +428,6 @@ data <- data %>%
       HLTHINS7 == 1 ~ 1, # Census includes those who have Indian Health Service coverage as uninsured
       TRUE ~ NA
     ),
-    medicaid2 = case_when(
-      uninsured == 1 ~ 0, # mutually exclusive
-      HLTHINS4 == 1 ~ 1,
-      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
-          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
-          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
-      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
-        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
-        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
-      TRUE ~ 0
-    ),
-    medicare2 = case_when(
-      uninsured == 1 | medicaid2 == 1 ~ 0, # mutually exclusive
-      HLTHINS3 == 1 ~ 1,
-      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
-          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
-          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
-      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
-        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
-        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
-      TRUE ~ 0
-    ),
-    marketplace2 = case_when(
-      uninsured == 1 | medicaid2 == 1 | medicare2 == 1 ~ 0, # mutually exclusive
-      HLTHINS2 == 1 ~ 1,
-      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
-          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
-          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
-      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
-        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
-        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
-      TRUE ~ 0
-    ),
-    esi2 = case_when(
-      uninsured == 1 | medicaid2 == 1 | medicare2 == 1 | marketplace2 == 1 ~ 0, # mutually exclusive
-      HLTHINS1 == 1 ~ 1,
-      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
-          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
-          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
-      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
-        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
-        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
-      TRUE ~ 0
-    ),
-    other_hi2 = case_when(
-      uninsured == 1 | medicaid2 == 1 | medicare2 == 1 | marketplace2 == 1 | esi2 == 1 ~ 0, # mutually exclusive
-      HLTHINS5 == 1 | HLTHINS6 == 1 | HLTHINS7 == 1 | HLTHINS8 == 1 ~ 1,
-      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
-          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
-          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
-      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
-        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
-        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
-      TRUE ~ 0
-    ),
     employed = case_when(
       ANYWORK == 1 ~ 1, 
       ANYWORK == 2 ~ 0, 
@@ -1237,32 +1182,6 @@ gen_did_tbl("va", sample)
 gen_did_tbl("ihs", sample)
 gen_did_tbl("other_hi", sample)
 gen_did_tbl("uninsured", sample)
-
-
-gen_did_tbl("medicaid", sample)
-gen_did_tbl("medicaid2", sample)
-
-gen_did_tbl("esi", sample)
-gen_did_tbl("esi2", sample)
-
-gen_did_tbl("uninsured", sample)
-
-# Medicaid 2
-medicaid2_pttest <- svyglm(medicaid2 ~ intervention * date, design = sample_pre)
-summary(medicaid2_pttest)
-
-# Employer-sponsored insurance
-esi2_pttest <- svyglm(esi2 ~ intervention * date, design = sample_pre)
-summary(esi2_pttest)
-
-# Medicaid 2
-medicaid2_adj <- svyglm(medicaid2 ~ intervention * post + age_cat + sex_cat, design = sample)
-summary(medicaid2_adj)
-
-# Employer-sponsored insurance
-esi2_adj <- svyglm(esi2 ~ intervention * post + age_cat + sex_cat, design = sample)
-summary(esi2_adj)
-
 ```
 
 # Code for Michael
