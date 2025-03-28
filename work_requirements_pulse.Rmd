@@ -428,6 +428,61 @@ data <- data %>%
       HLTHINS7 == 1 ~ 1, # Census includes those who have Indian Health Service coverage as uninsured
       TRUE ~ NA
     ),
+    medicaid2 = case_when(
+      uninsured == 1 ~ 0, # mutually exclusive
+      HLTHINS4 == 1 ~ 1,
+      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
+          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
+          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
+        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
+        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      TRUE ~ 0
+    ),
+    medicare2 = case_when(
+      uninsured == 1 | medicaid2 == 1 ~ 0, # mutually exclusive
+      HLTHINS3 == 1 ~ 1,
+      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
+          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
+          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
+        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
+        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      TRUE ~ 0
+    ),
+    marketplace2 = case_when(
+      uninsured == 1 | medicaid2 == 1 | medicare2 == 1 ~ 0, # mutually exclusive
+      HLTHINS2 == 1 ~ 1,
+      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
+          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
+          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
+        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
+        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      TRUE ~ 0
+    ),
+    esi2 = case_when(
+      uninsured == 1 | medicaid2 == 1 | medicare2 == 1 | marketplace2 == 1 ~ 0, # mutually exclusive
+      HLTHINS1 == 1 ~ 1,
+      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
+          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
+          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
+        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
+        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      TRUE ~ 0
+    ),
+    other_hi2 = case_when(
+      uninsured == 1 | medicaid2 == 1 | medicare2 == 1 | marketplace2 == 1 | esi2 == 1 ~ 0, # mutually exclusive
+      HLTHINS5 == 1 | HLTHINS6 == 1 | HLTHINS7 == 1 | HLTHINS8 == 1 ~ 1,
+      HLTHINS1 == -99 & HLTHINS2 == -99 & HLTHINS3 == -99 &
+          HLTHINS4 == -99 & HLTHINS5 == -99 & HLTHINS6 == -99 &
+          HLTHINS7 == -99 & HLTHINS8 == -99 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      HLTHINS1 == -88 & HLTHINS2 == -88 & HLTHINS3 == -88 &
+        HLTHINS4 == -88 & HLTHINS5 == -88 & HLTHINS6 == -88 &
+        HLTHINS7 == -88 & HLTHINS8 == -88 ~ NA, # If they didn't answer any of the health insurance questions, assign them NA
+      TRUE ~ 0
+    ),
     employed = case_when(
       ANYWORK == 1 ~ 1, 
       ANYWORK == 2 ~ 0, 
@@ -569,7 +624,7 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = pe
                               "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
                               "Mar 2024", "Jun 2024", "Sep 2024"),
                    drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("Medicaid Non-expansion States", "Georgia")) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
@@ -579,7 +634,7 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = pe
   ylim(0, 100)
 
 medicaid_quarter_plot
-ggsave("medicaid_quarter_plot_south.jpg")
+ggsave("medicaid_quarter_plot.jpg")
 
 # ESI
 esi_quarter <- svyby(~esi, ~quarter_factor + intervention, sample,
@@ -606,13 +661,13 @@ esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter_factor, y = percentage, 
   geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
   labs(
     x = "Date",
-    y = "Employer-sponsored insurance coverage, %"
+    y = "Employer-sponsored insurance, %"
   ) +
   scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
                               "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
                               "Mar 2024", "Jun 2024", "Sep 2024"),
                    drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("Medicaid Non-expansion States", "Georgia")) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
@@ -622,7 +677,7 @@ esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter_factor, y = percentage, 
   ylim(0, 100)
 
 esi_quarter_plot
-ggsave("esi_quarter_plot_south.jpg")
+ggsave("esi_quarter_plot.jpg")
 
 # Uninsured
 uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention, sample,
@@ -649,13 +704,13 @@ uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = 
   geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
   labs(
     x = "Date",
-    y = "Uninsured rate, %"
+    y = "Uninsured, %"
   ) +
   scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
                               "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
                               "Mar 2024", "Jun 2024", "Sep 2024"),
                    drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("Medicaid Non-expansion States", "Georgia")) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
@@ -665,7 +720,7 @@ uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = 
   ylim(0, 100)
 
 uninsured_quarter_plot
-ggsave("uninsured_quarter_plot_south.jpg")
+ggsave("uninsured_quarter_plot.jpg")
 
 # Employed
 employed_quarter <- svyby(~employed, ~quarter_factor + intervention, sample,
@@ -698,7 +753,7 @@ employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = pe
                               "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
                               "Mar 2024", "Jun 2024", "Sep 2024"),
                    drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("Medicaid Non-expansion States", "Georgia")) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
@@ -708,7 +763,7 @@ employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = pe
   ylim(0, 100)
 
 employed_quarter_plot
-ggsave("employed_quarter_plot_south.jpg")
+ggsave("employed_quarter_plot.jpg")
 ```
 
 # Test parallel trends
@@ -1182,6 +1237,32 @@ gen_did_tbl("va", sample)
 gen_did_tbl("ihs", sample)
 gen_did_tbl("other_hi", sample)
 gen_did_tbl("uninsured", sample)
+
+
+gen_did_tbl("medicaid", sample)
+gen_did_tbl("medicaid2", sample)
+
+gen_did_tbl("esi", sample)
+gen_did_tbl("esi2", sample)
+
+gen_did_tbl("uninsured", sample)
+
+# Medicaid 2
+medicaid2_pttest <- svyglm(medicaid2 ~ intervention * date, design = sample_pre)
+summary(medicaid2_pttest)
+
+# Employer-sponsored insurance
+esi2_pttest <- svyglm(esi2 ~ intervention * date, design = sample_pre)
+summary(esi2_pttest)
+
+# Medicaid 2
+medicaid2_adj <- svyglm(medicaid2 ~ intervention * post + age_cat + sex_cat, design = sample)
+summary(medicaid2_adj)
+
+# Employer-sponsored insurance
+esi2_adj <- svyglm(esi2 ~ intervention * post + age_cat + sex_cat, design = sample)
+summary(esi2_adj)
+
 ```
 
 # Code for Michael
