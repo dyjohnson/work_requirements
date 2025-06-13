@@ -70,7 +70,7 @@ puf_49 <- puf_49 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENI
 puf_50 <- puf_50 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
 puf_51 <- puf_51 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
 puf_52 <- puf_52 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_53 <- puf_43 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
+puf_53 <- puf_53 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
 puf_54 <- puf_54 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
 puf_55 <- puf_55 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
 puf_56 <- puf_56 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
@@ -150,6 +150,12 @@ rm("weights")
 ```{r}
 # Divide PWEIGHT by number of cycles
 data$PWEIGHT_divided <- data$PWEIGHT/32
+
+# Also Divide Replicate PWEIGHT by number of cycles
+rep_cols <- grep("^PWEIGHT[0-9]+$", names(data), value = TRUE)
+for (col in rep_cols) {
+  data[[col]] <- data[[col]] / 32
+}
 
 # Clean time and state
 data <- data %>%
@@ -286,13 +292,41 @@ data <- data %>%
       age >= 35 & age <= 44 ~ "35-44",
       age >= 45 & age <= 54 ~ "45-54",
       age >= 55 & age <= 64 ~ "55-64",
-      age >= 65 ~ ">65",
+      age >= 65 & age <= 74 ~ "65-74",
+      age >= 75 ~ ">75",
       TRUE ~ NA_character_
     ),
     sex_cat = case_when(
       EGENID_BIRTH == 1 ~ "1.Male",
       EGENID_BIRTH == 2 ~ "2.Female",
       TRUE ~ NA_character_
+    ),
+    race_cat = case_when(
+      RRACE == 1 ~ "White",
+      RRACE == 2 ~ "Black",
+      RRACE == 3 ~ "Asian",
+      RRACE == 4 ~ "Other",
+      TRUE ~ NA_character_
+    ),
+    race_cat = case_when( # Note: Hispanic ethnicity overrides all other race variables
+      RHISPANIC == 1 ~ race_cat,
+      RHISPANIC == 2 ~ "Hispanic",
+      TRUE ~ race_cat
+    ),
+    edu_cat = case_when(
+      EEDUC == 1 ~ "Less than high school",
+      EEDUC == 2 ~ "Some high school",
+      EEDUC == 3 ~ "High school graduate",
+      EEDUC == 4 ~ "Some college",
+      EEDUC == 5 ~ "Associates degree",
+      EEDUC == 6 ~ "Bachelors degree",
+      EEDUC == 7 ~ "Graduate degree",
+      TRUE ~ NA_character_
+    ),
+    bachelor_cat = case_when(
+      EEDUC %in% c(6, 7) ~ 1,
+      EEDUC %in% c(1, 2, 3, 4, 5) ~ 0,
+      TRUE ~ NA
     )
   )
 
@@ -467,11 +501,63 @@ sample1 <- survey %>%
       not_missing_employment == 1 # Employment not missing
   )
 
+# Georgia vs. South Dakota - 65+
+sample1_65 <- survey %>%
+  subset(
+    intervention1 %in% c(FALSE, TRUE) & # Intervention or control group
+      age >= 65 & # 65+ years old
+      fpg <= 100 & # Income up to 100% FPL
+      not_missing_hi == 1 & # Health insurance not missing
+      not_missing_employment == 1 # Employment not missing
+  )
+
+# Georgia vs. South Dakota - 65+ Medicare
+sample1_65_medicare <- survey %>%
+  subset(
+    intervention1 %in% c(FALSE, TRUE) & # Intervention or control group
+      age >= 65 & # 65+ years old
+      medicare == TRUE & # Medicare beneficiaries
+      not_missing_hi == 1 & # Health insurance not missing
+      not_missing_employment == 1 # Employment not missing
+  )
+
+# Georgia vs. South Dakota - 70+
+sample1_70 <- survey %>%
+  subset(
+    intervention1 %in% c(FALSE, TRUE) & # Intervention or control group
+      age >= 70 & # 70+ years old
+      fpg <= 100 & # Income up to 100% FPL
+      not_missing_hi == 1 & # Health insurance not missing
+      not_missing_employment == 1 # Employment not missing
+  )
+
+# Georgia vs. South Dakota - 70+ Medicare
+sample1_70_medicare <- survey %>%
+  subset(
+    intervention1 %in% c(FALSE, TRUE) & # Intervention or control group
+      age >= 70 & # 70+ years old
+      medicare == TRUE &
+      not_missing_hi == 1 & # Health insurance not missing
+      not_missing_employment == 1 # Employment not missing
+  )
+
+# Georgia vs. South Dakota - >200% FPL
+sample1_200 <- survey %>%
+  subset(
+    intervention1 %in% c(FALSE, TRUE) & # Intervention or control group
+      age >= 19 & age <= 64 & # 19-64 years old
+      fpg >= 200 & # Income over 200% FPL
+      not_missing_hi == 1 & # Health insurance not missing
+      not_missing_employment == 1 # Employment not missing
+  )
+
 # Subset to pre-period
 sample1_pre <- sample1 %>% subset(post == FALSE)
+sample1_65_pre <- sample1_65 %>% subset(post == FALSE)
 
 # Subset to post-period
 sample1_post <- sample1 %>% subset(post == TRUE)
+sample1_65_post <- sample1_65 %>% subset(post == TRUE)
 
 # Georgia vs. Alabama, Florida, Texas, Mississippi, South Carolina
 sample3 <- survey %>%
@@ -483,14 +569,27 @@ sample3 <- survey %>%
       not_missing_employment == 1 # Employment not missing
   )
 
+# Georgia vs. Alabama, Florida, Texas, Mississippi, South Carolina - 65+
+sample3_65 <- survey %>%
+  subset(
+    intervention3 %in% c(FALSE, TRUE) & # Intervention or control group
+      age >= 65 & # 65+ years old
+      fpg <= 100 & # Income up to 100% FPL
+      not_missing_hi == 1 & # Health insurance not missing
+      not_missing_employment == 1 # Employment not missing
+  )
+
 # Subset to pre-period
 sample3_pre <- sample3 %>% subset(post == FALSE)
+sample3_65_pre <- sample3_65 %>% subset(post == FALSE)
 
 # Subset to post-period
 sample3_post <- sample3 %>% subset(post == TRUE)
+sample3_65_post <- sample3_65 %>% subset(post == TRUE)
 ```
 
 # Plot data
+### GA v SD 19-64
 ```{r}
 # Medicaid
 medicaid_quarter <- svyby(~medicaid, ~quarter_factor + intervention1, sample1,
@@ -535,49 +634,6 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = pe
 medicaid_quarter_plot
 ggsave("medicaid_quarter_plot.jpg")
 
-# ESI
-esi_quarter <- svyby(~esi, ~quarter_factor + intervention1, sample1,
-                       svymean, vartype = "se", na.rm = TRUE) %>%
-  as.data.frame() %>%
-  rename(
-    percentage = esi,
-    se = se
-  ) %>%
-  mutate(
-    percentage = percentage * 100,
-    se = se * 100,
-    lower = pmax(percentage - 1.96 * se, 0),
-    upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  filter(quarter_factor != "2023 Q2")
-
-policy_change_x <- which(levels(esi_quarter$quarter_factor) == "2023 Q2") + (1/3)
-
-esi_quarter_plot <- ggplot(esi_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
-  geom_line() +
-  geom_point() +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
-  labs(
-    x = "Date",
-    y = "Employer-sponsored insurance, %"
-  ) +
-  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
-                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
-                              "Mar 2024", "Jun 2024", "Sep 2024"),
-                   drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "bottom",
-    legend.title = element_blank()
-  ) +
-  ylim(0, 100)
-
-esi_quarter_plot
-ggsave("esi_quarter_plot.jpg")
-
 # Uninsured
 uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention1, sample1,
                        svymean, vartype = "se", na.rm = TRUE) %>%
@@ -603,7 +659,7 @@ uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = 
   geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
   labs(
     x = "Date",
-    y = "Uninsured, %"
+    y = "Uninsured rate, %"
   ) +
   scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
                               "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
@@ -665,119 +721,1216 @@ employed_quarter_plot
 ggsave("employed_quarter_plot.jpg")
 ```
 
+### GA v non-expansion 19-64
+```{r}
+# Medicaid
+medicaid_quarter <- svyby(~medicaid, ~quarter_factor + intervention3, sample3,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = medicaid,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(medicaid_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = percentage, color = intervention3, group = intervention3)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Medicaid coverage, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("Non-expansion states", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+medicaid_quarter_plot
+ggsave("medicaid_quarter_plot_south.jpg")
+
+# Uninsured
+uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention3, sample3,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = uninsured,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(uninsured_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = percentage, color = intervention3, group = intervention3)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Uninsured, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("Non-expansion states", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+uninsured_quarter_plot
+ggsave("uninsured_quarter_plot_south.jpg")
+
+# Employed
+employed_quarter <- svyby(~employed, ~quarter_factor + intervention3, sample3,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = employed,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(employed_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = percentage, color = intervention3, group = intervention3)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Employment, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("Non-expansion states", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+employed_quarter_plot
+ggsave("employed_quarter_plot_south.jpg")
+```
+
+### GA v SD >65
+```{r}
+# Medicaid
+medicaid_quarter <- svyby(~medicaid, ~quarter_factor + intervention1, sample1_65,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = medicaid,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(medicaid_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Medicaid coverage, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+medicaid_quarter_plot
+ggsave("medicaid_quarter_plot_65.jpg")
+
+# Uninsured
+uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention1, sample1_65,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = uninsured,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(uninsured_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Uninsured rate, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+uninsured_quarter_plot
+ggsave("uninsured_quarter_plot_65.jpg")
+
+# Employed
+employed_quarter <- svyby(~employed, ~quarter_factor + intervention1, sample1_65,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = employed,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(employed_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Employment, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+employed_quarter_plot
+ggsave("employed_quarter_plot_65.jpg")
+```
+
+
+### GA v SD >65 Medicare
+```{r}
+# Medicaid
+medicaid_quarter <- svyby(~medicaid, ~quarter_factor + intervention1, sample1_65_medicare,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = medicaid,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(medicaid_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Medicaid coverage, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+medicaid_quarter_plot
+ggsave("medicaid_quarter_plot_65_medicare.jpg")
+
+# Uninsured
+uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention1, sample1_65_medicare,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = uninsured,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(uninsured_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Uninsured rate, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+uninsured_quarter_plot
+ggsave("uninsured_quarter_plot_65_medicare.jpg")
+
+# Employed
+employed_quarter <- svyby(~employed, ~quarter_factor + intervention1, sample1_65_medicare,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = employed,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(employed_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Employment, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+employed_quarter_plot
+ggsave("employed_quarter_plot_65_medicare.jpg")
+```
+
+### GA v SD >70
+```{r}
+# Medicaid
+medicaid_quarter <- svyby(~medicaid, ~quarter_factor + intervention1, sample1_70,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = medicaid,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(medicaid_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Medicaid coverage, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+medicaid_quarter_plot
+ggsave("medicaid_quarter_plot_70.jpg")
+
+# Uninsured
+uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention1, sample1_70,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = uninsured,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(uninsured_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Uninsured rate, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+uninsured_quarter_plot
+ggsave("uninsured_quarter_plot_70.jpg")
+
+# Employed
+employed_quarter <- svyby(~employed, ~quarter_factor + intervention1, sample1_70,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = employed,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(employed_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Employment, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+employed_quarter_plot
+ggsave("employed_quarter_plot_70.jpg")
+```
+
+
+
+### GA v SD >70 Medicare
+```{r}
+# Medicaid
+medicaid_quarter <- svyby(~medicaid, ~quarter_factor + intervention1, sample1_70_medicare,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = medicaid,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(medicaid_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Medicaid coverage, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+medicaid_quarter_plot
+ggsave("medicaid_quarter_plot_70_medicare.jpg")
+
+# Uninsured
+uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention1, sample1_70_medicare,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = uninsured,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(uninsured_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Uninsured rate, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+uninsured_quarter_plot
+ggsave("uninsured_quarter_plot_70_medicare.jpg")
+
+# Employed
+employed_quarter <- svyby(~employed, ~quarter_factor + intervention1, sample1_70_medicare,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = employed,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(employed_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Employment, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+employed_quarter_plot
+ggsave("employed_quarter_plot_70_medicare.jpg")
+```
+
+### GA v SD >200% FPL
+```{r}
+# Medicaid
+medicaid_quarter <- svyby(~medicaid, ~quarter_factor + intervention1, sample1_200,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = medicaid,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(medicaid_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Medicaid coverage, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+medicaid_quarter_plot
+ggsave("medicaid_quarter_plot_200.jpg")
+
+# Uninsured
+uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention1, sample1_200,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = uninsured,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(uninsured_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Uninsured rate, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+uninsured_quarter_plot
+ggsave("uninsured_quarter_plot_200.jpg")
+
+# Employed
+employed_quarter <- svyby(~employed, ~quarter_factor + intervention1, sample1_200,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = employed,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(employed_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Employment, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+employed_quarter_plot
+ggsave("employed_quarter_plot_200.jpg")
+```
+
+### GA v non-expansion >65
+```{r}
+# Medicaid
+medicaid_quarter <- svyby(~medicaid, ~quarter_factor + intervention3, sample3_65,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = medicaid,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(medicaid_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = percentage, color = intervention3, group = intervention3)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Medicaid coverage, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("Non-expansion states", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+medicaid_quarter_plot
+ggsave("medicaid_quarter_plot_south_65.jpg")
+
+# Uninsured
+uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention3, sample3_65,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = uninsured,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(uninsured_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = percentage, color = intervention3, group = intervention3)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Uninsured, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("Non-expansion states", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+uninsured_quarter_plot
+ggsave("uninsured_quarter_plot_south_65.jpg")
+
+# Employed
+employed_quarter <- svyby(~employed, ~quarter_factor + intervention3, sample3_65,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = employed,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(employed_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = percentage, color = intervention3, group = intervention3)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Employment, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("Non-expansion states", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+employed_quarter_plot
+ggsave("employed_quarter_plot_south_65.jpg")
+```
+
 # Create DID table
 ```{r}
-# Define function to fill in diff-in-diff table
 gen_did_tbl <- function(outcome_var, survey_design, z_value = 1.96) {
-  # Tabulate the average percentages in the pre and post time periods for intervention1 == TRUE
-  tbl_t <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention1 == TRUE), svymean, vartype = c("ci"), na.rm = TRUE)
+  # -------------------------------------------------------------------
+  # 1) Intervention group
+  # -------------------------------------------------------------------
+  # Subset design for the intervention group
+  int_design <- subset(survey_design, intervention1 == TRUE)
 
-  # Tabulate the average percentages in the pre and post time periods for intervention1 == FALSE
-  tbl_c <- svyby(as.formula(paste0("~", outcome_var)), ~post, subset(survey_design, intervention1 == FALSE), svymean, vartype = c("ci"), na.rm = TRUE)
+  # Calculate pre vs. post means with covariance
+  # So we can do a correct difference for the intervention group
+  tbl_t <- svyby(
+    formula = as.formula(paste0("~", outcome_var)),
+    by = ~post,               
+    design = int_design,
+    FUN = svymean,
+    na.rm = TRUE,
+    covmat = TRUE,            # <--- ensures we get the full covariance matrix
+    vartype = "ci"           
+  )
 
-  # Extract the means and confidence intervals for intervention1 == TRUE
-  pre_mean_t <- tbl_t[tbl_t$post == FALSE, outcome_var]
-  ci_pre_low_t <- tbl_t[tbl_t$post == FALSE, "ci_l"]
-  ci_pre_upp_t <- tbl_t[tbl_t$post == FALSE, "ci_u"]
-  post_mean_t <- tbl_t[tbl_t$post == TRUE, outcome_var]
-  ci_post_low_t <- tbl_t[tbl_t$post == TRUE, "ci_l"]
-  ci_post_upp_t <- tbl_t[tbl_t$post == TRUE, "ci_u"]
+  # Pre (FALSE) means
+  pre_mean_t       <- tbl_t[tbl_t$post == FALSE, outcome_var] * 100
+  pre_ci_l_t       <- tbl_t[tbl_t$post == FALSE, "ci_l"] * 100
+  pre_ci_u_t       <- tbl_t[tbl_t$post == FALSE, "ci_u"] * 100
 
-  # Convert to percentage points for intervention1 == TRUE
-  pre_mean_percent_t <- pre_mean_t * 100
-  ci_pre_low_percent_t <- ci_pre_low_t * 100
-  ci_pre_upp_percent_t <- ci_pre_upp_t * 100
-  post_mean_percent_t <- post_mean_t * 100
-  ci_post_low_percent_t <- ci_post_low_t * 100
-  ci_post_upp_percent_t <- ci_post_upp_t * 100
+  # Post (TRUE) means
+  post_mean_t      <- tbl_t[tbl_t$post == TRUE, outcome_var] * 100
+  post_ci_l_t      <- tbl_t[tbl_t$post == TRUE, "ci_l"] * 100
+  post_ci_u_t      <- tbl_t[tbl_t$post == TRUE, "ci_u"] * 100
 
-  # Calculate the difference for intervention1 == TRUE
-  diff_mean_t <- post_mean_t - pre_mean_t
+  # Use svycontrast to get the difference = Post (TRUE) - Pre (FALSE)
+  diff_t <- svycontrast(
+    tbl_t,
+    quote(`TRUE` - `FALSE`)
+  )
+  # Coefficient (point estimate) is in coef(diff_t)
+  diff_t_est <- coef(diff_t)[1] * 100   
+  diff_t_se  <- SE(diff_t)[1]   * 100
+  # 95% CI from confint()
+  diff_t_ci  <- confint(diff_t) * 100  
+  diff_t_ci_l <- diff_t_ci[1, 1]
+  diff_t_ci_u <- diff_t_ci[1, 2]
 
-  # Calculate the standard error of the difference for intervention1 == TRUE
-  diff_se_t <- sqrt((((tbl_t[tbl_t$post == TRUE, "ci_u"] - post_mean_t))/z_value)^2 +
-                    (((pre_mean_t - tbl_t[tbl_t$post == FALSE, "ci_l"]))/z_value)^2)
-
-  # Calculate the confidence interval for intervention1 == TRUE
-  ci_diff_low_t <- diff_mean_t - z_value * diff_se_t
-  ci_diff_upp_t <- diff_mean_t + z_value * diff_se_t
-
-  # Convert to percentage points for intervention1 == TRUE
-  diff_mean_percent_t <- diff_mean_t * 100
-  ci_diff_low_percent_t <- ci_diff_low_t * 100
-  ci_diff_upp_percent_t <- ci_diff_upp_t * 100
-
-  # Extract the means and confidence intervals for intervention1 == FALSE
-  pre_mean_c <- tbl_c[tbl_c$post == FALSE, outcome_var]
-  ci_pre_low_c <- tbl_c[tbl_c$post == FALSE, "ci_l"]
-  ci_pre_upp_c <- tbl_c[tbl_c$post == FALSE, "ci_u"]
-  post_mean_c <- tbl_c[tbl_c$post == TRUE, outcome_var]
-  ci_post_low_c <- tbl_c[tbl_c$post == TRUE, "ci_l"]
-  ci_post_upp_c <- tbl_c[tbl_c$post == TRUE, "ci_u"]
-
-  # Convert to percentage points for intervention1 == FALSE
-  pre_mean_percent_c <- pre_mean_c * 100
-  ci_pre_low_percent_c <- ci_pre_low_c * 100
-  ci_pre_upp_percent_c <- ci_pre_upp_c * 100
-  post_mean_percent_c <- post_mean_c * 100
-  ci_post_low_percent_c <- ci_post_low_c * 100
-  ci_post_upp_percent_c <- ci_post_upp_c * 100
-
-  # Calculate the difference for intervention1 == FALSE
-  diff_mean_c <- post_mean_c - pre_mean_c
-
-  # Calculate p value for intervention1 == TRUE
-  did_ttest_t <- svyttest(as.formula(paste0(outcome_var, " ~ post")), design = subset(survey_design, intervention1 == TRUE))
+  # Also get a p-value for (pre vs post) in the intervention group
+  did_ttest_t <- svyttest(
+    as.formula(paste0(outcome_var, " ~ post")),
+    design = int_design
+  )
   did_pval_t <- formatC(did_ttest_t$p.value, format = "f", digits = 4)
 
-  # Calculate the standard error of the difference for intervention1 == FALSE
-  diff_se_c <- sqrt((((tbl_c[tbl_c$post == TRUE, "ci_u"] - post_mean_c))/z_value)^2 +
-                    (((pre_mean_c - tbl_c[tbl_c$post == FALSE, "ci_l"]))/z_value)^2)
 
-  # Calculate the confidence interval for intervention1 == FALSE
-  ci_diff_low_c <- diff_mean_c - z_value * diff_se_c
-  ci_diff_upp_c <- diff_mean_c + z_value * diff_se_c
+  # -------------------------------------------------------------------
+  # 2) Control group
+  # -------------------------------------------------------------------
+  # Subset design for the control group
+  ctl_design <- subset(survey_design, intervention1 == FALSE)
 
-  # Convert to percentage points for intervention1 == FALSE
-  diff_mean_percent_c <- diff_mean_c * 100
-  ci_diff_low_percent_c <- ci_diff_low_c * 100
-  ci_diff_upp_percent_c <- ci_diff_upp_c * 100
+  # Calculate pre vs. post means with covariance
+  tbl_c <- svyby(
+    formula = as.formula(paste0("~", outcome_var)),
+    by = ~post,               
+    design = ctl_design,
+    FUN = svymean,
+    na.rm = TRUE,
+    covmat = TRUE,
+    vartype = "ci"
+  )
 
-  # Calculate p value for intervention1 == FALSE
-  did_ttest_c <- svyttest(as.formula(paste0(outcome_var, " ~ post")), design = subset(survey_design, intervention1 == FALSE))
+  # Pre (FALSE)
+  pre_mean_c  <- tbl_c[tbl_c$post == FALSE, outcome_var] * 100
+  pre_ci_l_c  <- tbl_c[tbl_c$post == FALSE, "ci_l"] * 100
+  pre_ci_u_c  <- tbl_c[tbl_c$post == FALSE, "ci_u"] * 100
+
+  # Post (TRUE)
+  post_mean_c <- tbl_c[tbl_c$post == TRUE, outcome_var] * 100
+  post_ci_l_c <- tbl_c[tbl_c$post == TRUE, "ci_l"] * 100
+  post_ci_u_c <- tbl_c[tbl_c$post == TRUE, "ci_u"] * 100
+
+  # Difference in the control group
+  diff_c <- svycontrast(
+    tbl_c,
+    quote(`TRUE` - `FALSE`)
+  )
+  diff_c_est <- coef(diff_c)[1] * 100
+  diff_c_se  <- SE(diff_c)[1]   * 100
+  diff_c_ci  <- confint(diff_c) * 100
+  diff_c_ci_l <- diff_c_ci[1, 1]
+  diff_c_ci_u <- diff_c_ci[1, 2]
+
+  # p-value for control group
+  did_ttest_c <- svyttest(
+    as.formula(paste0(outcome_var, " ~ post")),
+    design = ctl_design
+  )
   did_pval_c <- formatC(did_ttest_c$p.value, format = "f", digits = 4)
 
-  # Print the results for intervention1 == TRUE
-  cat("Intervention group:\n")
-  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_t, format = "f", digits = 1), " (",
-             formatC(ci_pre_low_percent_t, format = "f", digits = 1), ", ",
-             formatC(ci_pre_upp_percent_t, format = "f", digits = 1), ")\n"))
-  cat(paste0("Post period mean: ", formatC(post_mean_percent_t, format = "f", digits = 1), " (",
-             formatC(ci_post_low_percent_t, format = "f", digits = 1), ", ",
-             formatC(ci_post_upp_percent_t, format = "f", digits = 1), ")\n"))
-  cat(paste0("Difference: ", formatC(diff_mean_percent_t, format = "f", digits = 1), " (",
-             formatC(ci_diff_low_percent_t, format = "f", digits = 1), ", ",
-             formatC(ci_diff_upp_percent_t, format = "f", digits = 1), ")\n"))
-  cat(paste0("P value: ", formatC(did_pval_t, format = "f", digits = 4), "\n\n"))
 
-  # Print the results for intervention1 == FALSE
+  # -------------------------------------------------------------------
+  # 3) Print out results
+  # -------------------------------------------------------------------
+  # Intervention group
+  cat("Intervention group:\n")
+  cat(sprintf("Pre period mean: %.1f (%.1f, %.1f)\n",
+              pre_mean_t, pre_ci_l_t, pre_ci_u_t))
+  cat(sprintf("Post period mean: %.1f (%.1f, %.1f)\n",
+              post_mean_t, post_ci_l_t, post_ci_u_t))
+  cat(sprintf("Difference: %.1f (%.1f, %.1f)\n",
+              diff_t_est, diff_t_ci_l, diff_t_ci_u))
+  cat(sprintf("P value: %s\n\n", did_pval_t))
+
+  # Control group
   cat("Control group:\n")
-  cat(paste0("Pre period mean: ", formatC(pre_mean_percent_c, format = "f", digits = 1), " (",
-             formatC(ci_pre_low_percent_c, format = "f", digits = 1), ", ",
-             formatC(ci_pre_upp_percent_c, format = "f", digits = 1), ")\n"))
-  cat(paste0("Post period mean: ", formatC(post_mean_percent_c, format = "f", digits = 1), " (",
-             formatC(ci_post_low_percent_c, format = "f", digits = 1), ", ",
-             formatC(ci_post_upp_percent_c, format = "f", digits = 1), ")\n"))
-  cat(paste0("Difference: ", formatC(diff_mean_percent_c, format = "f", digits = 1), " (",
-             formatC(ci_diff_low_percent_c, format = "f", digits = 1), ", ",
-             formatC(ci_diff_upp_percent_c, format = "f", digits = 1), ")\n"))
-  cat(paste0("P value: ", formatC(did_pval_c, format = "f", digits = 4), "\n\n"))
+  cat(sprintf("Pre period mean: %.1f (%.1f, %.1f)\n",
+              pre_mean_c, pre_ci_l_c, pre_ci_u_c))
+  cat(sprintf("Post period mean: %.1f (%.1f, %.1f)\n",
+              post_mean_c, post_ci_l_c, post_ci_u_c))
+  cat(sprintf("Difference: %.1f (%.1f, %.1f)\n",
+              diff_c_est, diff_c_ci_l, diff_c_ci_u))
+  cat(sprintf("P value: %s\n\n", did_pval_c))
 }
 
-# Run on outcomes
+# GA v SD 19-64
 gen_did_tbl("medicaid", sample1)
 gen_did_tbl("uninsured", sample1)
 gen_did_tbl("employed", sample1)
+
+# GA v SD >65
+gen_did_tbl("medicaid", sample1_65)
+gen_did_tbl("uninsured", sample1_65)
+gen_did_tbl("employed", sample1_65)
+
+# GA v SD >65 Medicare
+gen_did_tbl("medicaid", sample1_65_medicare)
+gen_did_tbl("uninsured", sample1_65_medicare)
+gen_did_tbl("employed", sample1_65_medicare)
+
+# GA v SD >70
+gen_did_tbl("medicaid", sample1_70)
+gen_did_tbl("uninsured", sample1_70)
+gen_did_tbl("employed", sample1_70)
+
+# GA v SD >70 Medicare
+gen_did_tbl("medicaid", sample1_70_medicare)
+gen_did_tbl("uninsured", sample1_70_medicare)
+gen_did_tbl("employed", sample1_70_medicare)
+
+# GA v SD >200% FPL
+gen_did_tbl("medicaid", sample1_200)
+gen_did_tbl("uninsured", sample1_200)
+gen_did_tbl("employed", sample1_200)
+```
+
+```{r}
+gen_did_tbl <- function(outcome_var, survey_design, z_value = 1.96) {
+  # -------------------------------------------------------------------
+  # 1) Intervention group
+  # -------------------------------------------------------------------
+  # Subset design for the intervention group
+  int_design <- subset(survey_design, intervention3 == TRUE)
+
+  # Calculate pre vs. post means with covariance
+  # So we can do a correct difference for the intervention group
+  tbl_t <- svyby(
+    formula = as.formula(paste0("~", outcome_var)),
+    by = ~post,               
+    design = int_design,
+    FUN = svymean,
+    na.rm = TRUE,
+    covmat = TRUE,            # <--- ensures we get the full covariance matrix
+    vartype = "ci"           
+  )
+
+  # Pre (FALSE) means
+  pre_mean_t       <- tbl_t[tbl_t$post == FALSE, outcome_var] * 100
+  pre_ci_l_t       <- tbl_t[tbl_t$post == FALSE, "ci_l"] * 100
+  pre_ci_u_t       <- tbl_t[tbl_t$post == FALSE, "ci_u"] * 100
+
+  # Post (TRUE) means
+  post_mean_t      <- tbl_t[tbl_t$post == TRUE, outcome_var] * 100
+  post_ci_l_t      <- tbl_t[tbl_t$post == TRUE, "ci_l"] * 100
+  post_ci_u_t      <- tbl_t[tbl_t$post == TRUE, "ci_u"] * 100
+
+  # Use svycontrast to get the difference = Post (TRUE) - Pre (FALSE)
+  diff_t <- svycontrast(
+    tbl_t,
+    quote(`TRUE` - `FALSE`)
+  )
+  # Coefficient (point estimate) is in coef(diff_t)
+  diff_t_est <- coef(diff_t)[1] * 100   
+  diff_t_se  <- SE(diff_t)[1]   * 100
+  # 95% CI from confint()
+  diff_t_ci  <- confint(diff_t) * 100  
+  diff_t_ci_l <- diff_t_ci[1, 1]
+  diff_t_ci_u <- diff_t_ci[1, 2]
+
+  # Also get a p-value for (pre vs post) in the intervention group
+  did_ttest_t <- svyttest(
+    as.formula(paste0(outcome_var, " ~ post")),
+    design = int_design
+  )
+  did_pval_t <- formatC(did_ttest_t$p.value, format = "f", digits = 4)
+
+
+  # -------------------------------------------------------------------
+  # 2) Control group
+  # -------------------------------------------------------------------
+  # Subset design for the control group
+  ctl_design <- subset(survey_design, intervention3 == FALSE)
+
+  # Calculate pre vs. post means with covariance
+  tbl_c <- svyby(
+    formula = as.formula(paste0("~", outcome_var)),
+    by = ~post,               
+    design = ctl_design,
+    FUN = svymean,
+    na.rm = TRUE,
+    covmat = TRUE,
+    vartype = "ci"
+  )
+
+  # Pre (FALSE)
+  pre_mean_c  <- tbl_c[tbl_c$post == FALSE, outcome_var] * 100
+  pre_ci_l_c  <- tbl_c[tbl_c$post == FALSE, "ci_l"] * 100
+  pre_ci_u_c  <- tbl_c[tbl_c$post == FALSE, "ci_u"] * 100
+
+  # Post (TRUE)
+  post_mean_c <- tbl_c[tbl_c$post == TRUE, outcome_var] * 100
+  post_ci_l_c <- tbl_c[tbl_c$post == TRUE, "ci_l"] * 100
+  post_ci_u_c <- tbl_c[tbl_c$post == TRUE, "ci_u"] * 100
+
+  # Difference in the control group
+  diff_c <- svycontrast(
+    tbl_c,
+    quote(`TRUE` - `FALSE`)
+  )
+  diff_c_est <- coef(diff_c)[1] * 100
+  diff_c_se  <- SE(diff_c)[1]   * 100
+  diff_c_ci  <- confint(diff_c) * 100
+  diff_c_ci_l <- diff_c_ci[1, 1]
+  diff_c_ci_u <- diff_c_ci[1, 2]
+
+  # p-value for control group
+  did_ttest_c <- svyttest(
+    as.formula(paste0(outcome_var, " ~ post")),
+    design = ctl_design
+  )
+  did_pval_c <- formatC(did_ttest_c$p.value, format = "f", digits = 4)
+
+
+  # -------------------------------------------------------------------
+  # 3) Print out results
+  # -------------------------------------------------------------------
+  # Intervention group
+  cat("Intervention group:\n")
+  cat(sprintf("Pre period mean: %.1f (%.1f, %.1f)\n",
+              pre_mean_t, pre_ci_l_t, pre_ci_u_t))
+  cat(sprintf("Post period mean: %.1f (%.1f, %.1f)\n",
+              post_mean_t, post_ci_l_t, post_ci_u_t))
+  cat(sprintf("Difference: %.1f (%.1f, %.1f)\n",
+              diff_t_est, diff_t_ci_l, diff_t_ci_u))
+  cat(sprintf("P value: %s\n\n", did_pval_t))
+
+  # Control group
+  cat("Control group:\n")
+  cat(sprintf("Pre period mean: %.1f (%.1f, %.1f)\n",
+              pre_mean_c, pre_ci_l_c, pre_ci_u_c))
+  cat(sprintf("Post period mean: %.1f (%.1f, %.1f)\n",
+              post_mean_c, post_ci_l_c, post_ci_u_c))
+  cat(sprintf("Difference: %.1f (%.1f, %.1f)\n",
+              diff_c_est, diff_c_ci_l, diff_c_ci_u))
+  cat(sprintf("P value: %s\n\n", did_pval_c))
+}
+
+# GA v non-expansion 19-64
+gen_did_tbl("medicaid", sample3)
+gen_did_tbl("uninsured", sample3)
+gen_did_tbl("employed", sample3)
+
+# GA v non-expansion >65
+gen_did_tbl("medicaid", sample3_65)
+gen_did_tbl("uninsured", sample3_65)
+gen_did_tbl("employed", sample3_65)
 ```
 
 # Calculate N's
@@ -800,32 +1953,343 @@ total_tbl3_pre_u
 total_tbl3_post_u <- table(sample3_post$variables$intervention3)
 total_tbl3_post_u
 ```
+
 # Export raw data to Stata for Michael
 ```{r}
-# write_csv(data, "georgia_data.csv")
+write_csv(data, "georgia_data_v3.csv")
+
+# Check data
+temp <- read_csv("georgia_data_v3.csv")
+
+table(data$post)
+table(temp$post)
+
+table(data$intervention1)
+table(temp$intervention1)
+
+table(data$intervention3)
+table(temp$intervention3)
+
+rm(temp)
+
+sample <- data %>%
+  filter(
+    (intervention1 %in% c(FALSE, TRUE) | intervention2 %in% c(FALSE, TRUE) | intervention3 %in% c(FALSE, TRUE)) & # Intervention or control group
+      age >= 19 & # >=19 years old
+      fpg <= 100 & # Income up to 100% FPL
+      not_missing_hi == TRUE & # Health insurance not missing
+      not_missing_employment == TRUE # Employment not missing
+  )
+
+write.csv(sample, "georgia_data_filtered_v3.csv", row.names = FALSE)
+```
+
+# Baseline characteristics table
+```{r}
+# Unweighted N
+total_tbl_pre_u <- table(sample1_pre$variables$intervention1)
+total_tbl_pre_u
+
+total_tbl_post_u <- table(sample1_post$variables$intervention1)
+total_tbl_post_u
+
+# Weighted N
+total_tbl_pre_w <- svytable(~intervention1, design = sample1_pre) %>% as.data.frame()
+total_tbl_pre_w
+
+total_tbl_post_w <- svytable(~intervention1, design = sample1_post) %>% as.data.frame()
+total_tbl_post_w
+
+# Age
+age_tbl <- svyby(~age, ~state + post, sample1, svymean, vartype = c ("se"), na.rm = TRUE)
+age_tbl
+
+age_ttest_pre <- svyttest(age~state, sample1_pre)
+age_ttest_pre
+
+age_ttest_post <- svyttest(age~state, sample1_post)
+age_ttest_post
+
+# Sex
+sex_tbl <- svyby(~sex_cat, ~state + post, sample1, svymean, vartype = c("ci"), na.rm = TRUE)
+sex_tbl
+
+sex_chi_pre <- svychisq(~sex_cat + state, sample1_pre)
+sex_chi_pre
+
+sex_chi_post <- svychisq(~sex_cat + state, sample1_post)
+sex_chi_post
+
+# Race
+race_tbl <- svyby(~race_cat, ~state + post, sample1, svymean, vartype = c("ci"), na.rm = TRUE)
+race_tbl
+
+race_chi_pre <- svychisq(~race_cat + state, sample1_pre)
+race_chi_pre
+
+race_chi_post <- svychisq(~race_cat + state, sample1_post)
+race_chi_post
+
+# Education
+bachelor_tbl <- svyby(~bachelor_cat, ~state + post, sample1, svymean, vartype = c("ci"), na.rm = TRUE)
+bachelor_tbl
+
+bachelor_chi_pre <- svychisq(~bachelor_cat + state, sample1_pre)
+bachelor_chi_pre
+
+bachelor_chi_post <- svychisq(~bachelor_cat + state, sample1_post)
+bachelor_chi_post
+```
+
+# Playground 
+```{r}
+# Load required libraries
+library(survey)
+library(srvyr)
+library(dplyr)
+library(ggplot2)
+
+# Convert to srvyr object for tidy syntax
+sample1_srvyr <- as_survey(sample1)
+
+# Calculate survey-weighted proportions of age categories by intervention and year
+age_cat_summary <- sample1_srvyr %>%
+  group_by(intervention1, year, age_cat) %>%
+  summarize(prop = survey_mean(vartype = "ci", proportion = TRUE), .groups = "drop")
+
+# Plot the bar graph
+ggplot(age_cat_summary, aes(x = age_cat, y = prop, fill = intervention1)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ year) +
+  labs(x = "Age Category", y = "Proportion", fill = "Intervention",
+       title = "Age Categories by Intervention and Year (Survey-Weighted)") +
+  theme_minimal()
+
+# Calculate survey-weighted proportions of sex categories by intervention and year
+sex_cat_summary <- sample1_srvyr %>%
+  group_by(intervention1, year, sex_cat) %>%
+  summarize(prop = survey_mean(vartype = "ci", proportion = TRUE), .groups = "drop")
+
+# Plot the bar graph
+ggplot(sex_cat_summary, aes(x = sex_cat, y = prop, fill = intervention1)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ year) +
+  labs(x = "Sex Category", y = "Proportion", fill = "Intervention",
+       title = "Sex Categories by Intervention and Year (Survey-Weighted)") +
+  theme_minimal()
+
+
+# Convert to srvyr object for tidy syntax
+sample3_srvyr <- as_survey(sample3)
+
+# Calculate survey-weighted proportions of age categories by intervention and year
+age_cat_summary <- sample3_srvyr %>%
+  group_by(intervention3, year, age_cat) %>%
+  summarize(prop = survey_mean(vartype = "ci", proportion = TRUE), .groups = "drop")
+
+# Plot the bar graph
+ggplot(age_cat_summary, aes(x = age_cat, y = prop, fill = intervention3)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ year) +
+  labs(x = "Age Category", y = "Proportion", fill = "Intervention",
+       title = "Age Categories by Intervention and Year (Survey-Weighted)") +
+  theme_minimal()
+
+# Calculate survey-weighted proportions of sex categories by intervention and year
+sex_cat_summary <- sample3_srvyr %>%
+  group_by(intervention3, year, sex_cat) %>%
+  summarize(prop = survey_mean(vartype = "ci", proportion = TRUE), .groups = "drop")
+
+# Plot the bar graph
+ggplot(sex_cat_summary, aes(x = sex_cat, y = prop, fill = intervention3)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ year) +
+  labs(x = "Sex Category", y = "Proportion", fill = "Intervention",
+       title = "Sex Categories by Intervention and Year (Survey-Weighted)") +
+  theme_minimal()
+
+# Compare results to different weighting
+sample_raw <- data %>%
+ mutate(
+   intervention1 = case_when(
+     state == "Georgia" ~ TRUE,
+     state == "South Dakota" ~ FALSE,
+     TRUE ~ NA
+   ),
+   intervention3 = case_when(
+     state == "Georgia" ~ TRUE,
+     state %in% c("Alabama", "Florida", "Texas", "Mississippi", "South Carolina") ~ FALSE, 
+     TRUE ~ NA
+   ),
+   intervention4 = case_when(
+     state == "Georgia" ~ TRUE,
+     state %in% c("Tennessee") ~ FALSE,
+     TRUE ~ NA
+   ),
+   post = case_when( 
+      # Blank out March 29, 2023 to July 10, 2023
+      date < ymd("2023-03-29") ~ FALSE,
+      # date < ymd("2023-07-10") ~ FALSE,
+      date > ymd("2023-07-10") ~ TRUE,
+      # date > ymd("2024-03-31") ~ TRUE,
+      TRUE ~ NA
+    )
+ ) %>%
+ filter(
+   (intervention1 %in% c(FALSE, TRUE) | intervention3 %in% c(FALSE, TRUE)) & # Intervention or control group
+     age >= 19 & age <= 64 & # 19-64 years old
+     # age >= 70 & # 65+ years old
+     # fpg >= 200 & # Income up to 100% FPL
+     not_missing_hi == TRUE & # Health insurance not missing
+     not_missing_employment == TRUE # Employment not missing
+ ) %>%
+ mutate(
+   state_factor = as.factor(state),
+   date_factor = as.factor(date),
+  race_cat = case_when(
+     RRACE == 1 ~ "White",
+     RRACE == 2 ~ "Black",
+     RRACE == 3 ~ "Asian",
+     RRACE == 4 ~ "Other",
+     TRUE ~ NA_character_
+   ),
+   race_cat = case_when( # Note: Hispanic ethnicity overrides all other race variables
+     RHISPANIC == 1 ~ race_cat,
+     RHISPANIC == 2 ~ "Hispanic",
+     TRUE ~ race_cat
+   ),
+   edu_cat = case_when(
+     EEDUC == 1 ~ "Less than high school",
+     EEDUC == 2 ~ "Some high school",
+     EEDUC == 3 ~ "High school graduate",
+     EEDUC == 4 ~ "Some college",
+     EEDUC == 5 ~ "Associates degree",
+     EEDUC == 6 ~ "Bachelors degree",
+     EEDUC == 7 ~ "Graduate degree",
+     TRUE ~ NA_character_
+   ),
+  inc_cat = case_when(
+     fpg <= 100 ~ "Low income",
+     fpg >= 200 ~ "High income"
+  )
+ )
+
+sample_raw_pre <- sample_raw %>%
+ filter(
+   post == 0
+ )
+
+library(sandwich)
+library(lmtest)
+
+# Parallel trends
+## Medicaid
+medicaid_pttest <- lm(medicaid ~ intervention1 * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
+summary(medicaid_pttest)
+# medicaid_pttest_se <- vcovCL(medicaid_pttest, cluster = ~ state_factor)
+# medicaid_pttest_coef <- coeftest(medicaid_pttest, vcov = medicaid_pttest_se)
+# medicaid_pttest_coef
+# confint(medicaid_pttest_coef)
+
+## Uninsured
+uninsured_pttest <- lm(uninsured ~ intervention1 * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
+summary(uninsured_pttest)
+# uninsured_pttest_se <- vcovCL(uninsured_pttest, cluster = ~ state_factor)
+# uninsured_pttest_coef <- coeftest(uninsured_pttest, vcov = uninsured_pttest_se)
+# uninsured_pttest_coef
+# confint(uninsured_pttest_coef)
+
+## Employed
+employed_pttest <- lm(employed ~ intervention1 * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
+summary(employed_pttest)
+# employed_pttest_se <- vcovCL(employed_pttest, cluster = ~ state_factor)
+# employed_pttest_coef <- coeftest(employed_pttest, vcov = employed_pttest_se)
+# employed_pttest_coef
+# confint(employed_pttest_coef)
+
+# non-expansion states
+## Medicaid
+medicaid_pttest <- lm(medicaid ~ intervention3 * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
+summary(medicaid_pttest)
+# medicaid_pttest_se <- vcovCL(medicaid_pttest, cluster = ~ state_factor)
+# medicaid_pttest_coef <- coeftest(medicaid_pttest, vcov = medicaid_pttest_se)
+# medicaid_pttest_coef
+# confint(medicaid_pttest_coef)
+
+## Uninsured
+uninsured_pttest <- lm(uninsured ~ intervention3 * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
+summary(uninsured_pttest)
+uninsured_pttest_se <- vcovCL(uninsured_pttest, cluster = ~ state_factor)
+uninsured_pttest_coef <- coeftest(uninsured_pttest, vcov = uninsured_pttest_se)
+uninsured_pttest_coef
+confint(uninsured_pttest_coef)
+
+## Employed
+employed_pttest <- lm(employed ~ intervention3 * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
+summary(employed_pttest)
+employed_pttest_se <- vcovCL(employed_pttest, cluster = ~ state_factor)
+employed_pttest_coef <- coeftest(employed_pttest, vcov = employed_pttest_se)
+employed_pttest_coef
+confint(employed_pttest_coef)
+
+## Unadjusted DID
+# # Medicaid
+medicaid_unadj <- lm(medicaid ~ intervention3 * post + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+summary(medicaid_unadj)
+medicaid_unadj_se <- vcovCL(medicaid_unadj, cluster = ~ state_factor)
+medicaid_unadj_coef <- coeftest(medicaid_unadj, vcov = medicaid_unadj_se)
+medicaid_unadj_coef
+confint(medicaid_unadj_coef)
 # 
-# # Check data
-# temp <- read_csv("georgia_data.csv")
+# # Uninsured
+# uninsured_unadj <- lm(uninsured ~ intervention * post + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+# uninsured_unadj_se <- vcovCL(uninsured_unadj, cluster = ~ state_factor)
+# uninsured_unadj_coef <- coeftest(uninsured_unadj, vcov = uninsured_unadj_se)
+# uninsured_unadj_coef
+# confint(uninsured_unadj_coef)
 # 
-# table(data$post)
-# table(temp$post)
-# 
-# table(data$intervention1)
-# table(temp$intervention1)
-# 
-# table(data$intervention3)
-# table(temp$intervention3)
-# 
-# rm(temp)
-# 
-# sample <- data %>%
-#   filter(
-#     (intervention1 %in% c(FALSE, TRUE) | intervention2 %in% c(FALSE, TRUE) | intervention3 %in% c(FALSE, TRUE)) & # Intervention or control group
-#       age >= 19 & age <= 64 & # 19-64 years old
-#       fpg <= 100 & # Income up to 100% FPL
-#       not_missing_hi == TRUE & # Health insurance not missing
-#       not_missing_employment == TRUE # Employment not missing
-#   )
-# 
-# write.csv(sample, "georgia_data_filtered.csv", row.names = FALSE)
+# # Employed
+# employed_unadj <- lm(employed ~ intervention * post + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+# employed_unadj_se <- vcovCL(employed_unadj, cluster = ~ state_factor)
+# employed_unadj_coef <- coeftest(employed_unadj, vcov = employed_unadj_se)
+# employed_unadj_coef
+# confint(employed_unadj_coef)
+
+## Adjusted DID
+# Medicaid
+medicaid_adj <- lm(medicaid ~ intervention1 * post * inc_cat + age_cat + sex_cat + race_cat + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+summary(medicaid_adj)
+
+# Uninsured
+uninsured_adj <- lm(uninsured ~ intervention1 * post * inc_cat + age_cat + sex_cat + race_cat + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+summary(uninsured_adj)
+
+# Employed
+employed_adj <- lm(employed ~ intervention1 * post * inc_cat + age_cat + sex_cat + race_cat + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+summary(employed_adj)
+
+# Non-expansion states
+# Medicaid
+medicaid_adj <- lm(medicaid ~ intervention3 * post + age_cat + sex_cat + race_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+summary(medicaid_adj)
+# medicaid_adj_se <- vcovCL(medicaid_adj, cluster = ~ state_factor)
+# medicaid_adj_coef <- coeftest(medicaid_adj, vcov = medicaid_adj_se)
+# medicaid_adj_coef
+# confint(medicaid_adj_coef)
+
+# Uninsured
+uninsured_adj <- lm(uninsured ~ intervention3 * post + age_cat + sex_cat + race_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+summary(uninsured_adj)
+# uninsured_adj_se <- vcovCL(uninsured_adj, cluster = ~ state_factor)
+# uninsured_adj_coef <- coeftest(uninsured_adj, vcov = uninsured_adj_se)
+# uninsured_adj_coef
+# confint(uninsured_adj_coef)
+
+# Employed
+employed_adj <- lm(employed ~ intervention3 * post + age_cat + sex_cat + race_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+summary(employed_adj)
+# employed_adj_se <- vcovCL(employed_adj, cluster = ~ state_factor)
+# employed_adj_coef <- coeftest(employed_adj, vcov = employed_adj_se)
+# employed_adj_coef
+# confint(employed_adj_coef)
 ```
