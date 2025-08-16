@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r libraries}
 library(tidyverse)
 library(haven)
-library(summarytools)
+#library(summarytools)
 library(survey)
 library(srvyr)
 library(zoo)
@@ -22,74 +22,74 @@ library(zoo)
 ## Load data
 
 ```{r}
-puf_41 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week41_PUF_CSV/pulse2022_puf_41.csv")
-puf_42 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week42_PUF_CSV/pulse2022_puf_42.csv")
-puf_43 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week43_PUF_CSV/pulse2022_puf_43.csv")
-puf_44 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week44_PUF_CSV/pulse2022_puf_44.csv")
-puf_45 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week45_PUF_CSV/pulse2022_puf_45.csv")
-puf_46 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week46_PUF_CSV/pulse2022_puf_46.csv")
-puf_47 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week47_PUF_CSV/pulse2022_puf_47.csv")
-puf_48 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week48_PUF_CSV/pulse2022_puf_48.csv")
-puf_49 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week49_PUF_CSV/pulse2022_puf_49.csv")
-puf_50 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week50_PUF_CSV/pulse2022_puf_50.csv")
-puf_51 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week51_PUF_CSV/pulse2022_puf_51.csv")
-puf_52 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week52_PUF_CSV/pulse2022_puf_52.csv")
-puf_53 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week53_PUF_CSV/pulse2023_puf_53.csv")
-puf_54 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week54_PUF_CSV/pulse2023_puf_54.csv")
-puf_55 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week55_PUF_CSV/pulse2023_puf_55.csv")
-puf_56 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week56_PUF_CSV/pulse2023_puf_56.csv")
-puf_57 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week57_PUF_CSV/pulse2023_puf_57.csv")
-puf_58 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week58_PUF_CSV/pulse2023_puf_58.csv")
-puf_59 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week59_PUF_CSV/pulse2023_puf_59.csv")
-puf_60 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week60_PUF_CSV/pulse2023_puf_60.csv")
-puf_61 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week61_PUF_CSV/pulse2023_puf_61.csv")
-puf_62 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week62_PUF_CSV/pulse2023_puf_62.csv")
-puf_63 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week63_PUF_CSV/pulse2023_puf_63.csv")
-puf_401 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4Cycle01_PUF_CSV/hps_04_00_01_puf.csv")
-puf_402 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4Cycle02_PUF_CSV/hps_04_00_02_puf.csv")
-puf_403 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4Cycle03_PUF_CSV/hps_04_00_03_puf.csv")
-puf_404 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-1Cycle04_PUF_CSV/hps_04_01_04_puf.csv")
-puf_405 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-1Cycle05_PUF_CSV/hps_04_01_05_puf.csv")
-puf_406 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-1Cycle06_PUF_CSV/hps_04_01_06_puf.csv")
-puf_407 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-1Cycle07_PUF_CSV/hps_04_01_07_puf.csv")
-puf_408 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-2Cycle08_PUF_CSV/hps_04_02_08_puf.csv")
-puf_409 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-2Cycle09_PUF_CSV/hps_04_02_09_puf.csv")
+puf_41 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week41_PUF_CSV/pulse2022_puf_41.csv")
+puf_42 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week42_PUF_CSV/pulse2022_puf_42.csv")
+puf_43 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week43_PUF_CSV/pulse2022_puf_43.csv")
+puf_44 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week44_PUF_CSV/pulse2022_puf_44.csv")
+puf_45 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week45_PUF_CSV/pulse2022_puf_45.csv")
+puf_46 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week46_PUF_CSV/pulse2022_puf_46.csv")
+puf_47 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week47_PUF_CSV/pulse2022_puf_47.csv")
+puf_48 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week48_PUF_CSV/pulse2022_puf_48.csv")
+puf_49 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week49_PUF_CSV/pulse2022_puf_49.csv")
+puf_50 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week50_PUF_CSV/pulse2022_puf_50.csv")
+puf_51 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week51_PUF_CSV/pulse2022_puf_51.csv")
+puf_52 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week52_PUF_CSV/pulse2022_puf_52.csv")
+puf_53 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week53_PUF_CSV/pulse2023_puf_53.csv")
+puf_54 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week54_PUF_CSV/pulse2023_puf_54.csv")
+puf_55 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week55_PUF_CSV/pulse2023_puf_55.csv")
+puf_56 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week56_PUF_CSV/pulse2023_puf_56.csv")
+puf_57 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week57_PUF_CSV/pulse2023_puf_57.csv")
+puf_58 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week58_PUF_CSV/pulse2023_puf_58.csv")
+puf_59 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week59_PUF_CSV/pulse2023_puf_59.csv")
+puf_60 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week60_PUF_CSV/pulse2023_puf_60.csv")
+puf_61 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week61_PUF_CSV/pulse2023_puf_61.csv")
+puf_62 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week62_PUF_CSV/pulse2023_puf_62.csv")
+puf_63 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week63_PUF_CSV/pulse2023_puf_63.csv")
+puf_401 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4Cycle01_PUF_CSV/hps_04_00_01_puf.csv")
+puf_402 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4Cycle02_PUF_CSV/hps_04_00_02_puf.csv")
+puf_403 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4Cycle03_PUF_CSV/hps_04_00_03_puf.csv")
+puf_404 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4-1Cycle04_PUF_CSV/hps_04_01_04_puf.csv")
+puf_405 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4-1Cycle05_PUF_CSV/hps_04_01_05_puf.csv")
+puf_406 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4-1Cycle06_PUF_CSV/hps_04_01_06_puf.csv")
+puf_407 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4-1Cycle07_PUF_CSV/hps_04_01_07_puf.csv")
+puf_408 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4-2Cycle08_PUF_CSV/hps_04_02_08_puf.csv")
+puf_409 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4-2Cycle09_PUF_CSV/hps_04_02_09_puf.csv")
 ```
 
 # Select variables
 ```{r}
-puf_41 <- puf_41 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_42 <- puf_42 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_43 <- puf_43 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_44 <- puf_44 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_45 <- puf_45 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_46 <- puf_46 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_47 <- puf_47 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_48 <- puf_48 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_49 <- puf_49 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_50 <- puf_50 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_51 <- puf_51 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_52 <- puf_52 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_53 <- puf_53 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_54 <- puf_54 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_55 <- puf_55 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_56 <- puf_56 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_57 <- puf_57 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_58 <- puf_58 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_59 <- puf_59 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_60 <- puf_60 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_61 <- puf_61 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_62 <- puf_62 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_63 <- puf_63 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK")
-puf_401 <- puf_401 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
-puf_402 <- puf_402 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
-puf_403 <- puf_403 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
-puf_404 <- puf_404 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
-puf_405 <- puf_405 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
-puf_406 <- puf_406 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
-puf_407 <- puf_407 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
-puf_408 <- puf_408 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
-puf_409 <- puf_409 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE")
+puf_41 <- puf_41 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_42 <- puf_42 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_43 <- puf_43 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_44 <- puf_44 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_45 <- puf_45 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_46 <- puf_46 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_47 <- puf_47 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_48 <- puf_48 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_49 <- puf_49 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_50 <- puf_50 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_51 <- puf_51 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_52 <- puf_52 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_53 <- puf_53 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_54 <- puf_54 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_55 <- puf_55 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_56 <- puf_56 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_57 <- puf_57 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_58 <- puf_58 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_59 <- puf_59 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_60 <- puf_60 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_61 <- puf_61 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_62 <- puf_62 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_63 <- puf_63 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "WEEK", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_401 <- puf_401 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_402 <- puf_402 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_403 <- puf_403 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_404 <- puf_404 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_405 <- puf_405 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_406 <- puf_406 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_407 <- puf_407 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_408 <- puf_408 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
+puf_409 <- puf_409 %>% select("TBIRTH_YEAR", "RHISPANIC", "RRACE", "EEDUC", "EGENID_BIRTH", "THHLD_NUMPER", "ANYWORK", "HLTHINS1", "HLTHINS2", "HLTHINS3", "HLTHINS4", "HLTHINS5", "HLTHINS6", "HLTHINS7", "HLTHINS8", "INCOME", "EST_ST", "PWEIGHT", "HWEIGHT", "SCRAM", "CYCLE", "SEEING", "HEARING", "REMEMBERING", "MOBILITY")
 ```
 
 # Merge data
@@ -101,38 +101,38 @@ rm("puf_41", "puf_42", "puf_43", "puf_44", "puf_45", "puf_46", "puf_47", "puf_48
 
 # Load weights
 ```{r}
-repwgt_puf_41 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week41_PUF_CSV/pulse2022_repwgt_puf_41.csv")
-repwgt_puf_42 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week42_PUF_CSV/pulse2022_repwgt_puf_42.csv")
-repwgt_puf_43 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week43_PUF_CSV/pulse2022_repwgt_puf_43.csv")
-repwgt_puf_44 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week44_PUF_CSV/pulse2022_repwgt_puf_44.csv")
-repwgt_puf_45 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week45_PUF_CSV/pulse2022_repwgt_puf_45.csv")
-repwgt_puf_46 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week46_PUF_CSV/pulse2022_repwgt_puf_46.csv")
-repwgt_puf_47 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week47_PUF_CSV/pulse2022_repwgt_puf_47.csv")
-repwgt_puf_48 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week48_PUF_CSV/pulse2022_repwgt_puf_48.csv")
-repwgt_puf_49 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week49_PUF_CSV/pulse2022_repwgt_puf_49.csv")
-repwgt_puf_50 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week50_PUF_CSV/pulse2022_repwgt_puf_50.csv")
-repwgt_puf_51 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week51_PUF_CSV/pulse2022_repwgt_puf_51.csv")
-repwgt_puf_52 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week52_PUF_CSV/pulse2022_repwgt_puf_52.csv")
-repwgt_puf_53 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week53_PUF_CSV/pulse2023_repwgt_puf_53.csv")
-repwgt_puf_54 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week54_PUF_CSV/pulse2023_repwgt_puf_54.csv")
-repwgt_puf_55 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week55_PUF_CSV/pulse2023_repwgt_puf_55.csv")
-repwgt_puf_56 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week56_PUF_CSV/pulse2023_repwgt_puf_56.csv")
-repwgt_puf_57 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week57_PUF_CSV/pulse2023_repwgt_puf_57.csv")
-repwgt_puf_58 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week58_PUF_CSV/pulse2023_repwgt_puf_58.csv")
-repwgt_puf_59 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week59_PUF_CSV/pulse2023_repwgt_puf_59.csv")
-repwgt_puf_60 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week60_PUF_CSV/pulse2023_repwgt_puf_60.csv")
-repwgt_puf_61 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week61_PUF_CSV/pulse2023_repwgt_puf_61.csv")
-repwgt_puf_62 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week62_PUF_CSV/pulse2023_repwgt_puf_62.csv")
-repwgt_puf_63 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Week63_PUF_CSV/pulse2023_repwgt_puf_63.csv")
-repwgt_puf_401 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4Cycle01_PUF_CSV/hps_04_00_01_repwgt_puf.csv")
-repwgt_puf_402 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4Cycle02_PUF_CSV/hps_04_00_02_repwgt_puf.csv")
-repwgt_puf_403 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4Cycle03_PUF_CSV/hps_04_00_03_repwgt_puf.csv")
-repwgt_puf_404 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-1Cycle04_PUF_CSV/hps_04_01_04_repwgt_puf.csv")
-repwgt_puf_405 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-1Cycle05_PUF_CSV/hps_04_01_05_repwgt_puf.csv")
-repwgt_puf_406 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-1Cycle06_PUF_CSV/hps_04_01_06_repwgt_puf.csv")
-repwgt_puf_407 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-1Cycle07_PUF_CSV/hps_04_01_07_repwgt_puf.csv")
-repwgt_puf_408 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-2Cycle08_PUF_CSV/hps_04_02_08_repwgt_puf.csv")
-repwgt_puf_409 <- read_csv("C:/Users/djohns44/OneDrive - Beth Israel Lahey Health/Pulse/HPS_Phase4-2Cycle09_PUF_CSV/hps_04_02_09_repwgt_puf.csv")
+repwgt_puf_41 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week41_PUF_CSV/pulse2022_repwgt_puf_41.csv")
+repwgt_puf_42 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week42_PUF_CSV/pulse2022_repwgt_puf_42.csv")
+repwgt_puf_43 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week43_PUF_CSV/pulse2022_repwgt_puf_43.csv")
+repwgt_puf_44 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week44_PUF_CSV/pulse2022_repwgt_puf_44.csv")
+repwgt_puf_45 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week45_PUF_CSV/pulse2022_repwgt_puf_45.csv")
+repwgt_puf_46 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week46_PUF_CSV/pulse2022_repwgt_puf_46.csv")
+repwgt_puf_47 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week47_PUF_CSV/pulse2022_repwgt_puf_47.csv")
+repwgt_puf_48 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week48_PUF_CSV/pulse2022_repwgt_puf_48.csv")
+repwgt_puf_49 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week49_PUF_CSV/pulse2022_repwgt_puf_49.csv")
+repwgt_puf_50 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week50_PUF_CSV/pulse2022_repwgt_puf_50.csv")
+repwgt_puf_51 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week51_PUF_CSV/pulse2022_repwgt_puf_51.csv")
+repwgt_puf_52 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week52_PUF_CSV/pulse2022_repwgt_puf_52.csv")
+repwgt_puf_53 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week53_PUF_CSV/pulse2023_repwgt_puf_53.csv")
+repwgt_puf_54 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week54_PUF_CSV/pulse2023_repwgt_puf_54.csv")
+repwgt_puf_55 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week55_PUF_CSV/pulse2023_repwgt_puf_55.csv")
+repwgt_puf_56 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week56_PUF_CSV/pulse2023_repwgt_puf_56.csv")
+repwgt_puf_57 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week57_PUF_CSV/pulse2023_repwgt_puf_57.csv")
+repwgt_puf_58 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week58_PUF_CSV/pulse2023_repwgt_puf_58.csv")
+repwgt_puf_59 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week59_PUF_CSV/pulse2023_repwgt_puf_59.csv")
+repwgt_puf_60 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week60_PUF_CSV/pulse2023_repwgt_puf_60.csv")
+repwgt_puf_61 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week61_PUF_CSV/pulse2023_repwgt_puf_61.csv")
+repwgt_puf_62 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week62_PUF_CSV/pulse2023_repwgt_puf_62.csv")
+repwgt_puf_63 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Week63_PUF_CSV/pulse2023_repwgt_puf_63.csv")
+repwgt_puf_401 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4Cycle01_PUF_CSV/hps_04_00_01_repwgt_puf.csv")
+repwgt_puf_402 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4Cycle02_PUF_CSV/hps_04_00_02_repwgt_puf.csv")
+repwgt_puf_403 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4Cycle03_PUF_CSV/hps_04_00_03_repwgt_puf.csv")
+repwgt_puf_404 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4-1Cycle04_PUF_CSV/hps_04_01_04_repwgt_puf.csv")
+repwgt_puf_405 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4-1Cycle05_PUF_CSV/hps_04_01_05_repwgt_puf.csv")
+repwgt_puf_406 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4-1Cycle06_PUF_CSV/hps_04_01_06_repwgt_puf.csv")
+repwgt_puf_407 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4-1Cycle07_PUF_CSV/hps_04_01_07_repwgt_puf.csv")
+repwgt_puf_408 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4-2Cycle08_PUF_CSV/hps_04_02_08_repwgt_puf.csv")
+repwgt_puf_409 <- read_csv("/Users/danieljohnson/Library/CloudStorage/OneDrive-TheUniversityofChicago/Pulse/HPS_Phase4-2Cycle09_PUF_CSV/hps_04_02_09_repwgt_puf.csv")
 ```
 
 # Merge weights and data
@@ -327,6 +327,17 @@ data <- data %>%
       EEDUC %in% c(6, 7) ~ 1,
       EEDUC %in% c(1, 2, 3, 4, 5) ~ 0,
       TRUE ~ NA
+    ),
+    disability_cat = case_when(
+      SEEING %in% c(3, 4) |
+        HEARING %in% c(3, 4) |
+        REMEMBERING %in% c(3, 4) |
+        MOBILITY %in% c(3, 4) ~ 1,
+      SEEING %in% c(1, 2) &
+        HEARING %in% c(1, 2) &
+        REMEMBERING %in% c(1, 2) &
+        MOBILITY %in% c(1, 2) ~ 0,
+      TRUE ~ NA
     )
   )
 
@@ -474,7 +485,37 @@ data <- data %>%
       state == "Georgia" ~ TRUE,
       state %in% c("Alabama", "Florida", "Texas", "Mississippi", "South Carolina") ~ FALSE,
       TRUE ~ NA
-    )
+    ),
+    intervention4 = case_when(
+      state == "Georgia" ~ TRUE,
+      state %in% c("Alabama", "Florida", "Tennessee", "Mississippi", "South Carolina") ~ FALSE,
+      TRUE ~ NA
+    ),
+    intervention_drop_al = case_when(
+     state == "Georgia" ~ TRUE,
+     state %in% c("Florida", "Mississippi", "South Carolina", "Tennessee") ~ FALSE,
+     TRUE ~ NA
+   ),
+   intervention_drop_fl = case_when(
+     state == "Georgia" ~ TRUE,
+     state %in% c("Alabama", "Mississippi", "South Carolina", "Tennessee") ~ FALSE,
+     TRUE ~ NA
+   ),
+   intervention_drop_ms = case_when(
+     state == "Georgia" ~ TRUE,
+     state %in% c("Alabama", "Florida", "South Carolina", "Tennessee") ~ FALSE,
+     TRUE ~ NA
+   ),
+   intervention_drop_sc = case_when(
+     state == "Georgia" ~ TRUE,
+     state %in% c("Alabama", "Florida", "Mississippi", "Tennessee") ~ FALSE,
+     TRUE ~ NA
+   ),
+   intervention_drop_tn = case_when(
+     state == "Georgia" ~ TRUE,
+     state %in% c("Alabama", "Florida", "Mississippi", "South Carolina") ~ FALSE,
+     TRUE ~ NA
+   )
   )
 ```
 
@@ -495,6 +536,7 @@ survey <- data %>%
 sample1 <- survey %>%
   subset(
     intervention1 %in% c(FALSE, TRUE) & # Intervention or control group
+      post %in% c(FALSE, TRUE) & # Exclude blanking period
       age >= 19 & age <= 64 & # 19-64 years old
       fpg <= 100 & # Income up to 100% FPL
       not_missing_hi == 1 & # Health insurance not missing
@@ -506,58 +548,10 @@ sample1_65 <- survey %>%
   subset(
     intervention1 %in% c(FALSE, TRUE) & # Intervention or control group
       age >= 65 & # 65+ years old
-      fpg <= 100 & # Income up to 100% FPL
+      # fpg <= 100 & # Income up to 100% FPL
       not_missing_hi == 1 & # Health insurance not missing
       not_missing_employment == 1 # Employment not missing
   )
-
-# Georgia vs. South Dakota - 65+ Medicare
-sample1_65_medicare <- survey %>%
-  subset(
-    intervention1 %in% c(FALSE, TRUE) & # Intervention or control group
-      age >= 65 & # 65+ years old
-      medicare == TRUE & # Medicare beneficiaries
-      not_missing_hi == 1 & # Health insurance not missing
-      not_missing_employment == 1 # Employment not missing
-  )
-
-# Georgia vs. South Dakota - 70+
-sample1_70 <- survey %>%
-  subset(
-    intervention1 %in% c(FALSE, TRUE) & # Intervention or control group
-      age >= 70 & # 70+ years old
-      fpg <= 100 & # Income up to 100% FPL
-      not_missing_hi == 1 & # Health insurance not missing
-      not_missing_employment == 1 # Employment not missing
-  )
-
-# Georgia vs. South Dakota - 70+ Medicare
-sample1_70_medicare <- survey %>%
-  subset(
-    intervention1 %in% c(FALSE, TRUE) & # Intervention or control group
-      age >= 70 & # 70+ years old
-      medicare == TRUE &
-      not_missing_hi == 1 & # Health insurance not missing
-      not_missing_employment == 1 # Employment not missing
-  )
-
-# Georgia vs. South Dakota - >200% FPL
-sample1_200 <- survey %>%
-  subset(
-    intervention1 %in% c(FALSE, TRUE) & # Intervention or control group
-      age >= 19 & age <= 64 & # 19-64 years old
-      fpg >= 200 & # Income over 200% FPL
-      not_missing_hi == 1 & # Health insurance not missing
-      not_missing_employment == 1 # Employment not missing
-  )
-
-# Subset to pre-period
-sample1_pre <- sample1 %>% subset(post == FALSE)
-sample1_65_pre <- sample1_65 %>% subset(post == FALSE)
-
-# Subset to post-period
-sample1_post <- sample1 %>% subset(post == TRUE)
-sample1_65_post <- sample1_65 %>% subset(post == TRUE)
 
 # Georgia vs. Alabama, Florida, Texas, Mississippi, South Carolina
 sample3 <- survey %>%
@@ -573,19 +567,50 @@ sample3 <- survey %>%
 sample3_65 <- survey %>%
   subset(
     intervention3 %in% c(FALSE, TRUE) & # Intervention or control group
+      post %in% c(FALSE, TRUE) & # Exclude blanking period
       age >= 65 & # 65+ years old
+      # fpg <= 100 & # Income up to 100% FPL
+      not_missing_hi == 1 & # Health insurance not missing
+      not_missing_employment == 1 # Employment not missing
+  )
+
+# Georgia vs. Alabama, Florida, Tennessee, Mississippi, South Carolina
+sample4 <- survey %>%
+  subset(
+    intervention4 %in% c(FALSE, TRUE) & # Intervention or control group
+      post %in% c(FALSE, TRUE) & # Exclude blanking period
+      age >= 19 & age <= 64 & # 19-64 years old
       fpg <= 100 & # Income up to 100% FPL
       not_missing_hi == 1 & # Health insurance not missing
       not_missing_employment == 1 # Employment not missing
   )
 
+# Georgia vs. Alabama, Florida, Texas, Mississippi, South Carolina - 65+
+sample4_65 <- survey %>%
+  subset(
+    intervention4 %in% c(FALSE, TRUE) & # Intervention or control group
+      post %in% c(FALSE, TRUE) & # Exclude blanking period
+      age >= 65 & # 65+ years old
+      # fpg <= 100 & # Income up to 100% FPL
+      not_missing_hi == 1 & # Health insurance not missing
+      not_missing_employment == 1 # Employment not missing
+  )
+
 # Subset to pre-period
+sample1_pre <- sample1 %>% subset(post == FALSE)
+sample1_65_pre <- sample1_65 %>% subset(post == FALSE)
 sample3_pre <- sample3 %>% subset(post == FALSE)
 sample3_65_pre <- sample3_65 %>% subset(post == FALSE)
+sample4_pre <- sample4 %>% subset(post == FALSE)
+sample4_65_pre <- sample4_65 %>% subset(post == FALSE)
 
 # Subset to post-period
+sample1_post <- sample1 %>% subset(post == TRUE)
+sample1_65_post <- sample1_65 %>% subset(post == TRUE)
 sample3_post <- sample3 %>% subset(post == TRUE)
 sample3_65_post <- sample3_65 %>% subset(post == TRUE)
+sample4_post <- sample4 %>% subset(post == TRUE)
+sample4_65_post <- sample4_65 %>% subset(post == TRUE)
 ```
 
 # Plot data
@@ -853,6 +878,139 @@ employed_quarter_plot
 ggsave("employed_quarter_plot_south.jpg")
 ```
 
+
+### GA v intervention4 19-64
+```{r}
+# Medicaid
+medicaid_quarter <- svyby(~medicaid, ~quarter_factor + intervention4, sample4,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = medicaid,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(medicaid_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = percentage, color = intervention4, group = intervention4)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Medicaid coverage, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("Non-expansion states", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+medicaid_quarter_plot
+ggsave("medicaid_quarter_plot_4.jpg")
+
+# Uninsured
+uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention4, sample4,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = uninsured,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(uninsured_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = percentage, color = intervention4, group = intervention4)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Uninsured, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("Non-expansion states", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+uninsured_quarter_plot
+ggsave("uninsured_quarter_plot_4.jpg")
+
+# Employed
+employed_quarter <- svyby(~employed, ~quarter_factor + intervention4, sample4,
+                       svymean, vartype = "se", na.rm = TRUE) %>%
+  as.data.frame() %>%
+  rename(
+    percentage = employed,
+    se = se
+  ) %>%
+  mutate(
+    percentage = percentage * 100,
+    se = se * 100,
+    lower = pmax(percentage - 1.96 * se, 0),
+    upper = pmin(percentage + 1.96 * se, 100)
+  ) %>%
+  filter(quarter_factor != "2023 Q2")
+
+policy_change_x <- which(levels(employed_quarter$quarter_factor) == "2023 Q2") + (1/3)
+
+employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = percentage, color = intervention4, group = intervention4)) +
+  geom_line() +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
+  labs(
+    x = "Date",
+    y = "Employment, %"
+  ) +
+  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
+                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
+                              "Mar 2024", "Jun 2024", "Sep 2024"),
+                   drop = FALSE) +
+  scale_color_brewer(palette = "Set1", labels = c("Non-expansion states", "Georgia")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  ylim(0, 100)
+
+employed_quarter_plot
+ggsave("employed_quarter_plot_4.jpg")
+```
+
 ### GA v SD >65
 ```{r}
 # Medicaid
@@ -896,7 +1054,7 @@ medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = pe
   ylim(0, 100)
 
 medicaid_quarter_plot
-ggsave("medicaid_quarter_plot_65.jpg")
+# ggsave("medicaid_quarter_plot_65.jpg")
 
 # Uninsured
 uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention1, sample1_65,
@@ -939,7 +1097,7 @@ uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = 
   ylim(0, 100)
 
 uninsured_quarter_plot
-ggsave("uninsured_quarter_plot_65.jpg")
+# ggsave("uninsured_quarter_plot_65.jpg")
 
 # Employed
 employed_quarter <- svyby(~employed, ~quarter_factor + intervention1, sample1_65,
@@ -982,544 +1140,13 @@ employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = pe
   ylim(0, 100)
 
 employed_quarter_plot
-ggsave("employed_quarter_plot_65.jpg")
-```
-
-
-### GA v SD >65 Medicare
-```{r}
-# Medicaid
-medicaid_quarter <- svyby(~medicaid, ~quarter_factor + intervention1, sample1_65_medicare,
-                       svymean, vartype = "se", na.rm = TRUE) %>%
-  as.data.frame() %>%
-  rename(
-    percentage = medicaid,
-    se = se
-  ) %>%
-  mutate(
-    percentage = percentage * 100,
-    se = se * 100,
-    lower = pmax(percentage - 1.96 * se, 0),
-    upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  filter(quarter_factor != "2023 Q2")
-
-policy_change_x <- which(levels(medicaid_quarter$quarter_factor) == "2023 Q2") + (1/3)
-
-medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
-  geom_line() +
-  geom_point() +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
-  labs(
-    x = "Date",
-    y = "Medicaid coverage, %"
-  ) +
-  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
-                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
-                              "Mar 2024", "Jun 2024", "Sep 2024"),
-                   drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "bottom",
-    legend.title = element_blank()
-  ) +
-  ylim(0, 100)
-
-medicaid_quarter_plot
-ggsave("medicaid_quarter_plot_65_medicare.jpg")
-
-# Uninsured
-uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention1, sample1_65_medicare,
-                       svymean, vartype = "se", na.rm = TRUE) %>%
-  as.data.frame() %>%
-  rename(
-    percentage = uninsured,
-    se = se
-  ) %>%
-  mutate(
-    percentage = percentage * 100,
-    se = se * 100,
-    lower = pmax(percentage - 1.96 * se, 0),
-    upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  filter(quarter_factor != "2023 Q2")
-
-policy_change_x <- which(levels(uninsured_quarter$quarter_factor) == "2023 Q2") + (1/3)
-
-uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
-  geom_line() +
-  geom_point() +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
-  labs(
-    x = "Date",
-    y = "Uninsured rate, %"
-  ) +
-  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
-                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
-                              "Mar 2024", "Jun 2024", "Sep 2024"),
-                   drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "bottom",
-    legend.title = element_blank()
-  ) +
-  ylim(0, 100)
-
-uninsured_quarter_plot
-ggsave("uninsured_quarter_plot_65_medicare.jpg")
-
-# Employed
-employed_quarter <- svyby(~employed, ~quarter_factor + intervention1, sample1_65_medicare,
-                       svymean, vartype = "se", na.rm = TRUE) %>%
-  as.data.frame() %>%
-  rename(
-    percentage = employed,
-    se = se
-  ) %>%
-  mutate(
-    percentage = percentage * 100,
-    se = se * 100,
-    lower = pmax(percentage - 1.96 * se, 0),
-    upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  filter(quarter_factor != "2023 Q2")
-
-policy_change_x <- which(levels(employed_quarter$quarter_factor) == "2023 Q2") + (1/3)
-
-employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
-  geom_line() +
-  geom_point() +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
-  labs(
-    x = "Date",
-    y = "Employment, %"
-  ) +
-  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
-                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
-                              "Mar 2024", "Jun 2024", "Sep 2024"),
-                   drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "bottom",
-    legend.title = element_blank()
-  ) +
-  ylim(0, 100)
-
-employed_quarter_plot
-ggsave("employed_quarter_plot_65_medicare.jpg")
-```
-
-### GA v SD >70
-```{r}
-# Medicaid
-medicaid_quarter <- svyby(~medicaid, ~quarter_factor + intervention1, sample1_70,
-                       svymean, vartype = "se", na.rm = TRUE) %>%
-  as.data.frame() %>%
-  rename(
-    percentage = medicaid,
-    se = se
-  ) %>%
-  mutate(
-    percentage = percentage * 100,
-    se = se * 100,
-    lower = pmax(percentage - 1.96 * se, 0),
-    upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  filter(quarter_factor != "2023 Q2")
-
-policy_change_x <- which(levels(medicaid_quarter$quarter_factor) == "2023 Q2") + (1/3)
-
-medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
-  geom_line() +
-  geom_point() +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
-  labs(
-    x = "Date",
-    y = "Medicaid coverage, %"
-  ) +
-  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
-                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
-                              "Mar 2024", "Jun 2024", "Sep 2024"),
-                   drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "bottom",
-    legend.title = element_blank()
-  ) +
-  ylim(0, 100)
-
-medicaid_quarter_plot
-ggsave("medicaid_quarter_plot_70.jpg")
-
-# Uninsured
-uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention1, sample1_70,
-                       svymean, vartype = "se", na.rm = TRUE) %>%
-  as.data.frame() %>%
-  rename(
-    percentage = uninsured,
-    se = se
-  ) %>%
-  mutate(
-    percentage = percentage * 100,
-    se = se * 100,
-    lower = pmax(percentage - 1.96 * se, 0),
-    upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  filter(quarter_factor != "2023 Q2")
-
-policy_change_x <- which(levels(uninsured_quarter$quarter_factor) == "2023 Q2") + (1/3)
-
-uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
-  geom_line() +
-  geom_point() +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
-  labs(
-    x = "Date",
-    y = "Uninsured rate, %"
-  ) +
-  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
-                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
-                              "Mar 2024", "Jun 2024", "Sep 2024"),
-                   drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "bottom",
-    legend.title = element_blank()
-  ) +
-  ylim(0, 100)
-
-uninsured_quarter_plot
-ggsave("uninsured_quarter_plot_70.jpg")
-
-# Employed
-employed_quarter <- svyby(~employed, ~quarter_factor + intervention1, sample1_70,
-                       svymean, vartype = "se", na.rm = TRUE) %>%
-  as.data.frame() %>%
-  rename(
-    percentage = employed,
-    se = se
-  ) %>%
-  mutate(
-    percentage = percentage * 100,
-    se = se * 100,
-    lower = pmax(percentage - 1.96 * se, 0),
-    upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  filter(quarter_factor != "2023 Q2")
-
-policy_change_x <- which(levels(employed_quarter$quarter_factor) == "2023 Q2") + (1/3)
-
-employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
-  geom_line() +
-  geom_point() +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
-  labs(
-    x = "Date",
-    y = "Employment, %"
-  ) +
-  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
-                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
-                              "Mar 2024", "Jun 2024", "Sep 2024"),
-                   drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "bottom",
-    legend.title = element_blank()
-  ) +
-  ylim(0, 100)
-
-employed_quarter_plot
-ggsave("employed_quarter_plot_70.jpg")
-```
-
-
-
-### GA v SD >70 Medicare
-```{r}
-# Medicaid
-medicaid_quarter <- svyby(~medicaid, ~quarter_factor + intervention1, sample1_70_medicare,
-                       svymean, vartype = "se", na.rm = TRUE) %>%
-  as.data.frame() %>%
-  rename(
-    percentage = medicaid,
-    se = se
-  ) %>%
-  mutate(
-    percentage = percentage * 100,
-    se = se * 100,
-    lower = pmax(percentage - 1.96 * se, 0),
-    upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  filter(quarter_factor != "2023 Q2")
-
-policy_change_x <- which(levels(medicaid_quarter$quarter_factor) == "2023 Q2") + (1/3)
-
-medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
-  geom_line() +
-  geom_point() +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
-  labs(
-    x = "Date",
-    y = "Medicaid coverage, %"
-  ) +
-  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
-                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
-                              "Mar 2024", "Jun 2024", "Sep 2024"),
-                   drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "bottom",
-    legend.title = element_blank()
-  ) +
-  ylim(0, 100)
-
-medicaid_quarter_plot
-ggsave("medicaid_quarter_plot_70_medicare.jpg")
-
-# Uninsured
-uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention1, sample1_70_medicare,
-                       svymean, vartype = "se", na.rm = TRUE) %>%
-  as.data.frame() %>%
-  rename(
-    percentage = uninsured,
-    se = se
-  ) %>%
-  mutate(
-    percentage = percentage * 100,
-    se = se * 100,
-    lower = pmax(percentage - 1.96 * se, 0),
-    upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  filter(quarter_factor != "2023 Q2")
-
-policy_change_x <- which(levels(uninsured_quarter$quarter_factor) == "2023 Q2") + (1/3)
-
-uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
-  geom_line() +
-  geom_point() +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
-  labs(
-    x = "Date",
-    y = "Uninsured rate, %"
-  ) +
-  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
-                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
-                              "Mar 2024", "Jun 2024", "Sep 2024"),
-                   drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "bottom",
-    legend.title = element_blank()
-  ) +
-  ylim(0, 100)
-
-uninsured_quarter_plot
-ggsave("uninsured_quarter_plot_70_medicare.jpg")
-
-# Employed
-employed_quarter <- svyby(~employed, ~quarter_factor + intervention1, sample1_70_medicare,
-                       svymean, vartype = "se", na.rm = TRUE) %>%
-  as.data.frame() %>%
-  rename(
-    percentage = employed,
-    se = se
-  ) %>%
-  mutate(
-    percentage = percentage * 100,
-    se = se * 100,
-    lower = pmax(percentage - 1.96 * se, 0),
-    upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  filter(quarter_factor != "2023 Q2")
-
-policy_change_x <- which(levels(employed_quarter$quarter_factor) == "2023 Q2") + (1/3)
-
-employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
-  geom_line() +
-  geom_point() +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
-  labs(
-    x = "Date",
-    y = "Employment, %"
-  ) +
-  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
-                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
-                              "Mar 2024", "Jun 2024", "Sep 2024"),
-                   drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "bottom",
-    legend.title = element_blank()
-  ) +
-  ylim(0, 100)
-
-employed_quarter_plot
-ggsave("employed_quarter_plot_70_medicare.jpg")
-```
-
-### GA v SD >200% FPL
-```{r}
-# Medicaid
-medicaid_quarter <- svyby(~medicaid, ~quarter_factor + intervention1, sample1_200,
-                       svymean, vartype = "se", na.rm = TRUE) %>%
-  as.data.frame() %>%
-  rename(
-    percentage = medicaid,
-    se = se
-  ) %>%
-  mutate(
-    percentage = percentage * 100,
-    se = se * 100,
-    lower = pmax(percentage - 1.96 * se, 0),
-    upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  filter(quarter_factor != "2023 Q2")
-
-policy_change_x <- which(levels(medicaid_quarter$quarter_factor) == "2023 Q2") + (1/3)
-
-medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
-  geom_line() +
-  geom_point() +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
-  labs(
-    x = "Date",
-    y = "Medicaid coverage, %"
-  ) +
-  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
-                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
-                              "Mar 2024", "Jun 2024", "Sep 2024"),
-                   drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "bottom",
-    legend.title = element_blank()
-  ) +
-  ylim(0, 100)
-
-medicaid_quarter_plot
-ggsave("medicaid_quarter_plot_200.jpg")
-
-# Uninsured
-uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention1, sample1_200,
-                       svymean, vartype = "se", na.rm = TRUE) %>%
-  as.data.frame() %>%
-  rename(
-    percentage = uninsured,
-    se = se
-  ) %>%
-  mutate(
-    percentage = percentage * 100,
-    se = se * 100,
-    lower = pmax(percentage - 1.96 * se, 0),
-    upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  filter(quarter_factor != "2023 Q2")
-
-policy_change_x <- which(levels(uninsured_quarter$quarter_factor) == "2023 Q2") + (1/3)
-
-uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
-  geom_line() +
-  geom_point() +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
-  labs(
-    x = "Date",
-    y = "Uninsured rate, %"
-  ) +
-  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
-                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
-                              "Mar 2024", "Jun 2024", "Sep 2024"),
-                   drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "bottom",
-    legend.title = element_blank()
-  ) +
-  ylim(0, 100)
-
-uninsured_quarter_plot
-ggsave("uninsured_quarter_plot_200.jpg")
-
-# Employed
-employed_quarter <- svyby(~employed, ~quarter_factor + intervention1, sample1_200,
-                       svymean, vartype = "se", na.rm = TRUE) %>%
-  as.data.frame() %>%
-  rename(
-    percentage = employed,
-    se = se
-  ) %>%
-  mutate(
-    percentage = percentage * 100,
-    se = se * 100,
-    lower = pmax(percentage - 1.96 * se, 0),
-    upper = pmin(percentage + 1.96 * se, 100)
-  ) %>%
-  filter(quarter_factor != "2023 Q2")
-
-policy_change_x <- which(levels(employed_quarter$quarter_factor) == "2023 Q2") + (1/3)
-
-employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = percentage, color = intervention1, group = intervention1)) +
-  geom_line() +
-  geom_point() +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-  geom_vline(xintercept = policy_change_x, linetype = "dashed", color = "black") +  # Policy change in July 2023
-  labs(
-    x = "Date",
-    y = "Employment, %"
-  ) +
-  scale_x_discrete(labels = c("Mar 2022", "Jun 2022", "Sep 2022", "Dec 2022", 
-                              "Mar 2023", "Jun 2023", "Sep 2023", "Dec 2023",
-                              "Mar 2024", "Jun 2024", "Sep 2024"),
-                   drop = FALSE) +
-  scale_color_brewer(palette = "Set1", labels = c("South Dakota", "Georgia")) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "bottom",
-    legend.title = element_blank()
-  ) +
-  ylim(0, 100)
-
-employed_quarter_plot
-ggsave("employed_quarter_plot_200.jpg")
+# ggsave("employed_quarter_plot_65.jpg")
 ```
 
 ### GA v non-expansion >65
 ```{r}
 # Medicaid
-medicaid_quarter <- svyby(~medicaid, ~quarter_factor + intervention3, sample3_65,
+medicaid_quarter <- svyby(~medicaid, ~quarter_factor + intervention4, sample4_65,
                        svymean, vartype = "se", na.rm = TRUE) %>%
   as.data.frame() %>%
   rename(
@@ -1536,7 +1163,7 @@ medicaid_quarter <- svyby(~medicaid, ~quarter_factor + intervention3, sample3_65
 
 policy_change_x <- which(levels(medicaid_quarter$quarter_factor) == "2023 Q2") + (1/3)
 
-medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = percentage, color = intervention3, group = intervention3)) +
+medicaid_quarter_plot <- ggplot(medicaid_quarter, aes(x = quarter_factor, y = percentage, color = intervention4, group = intervention4)) +
   geom_line() +
   geom_point() +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
@@ -1562,7 +1189,7 @@ medicaid_quarter_plot
 ggsave("medicaid_quarter_plot_south_65.jpg")
 
 # Uninsured
-uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention3, sample3_65,
+uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention4, sample4_65,
                        svymean, vartype = "se", na.rm = TRUE) %>%
   as.data.frame() %>%
   rename(
@@ -1579,7 +1206,7 @@ uninsured_quarter <- svyby(~uninsured, ~quarter_factor + intervention3, sample3_
 
 policy_change_x <- which(levels(uninsured_quarter$quarter_factor) == "2023 Q2") + (1/3)
 
-uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = percentage, color = intervention3, group = intervention3)) +
+uninsured_quarter_plot <- ggplot(uninsured_quarter, aes(x = quarter_factor, y = percentage, color = intervention4, group = intervention4)) +
   geom_line() +
   geom_point() +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
@@ -1605,7 +1232,7 @@ uninsured_quarter_plot
 ggsave("uninsured_quarter_plot_south_65.jpg")
 
 # Employed
-employed_quarter <- svyby(~employed, ~quarter_factor + intervention3, sample3_65,
+employed_quarter <- svyby(~employed, ~quarter_factor + intervention4, sample4_65,
                        svymean, vartype = "se", na.rm = TRUE) %>%
   as.data.frame() %>%
   rename(
@@ -1622,7 +1249,7 @@ employed_quarter <- svyby(~employed, ~quarter_factor + intervention3, sample3_65
 
 policy_change_x <- which(levels(employed_quarter$quarter_factor) == "2023 Q2") + (1/3)
 
-employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = percentage, color = intervention3, group = intervention3)) +
+employed_quarter_plot <- ggplot(employed_quarter, aes(x = quarter_factor, y = percentage, color = intervention4, group = intervention4)) +
   geom_line() +
   geom_point() +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
@@ -1649,6 +1276,8 @@ ggsave("employed_quarter_plot_south_65.jpg")
 ```
 
 # Create DID table
+
+### GA vs SD
 ```{r}
 gen_did_tbl <- function(outcome_var, survey_design, z_value = 1.96) {
   # -------------------------------------------------------------------
@@ -1801,13 +1430,15 @@ gen_did_tbl("uninsured", sample1_200)
 gen_did_tbl("employed", sample1_200)
 ```
 
+### GA vs non-expansion
+
 ```{r}
 gen_did_tbl <- function(outcome_var, survey_design, z_value = 1.96) {
   # -------------------------------------------------------------------
   # 1) Intervention group
   # -------------------------------------------------------------------
   # Subset design for the intervention group
-  int_design <- subset(survey_design, intervention3 == TRUE)
+  int_design <- subset(survey_design, intervention4 == TRUE)
 
   # Calculate pre vs. post means with covariance
   # So we can do a correct difference for the intervention group
@@ -1856,7 +1487,7 @@ gen_did_tbl <- function(outcome_var, survey_design, z_value = 1.96) {
   # 2) Control group
   # -------------------------------------------------------------------
   # Subset design for the control group
-  ctl_design <- subset(survey_design, intervention3 == FALSE)
+  ctl_design <- subset(survey_design, intervention4 == FALSE)
 
   # Calculate pre vs. post means with covariance
   tbl_c <- svyby(
@@ -1923,14 +1554,14 @@ gen_did_tbl <- function(outcome_var, survey_design, z_value = 1.96) {
 }
 
 # GA v non-expansion 19-64
-gen_did_tbl("medicaid", sample3)
-gen_did_tbl("uninsured", sample3)
-gen_did_tbl("employed", sample3)
+gen_did_tbl("medicaid", sample4)
+gen_did_tbl("uninsured", sample4)
+gen_did_tbl("employed", sample4)
 
 # GA v non-expansion >65
-gen_did_tbl("medicaid", sample3_65)
-gen_did_tbl("uninsured", sample3_65)
-gen_did_tbl("employed", sample3_65)
+gen_did_tbl("medicaid", sample4_65)
+gen_did_tbl("uninsured", sample4_65)
+gen_did_tbl("employed", sample4_65)
 ```
 
 # Calculate N's
@@ -1944,101 +1575,194 @@ total_tbl1_pre_u
 total_tbl1_post_u <- table(sample1_post$variables$intervention1)
 total_tbl1_post_u
 
-# Georgia vs. Alabama, Florida, Texas, Mississippi, South Carolina
+# Georgia vs. Alabama, Florida, Tennessee, Mississippi, South Carolina
+total_tbl4_u <- table(sample4$variables$intervention4)
+total_tbl4_u
+
 ## Unweighted N in pre period
-total_tbl3_pre_u <- table(sample3_pre$variables$intervention3)
-total_tbl3_pre_u
+total_tbl4_pre_u <- table(sample4_pre$variables$intervention4)
+total_tbl4_pre_u
 
 ## Unweighted N in post period
-total_tbl3_post_u <- table(sample3_post$variables$intervention3)
-total_tbl3_post_u
+total_tbl4_post_u <- table(sample4_post$variables$intervention4)
+total_tbl4_post_u
+
+# Georgia vs. South Dakota >65
+## Unweighted N in pre period
+total_tbl1_65_pre_u <- table(sample1_65_pre$variables$intervention1)
+total_tbl1_65_pre_u
+
+## Unweighted N in post period
+total_tbl1_65_post_u <- table(sample1_65_post$variables$intervention1)
+total_tbl1_65_post_u
+
+# Georgia vs. non-expansion states >65
+total_tbl4_65_u <- table(sample4_65$variables$intervention4)
+total_tbl4_65_u
+
+## Unweighted N in pre period
+total_tbl4_65_pre_u <- table(sample4_65_pre$variables$intervention4)
+total_tbl4_65_pre_u
+
+## Unweighted N in post period
+total_tbl4_65_post_u <- table(sample4_65_post$variables$intervention4)
+total_tbl4_65_post_u
+```
+
+# Baseline characteristics table
+### GA v SD
+```{r}
+# Unweighted N
+total_tbl_u <- table(sample1$variables$intervention1)
+total_tbl_u
+
+# Weighted N
+total_tbl_w <- svytable(~intervention1, design = sample1) %>% as.data.frame()
+total_tbl_w
+
+# Age
+age_n <- sample1$variables %>%
+  group_by(state, age_cat) %>%
+  summarise(count = n(), .groups = "drop")
+age_n
+
+age_pct <- svyby(~age_cat, ~state, sample1, svymean, vartype = c ("se"), na.rm = TRUE)
+age_pct
+
+age_chi <- svychisq(~age_cat +state, sample1)
+age_chi
+
+# Sex
+sex_n <- sample1$variables %>%
+  group_by(state, sex_cat) %>%
+  summarise(count = n(), .groups = "drop")
+sex_n
+
+sex_pct <- svyby(~sex_cat, ~state, sample1, svymean, vartype = c ("se"), na.rm = TRUE)
+sex_pct
+
+sex_chi <- svychisq(~sex_cat +state, sample1)
+sex_chi
+
+# Race
+race_n <- sample1$variables %>%
+  group_by(state, race_cat) %>%
+  summarise(count = n(), .groups = "drop")
+race_n
+
+race_pct <- svyby(~race_cat, ~state, sample1, svymean, vartype = c ("se"), na.rm = TRUE)
+race_pct
+
+race_chi <- svychisq(~race_cat +state, sample1)
+race_chi
+
+# Disability
+disability_n <- sample1$variables %>%
+  group_by(state, disability_cat) %>%
+  summarise(count = n(), .groups = "drop")
+disability_n
+
+disability_pct <- svyby(~disability_cat, ~state, sample1, svymean, vartype = c ("se"), na.rm = TRUE)
+disability_pct
+
+disability_chi <- svychisq(~disability_cat +state, sample1)
+disability_chi
+```
+
+### GA v non-expansion
+```{r}
+# Unweighted N
+total_tbl_u <- table(sample4$variables$intervention4)
+total_tbl_u
+
+# Weighted N
+total_tbl_w <- svytable(~intervention4, design = sample4) %>% as.data.frame()
+total_tbl_w
+
+# Age
+age_n <- sample4$variables %>%
+  group_by(intervention4, age_cat) %>%
+  summarise(count = n(), .groups = "drop")
+age_n
+
+age_pct <- svyby(~age_cat, ~intervention4, sample4, svymean, vartype = c ("se"), na.rm = TRUE)
+age_pct
+
+age_chi <- svychisq(~age_cat +intervention4, sample4)
+age_chi
+
+# Sex
+sex_n <- sample4$variables %>%
+  group_by(intervention4, sex_cat) %>%
+  summarise(count = n(), .groups = "drop")
+sex_n
+
+sex_pct <- svyby(~sex_cat, ~intervention4, sample4, svymean, vartype = c ("se"), na.rm = TRUE)
+sex_pct
+
+sex_chi <- svychisq(~sex_cat +intervention4, sample4)
+sex_chi
+
+# Race
+race_n <- sample4$variables %>%
+  group_by(intervention4, race_cat) %>%
+  summarise(count = n(), .groups = "drop")
+race_n
+
+race_pct <- svyby(~race_cat, ~intervention4, sample4, svymean, vartype = c ("se"), na.rm = TRUE)
+race_pct
+
+race_chi <- svychisq(~race_cat +intervention4, sample4)
+race_chi
+
+# Disability
+disability_n <- sample4$variables %>%
+  group_by(intervention4, disability_cat) %>%
+  summarise(count = n(), .groups = "drop")
+disability_n
+
+disability_pct <- svyby(~disability_cat, ~intervention4, sample4, svymean, vartype = c ("se"), na.rm = TRUE)
+disability_pct
+
+disability_chi <- svychisq(~disability_cat +intervention4, sample4)
+disability_chi
 ```
 
 # Export raw data to Stata for Michael
 ```{r}
-write_csv(data, "georgia_data_v3.csv")
+write_dta(data, "georgia_data_v5.dta")
 
 # Check data
-temp <- read_csv("georgia_data_v3.csv")
-
-table(data$post)
-table(temp$post)
-
-table(data$intervention1)
-table(temp$intervention1)
-
-table(data$intervention3)
-table(temp$intervention3)
-
-rm(temp)
+# temp <- read_csv("georgia_data_v3.csv")
+# 
+# table(data$post)
+# table(temp$post)
+# 
+# table(data$intervention1)
+# table(temp$intervention1)
+# 
+# table(data$intervention3)
+# table(temp$intervention3)
+# 
+# rm(temp)
 
 sample <- data %>%
   filter(
-    (intervention1 %in% c(FALSE, TRUE) | intervention2 %in% c(FALSE, TRUE) | intervention3 %in% c(FALSE, TRUE)) & # Intervention or control group
-      age >= 19 & # >=19 years old
-      fpg <= 100 & # Income up to 100% FPL
+    (intervention1 %in% c(FALSE, TRUE) | 
+       intervention3 %in% c(FALSE, TRUE) | 
+       intervention4 %in% c(FALSE, TRUE) |
+       intervention_drop_al %in% c(FALSE, TRUE) |
+       intervention_drop_fl %in% c(FALSE, TRUE) |
+       intervention_drop_ms %in% c(FALSE, TRUE) |
+       intervention_drop_sc %in% c(FALSE, TRUE) |
+       intervention_drop_tn %in% c(FALSE, TRUE)) & # Intervention or control group
+      age >= 19 &  # >=19 years old
+      # fpg <= 100 & # Income up to 100% FPL
       not_missing_hi == TRUE & # Health insurance not missing
       not_missing_employment == TRUE # Employment not missing
   )
 
-write.csv(sample, "georgia_data_filtered_v3.csv", row.names = FALSE)
-```
-
-# Baseline characteristics table
-```{r}
-# Unweighted N
-total_tbl_pre_u <- table(sample1_pre$variables$intervention1)
-total_tbl_pre_u
-
-total_tbl_post_u <- table(sample1_post$variables$intervention1)
-total_tbl_post_u
-
-# Weighted N
-total_tbl_pre_w <- svytable(~intervention1, design = sample1_pre) %>% as.data.frame()
-total_tbl_pre_w
-
-total_tbl_post_w <- svytable(~intervention1, design = sample1_post) %>% as.data.frame()
-total_tbl_post_w
-
-# Age
-age_tbl <- svyby(~age, ~state + post, sample1, svymean, vartype = c ("se"), na.rm = TRUE)
-age_tbl
-
-age_ttest_pre <- svyttest(age~state, sample1_pre)
-age_ttest_pre
-
-age_ttest_post <- svyttest(age~state, sample1_post)
-age_ttest_post
-
-# Sex
-sex_tbl <- svyby(~sex_cat, ~state + post, sample1, svymean, vartype = c("ci"), na.rm = TRUE)
-sex_tbl
-
-sex_chi_pre <- svychisq(~sex_cat + state, sample1_pre)
-sex_chi_pre
-
-sex_chi_post <- svychisq(~sex_cat + state, sample1_post)
-sex_chi_post
-
-# Race
-race_tbl <- svyby(~race_cat, ~state + post, sample1, svymean, vartype = c("ci"), na.rm = TRUE)
-race_tbl
-
-race_chi_pre <- svychisq(~race_cat + state, sample1_pre)
-race_chi_pre
-
-race_chi_post <- svychisq(~race_cat + state, sample1_post)
-race_chi_post
-
-# Education
-bachelor_tbl <- svyby(~bachelor_cat, ~state + post, sample1, svymean, vartype = c("ci"), na.rm = TRUE)
-bachelor_tbl
-
-bachelor_chi_pre <- svychisq(~bachelor_cat + state, sample1_pre)
-bachelor_chi_pre
-
-bachelor_chi_post <- svychisq(~bachelor_cat + state, sample1_post)
-bachelor_chi_post
+write_dta(sample, "georgia_data_filtered_v5.dta")
 ```
 
 # Playground 
@@ -2123,7 +1847,37 @@ sample_raw <- data %>%
    ),
    intervention4 = case_when(
      state == "Georgia" ~ TRUE,
-     state %in% c("Tennessee") ~ FALSE,
+     state %in% c("Alabama", "Florida", "Mississippi", "South Carolina", "Tennessee") ~ FALSE,
+     TRUE ~ NA
+   ),
+   intervention5 = case_when(
+     state == "Georgia" ~ TRUE,
+     state %in% c("Alabama", "Florida", "Mississippi", "South Carolina", "Tennessee", "Texas") ~ FALSE,
+     TRUE ~ NA
+   ),
+   intervention_drop_al = case_when(
+     state == "Georgia" ~ TRUE,
+     state %in% c("Florida", "Mississippi", "South Carolina", "Tennessee") ~ FALSE,
+     TRUE ~ NA
+   ),
+   intervention_drop_fl = case_when(
+     state == "Georgia" ~ TRUE,
+     state %in% c("Alabama", "Mississippi", "South Carolina", "Tennessee") ~ FALSE,
+     TRUE ~ NA
+   ),
+   intervention_drop_ms = case_when(
+     state == "Georgia" ~ TRUE,
+     state %in% c("Alabama", "Florida", "South Carolina", "Tennessee") ~ FALSE,
+     TRUE ~ NA
+   ),
+   intervention_drop_sc = case_when(
+     state == "Georgia" ~ TRUE,
+     state %in% c("Alabama", "Florida", "Mississippi", "Tennessee") ~ FALSE,
+     TRUE ~ NA
+   ),
+   intervention_drop_tn = case_when(
+     state == "Georgia" ~ TRUE,
+     state %in% c("Alabama", "Florida", "Mississippi", "South Carolina") ~ FALSE,
      TRUE ~ NA
    ),
    post = case_when( 
@@ -2136,10 +1890,10 @@ sample_raw <- data %>%
     )
  ) %>%
  filter(
-   (intervention1 %in% c(FALSE, TRUE) | intervention3 %in% c(FALSE, TRUE)) & # Intervention or control group
+   (intervention1 %in% c(FALSE, TRUE) | intervention3 %in% c(FALSE, TRUE) | intervention4 %in% c(FALSE, TRUE) | intervention5 %in% c(FALSE, TRUE)) & # Intervention or control group
      age >= 19 & age <= 64 & # 19-64 years old
-     # age >= 70 & # 65+ years old
-     # fpg >= 200 & # Income up to 100% FPL
+     # age >= 65 & # 65+ years old
+     fpg <= 100 & # Income up to 100% FPL
      not_missing_hi == TRUE & # Health insurance not missing
      not_missing_employment == TRUE # Employment not missing
  ) %>%
@@ -2184,7 +1938,7 @@ library(lmtest)
 
 # Parallel trends
 ## Medicaid
-medicaid_pttest <- lm(medicaid ~ intervention1 * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
+medicaid_pttest <- lm(medicaid ~ intervention6 * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
 summary(medicaid_pttest)
 # medicaid_pttest_se <- vcovCL(medicaid_pttest, cluster = ~ state_factor)
 # medicaid_pttest_coef <- coeftest(medicaid_pttest, vcov = medicaid_pttest_se)
@@ -2192,7 +1946,7 @@ summary(medicaid_pttest)
 # confint(medicaid_pttest_coef)
 
 ## Uninsured
-uninsured_pttest <- lm(uninsured ~ intervention1 * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
+uninsured_pttest <- lm(uninsured ~ intervention4 * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
 summary(uninsured_pttest)
 # uninsured_pttest_se <- vcovCL(uninsured_pttest, cluster = ~ state_factor)
 # uninsured_pttest_coef <- coeftest(uninsured_pttest, vcov = uninsured_pttest_se)
@@ -2200,7 +1954,7 @@ summary(uninsured_pttest)
 # confint(uninsured_pttest_coef)
 
 ## Employed
-employed_pttest <- lm(employed ~ intervention1 * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
+employed_pttest <- lm(employed ~ intervention6 * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
 summary(employed_pttest)
 # employed_pttest_se <- vcovCL(employed_pttest, cluster = ~ state_factor)
 # employed_pttest_coef <- coeftest(employed_pttest, vcov = employed_pttest_se)
@@ -2209,7 +1963,7 @@ summary(employed_pttest)
 
 # non-expansion states
 ## Medicaid
-medicaid_pttest <- lm(medicaid ~ intervention3 * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
+medicaid_pttest <- lm(medicaid ~ intervention4 * date + state_factor + date_factor, data = sample_raw_pre, weights = PWEIGHT_divided)
 summary(medicaid_pttest)
 # medicaid_pttest_se <- vcovCL(medicaid_pttest, cluster = ~ state_factor)
 # medicaid_pttest_coef <- coeftest(medicaid_pttest, vcov = medicaid_pttest_se)
@@ -2257,7 +2011,7 @@ confint(medicaid_unadj_coef)
 
 ## Adjusted DID
 # Medicaid
-medicaid_adj <- lm(medicaid ~ intervention1 * post * inc_cat + age_cat + sex_cat + race_cat + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+medicaid_adj <- lm(medicaid ~ intervention1 * post + age_cat + sex_cat + race_cat + date_factor, data = sample_raw, weights = PWEIGHT_divided)
 summary(medicaid_adj)
 
 # Uninsured
@@ -2270,7 +2024,7 @@ summary(employed_adj)
 
 # Non-expansion states
 # Medicaid
-medicaid_adj <- lm(medicaid ~ intervention3 * post + age_cat + sex_cat + race_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+medicaid_adj <- lm(medicaid ~ intervention4 * post + age_cat + sex_cat + race_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
 summary(medicaid_adj)
 # medicaid_adj_se <- vcovCL(medicaid_adj, cluster = ~ state_factor)
 # medicaid_adj_coef <- coeftest(medicaid_adj, vcov = medicaid_adj_se)
@@ -2278,7 +2032,7 @@ summary(medicaid_adj)
 # confint(medicaid_adj_coef)
 
 # Uninsured
-uninsured_adj <- lm(uninsured ~ intervention3 * post + age_cat + sex_cat + race_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+uninsured_adj <- lm(uninsured ~ intervention4 * post + age_cat + sex_cat + race_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
 summary(uninsured_adj)
 # uninsured_adj_se <- vcovCL(uninsured_adj, cluster = ~ state_factor)
 # uninsured_adj_coef <- coeftest(uninsured_adj, vcov = uninsured_adj_se)
@@ -2286,10 +2040,23 @@ summary(uninsured_adj)
 # confint(uninsured_adj_coef)
 
 # Employed
-employed_adj <- lm(employed ~ intervention3 * post + age_cat + sex_cat + race_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+employed_adj <- lm(employed ~ intervention4 * post + age_cat + sex_cat + race_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
 summary(employed_adj)
 # employed_adj_se <- vcovCL(employed_adj, cluster = ~ state_factor)
 # employed_adj_coef <- coeftest(employed_adj, vcov = employed_adj_se)
 # employed_adj_coef
 # confint(employed_adj_coef)
+
+table(sample_raw$intervention3, sample_raw$state)
+svytable(~intervention3 + state, design = sample3)
+table(sample_raw$intervention4, sample_raw$state)
+svytable(~intervention4 + state, design = sample4)
+
+medicaid_adj <- lm(medicaid ~ intervention5 * post + age_cat + sex_cat + race_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+summary(medicaid_adj)
+
+lm(medicaid ~ intervention_drop_fl * post + age_cat + sex_cat + race_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+lm(medicaid ~ intervention_drop_ms * post + age_cat + sex_cat + race_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+lm(medicaid ~ intervention_drop_sc * post + age_cat + sex_cat + race_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
+lm(medicaid ~ intervention_drop_tn * post + age_cat + sex_cat + race_cat + state_factor + date_factor, data = sample_raw, weights = PWEIGHT_divided)
 ```
