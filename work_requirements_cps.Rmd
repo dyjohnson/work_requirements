@@ -14,7 +14,6 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ipumsr)
 library(tidyverse)
 library(haven)
-library(summarytools)
 library(survey)
 ```
 
@@ -23,7 +22,7 @@ library(survey)
 ## Load data
 
 ```{r}
-ddi <- read_ipums_ddi("cps_00008.xml")
+ddi <- read_ipums_ddi("cps_00010.xml")
 data <- read_ipums_micro(ddi)
 ```
 
@@ -31,15 +30,20 @@ data <- read_ipums_micro(ddi)
 ``` {r}
 data <- data %>%
   mutate(
-    intervention = case_when(
-      STATEFIP == 13 ~ 1, # Georgia
-      STATEFIP == 46 ~ 0, # South Dakota
-      TRUE ~ NA_real_
+    intervention1 = case_when(
+      STATEFIP == 13 ~ TRUE, # Georgia
+      STATEFIP == 46 ~ FALSE, # South Dakota
+      TRUE ~ NA
+    ),
+    intervention2 = case_when(
+      STATEFIP == 13 ~ TRUE, # Georgia
+      STATEFIP %in% c(1, 12, 47, 28, 45) ~ FALSE, # Alabama, Florida, Tennessee, Mississippi, South Carolina
+      TRUE ~ NA
     ),
     post = case_when(
-      YEAR %in% c(2022, 2023) ~ 0,
-      YEAR == 2024 ~ 1, 
-      TRUE ~ NA_real_
+      YEAR %in% c(2022, 2023) ~ FALSE,
+      YEAR == 2024 ~ TRUE, 
+      TRUE ~ NA
     ),
     medicaid = case_when(
       HIMCAIDNW == 1 ~ 0,
@@ -51,32 +55,93 @@ data <- data %>%
       ANYCOVNW == 2 ~ 1,
       TRUE ~ NA_real_
     ),
-    esi = case_when(
-      GRPCOVNW == 1 ~ 0,
-      GRPCOVNW == 2 ~ 1,
-      TRUE ~ NA_real_
-    ),
     employed = case_when(
-      EMPSTAT %in% c(20, 21, 22) ~ 0,
+      EMPSTAT %in% c(20, 21, 22, 30, 31, 32, 33, 34, 35, 36) ~ 0,
       EMPSTAT %in% c(10, 12) ~ 1,
       TRUE ~ NA_real_
     ),
-    student = case_when( # only for 16-24 year olds
-      SCHLCOLL %in% c(1, 2, 3, 4) ~ 1,
-      SCHLCOLL  == 5 ~ 0,
-      TRUE ~ NA_real_
+    state = case_when(
+      STATEFIP == 01 ~ "Alabama",
+      STATEFIP == 02 ~ "Alaska",
+      STATEFIP == 04 ~ "Arizona",
+      STATEFIP == 05 ~ "Arkansas",
+      STATEFIP == 06 ~ "California",
+      STATEFIP == 08 ~ "Colorado",
+      STATEFIP == 09 ~ "Connecticut",
+      STATEFIP == 10 ~ "Delaware",
+      STATEFIP == 11 ~ "District of Columbia",
+      STATEFIP == 12 ~ "Florida",
+      STATEFIP == 13 ~ "Georgia",
+      STATEFIP == 15 ~ "Hawaii",
+      STATEFIP == 16 ~ "Idaho",
+      STATEFIP == 17 ~ "Illinois",
+      STATEFIP == 18 ~ "Indiana",
+      STATEFIP == 19 ~ "Iowa",
+      STATEFIP == 20 ~ "Kansas",
+      STATEFIP == 21 ~ "Kentucky",
+      STATEFIP == 22 ~ "Louisiana",
+      STATEFIP == 23 ~ "Maine",
+      STATEFIP == 24 ~ "Maryland",
+      STATEFIP == 25 ~ "Massachusetts",
+      STATEFIP == 26 ~ "Michigan",
+      STATEFIP == 27 ~ "Minnesota",
+      STATEFIP == 28 ~ "Mississippi",
+      STATEFIP == 29 ~ "Missouri",
+      STATEFIP == 30 ~ "Montana",
+      STATEFIP == 31 ~ "Nebraska",
+      STATEFIP == 32 ~ "Nevada",
+      STATEFIP == 33 ~ "New Hampshire",
+      STATEFIP == 34 ~ "New Jersey",
+      STATEFIP == 35 ~ "New Mexico",
+      STATEFIP == 36 ~ "New York",
+      STATEFIP == 37 ~ "North Carolina",
+      STATEFIP == 38 ~ "North Dakota",
+      STATEFIP == 39 ~ "Ohio",
+      STATEFIP == 40 ~ "Oklahoma",
+      STATEFIP == 41 ~ "Oregon",
+      STATEFIP == 42 ~ "Pennsylvania",
+      STATEFIP == 44 ~ "Rhode Island",
+      STATEFIP == 45 ~ "South Carolina",
+      STATEFIP == 46 ~ "South Dakota",
+      STATEFIP == 47 ~ "Tennessee",
+      STATEFIP == 48 ~ "Texas",
+      STATEFIP == 49 ~ "Utah",
+      STATEFIP == 50 ~ "Vermont",
+      STATEFIP == 51 ~ "Virginia",
+      STATEFIP == 53 ~ "Washington",
+      STATEFIP == 54 ~ "West Virginia",
+      STATEFIP == 55 ~ "Wisconsin",
+      STATEFIP == 56 ~ "Wyoming"
     ),
-    qualifying = case_when( # consider dropping because of student
-      employed == 1 | student == 1 ~ 1,
-      employed == 0 & student == 0 ~ 0,
-      TRUE ~ NA_real_
+    age_cat = case_when(
+      AGE >= 18 & AGE <= 24 ~ "18-24",
+      AGE >= 25 & AGE <= 34 ~ "25-34",
+      AGE >= 35 & AGE <= 44 ~ "35-44",
+      AGE >= 45 & AGE <= 54 ~ "45-54",
+      AGE >= 55 & AGE <= 64 ~ "55-64",
+      AGE >= 65 & AGE <= 74 ~ "65-74",
+      AGE >= 75 ~ ">75",
+      TRUE ~ NA_character_
     ),
-    poorhealth = case_when(
-      HEALTH %in% c(4, 5) ~ 1,
-      HEALTH %in% c(1, 2, 3) ~ 0,
-      TRUE ~ NA_real_
+    sex_cat = case_when(
+      SEX == 1 ~ "1.Male",
+      SEX == 2 ~ "2.Female",
+      TRUE ~ NA_character_
     ),
-    spending = MOOP
+    race_cat = case_when(
+      RACE == 100 ~ "White",
+      RACE == 200 ~ "Black",
+      RACE %in% c(650, 651, 652) ~ "Asian",
+      RACE %in% c(300, 700, 801, 802, 803, 804, 805, 806, 807, 808, 809, 810, 811, 812, 813, 814, 815, 816, 817, 818, 819, 820, 830) ~ "Other",
+      TRUE ~ NA_character_
+    ),
+    race_cat = case_when( # Note: Hispanic ethnicity overrides all other race variables
+      HISPAN == 0 ~ race_cat,
+      HISPAN %in% c(100, 102, 103, 104, 108, 109, 200, 300, 400, 500, 600, 610, 611, 612) ~ "Hispanic",
+      TRUE ~ race_cat
+    ),
+    state_factor = as.factor(state),
+    date_factor = as.factor(YEAR)
   )
 ```
 
@@ -87,22 +152,244 @@ survey <- svydesign(id = ~`CPSIDP`, weights = ~`ASECWT`, data = data, nest = TRU
 options(survey.lonely.psu = "adjust")
 ```
 
-## Select sample
+## Select samples
 ```{r}
-eligible <- survey %>%
-  subset(
-    !is.na(intervention) &
+sample1_raw <- data %>%
+  filter(
+    !is.na(intervention1) &
       AGE >= 19 & AGE <= 64 & # 19-64 years old
       OFFPOV == 1 # Income up to 100% FPL
   )
 
-eligible_raw <- data %>%
-  filter(
-    !is.na(intervention) &
+sample1 <- survey %>%
+  subset(
+    !is.na(intervention1) &
       AGE >= 19 & AGE <= 64 & # 19-64 years old
       OFFPOV == 1 # Income up to 100% FPL
   )
+
+sample2_raw <- data %>%
+  filter(
+    !is.na(intervention2) &
+      AGE >= 19 & AGE <= 64 & # 19-64 years old
+      OFFPOV == 1 # Income up to 100% FPL
+  )
+
+sample2 <- survey %>%
+  subset(
+    !is.na(intervention2) &
+      AGE >= 19 & AGE <= 64 & # 19-64 years old
+      OFFPOV == 1 # Income up to 100% FPL
+  )
+
+# Subset to pre-period
+sample2_pre <- sample2 %>% subset(post == FALSE)
+
+# Subset to post-period
+sample2_post <- sample2 %>% subset(post == TRUE)
 ```
+
+## Pre-post stats
+```{r}
+table(sample1_raw$intervention1, sample1_raw$post)
+
+medicaid_post_sd <- svyby(~medicaid, ~intervention1 + post, design = sample1, FUN = svymean, vartype = "ci")
+medicaid_post_sd
+
+uninsured_post_sd <- svyby(~uninsured, ~intervention1 + post, design = sample1, FUN = svymean, vartype = "ci")
+uninsured_post_sd
+
+employed_post_sd <- svyby(~employed, ~intervention1 + post, design = subset(sample1, !is.na(employed)), FUN = svymean, vartype = "ci")
+employed_post_sd
+
+table(sample2_raw$intervention2, sample2_raw$post)
+
+medicaid_post_south <- svyby(~medicaid, ~intervention2 + post, design = sample2, FUN = svymean, vartype = "ci")
+medicaid_post_south
+
+uninsured_post_south <- svyby(~uninsured, ~intervention2 + post, design = sample2, FUN = svymean, vartype = "ci")
+uninsured_post_south
+
+employed_post_south <- svyby(~employed, ~intervention2 + post, design = subset(sample2, !is.na(employed)), FUN = svymean, vartype = "ci")
+employed_post_south
+```
+
+# Calculate N's
+```{r}
+# Georgia vs. Alabama, Florida, Tennessee, Mississippi, South Carolina
+## Unweighted N in pre period
+total_tbl2_pre_u <- table(sample2_pre$variables$intervention2)
+total_tbl2_pre_u
+
+## Unweighted N in post period
+total_tbl2_post_u <- table(sample2_post$variables$intervention2)
+total_tbl2_post_u
+```
+
+## DID table
+```{r}
+gen_did_tbl <- function(outcome_var, survey_design, z_value = 1.96) {
+  # -------------------------------------------------------------------
+  # 1) Intervention group
+  # -------------------------------------------------------------------
+  # Subset design for the intervention group
+  int_design <- subset(survey_design, intervention2 == TRUE)
+
+  # Calculate pre vs. post means with covariance
+  # So we can do a correct difference for the intervention group
+  tbl_t <- svyby(
+    formula = as.formula(paste0("~", outcome_var)),
+    by = ~post,               
+    design = int_design,
+    FUN = svymean,
+    na.rm = TRUE,
+    covmat = TRUE,            # <--- ensures we get the full covariance matrix
+    vartype = "ci"           
+  )
+
+  # Pre (FALSE) means
+  pre_mean_t       <- tbl_t[tbl_t$post == FALSE, outcome_var] * 100
+  pre_ci_l_t       <- tbl_t[tbl_t$post == FALSE, "ci_l"] * 100
+  pre_ci_u_t       <- tbl_t[tbl_t$post == FALSE, "ci_u"] * 100
+
+  # Post (TRUE) means
+  post_mean_t      <- tbl_t[tbl_t$post == TRUE, outcome_var] * 100
+  post_ci_l_t      <- tbl_t[tbl_t$post == TRUE, "ci_l"] * 100
+  post_ci_u_t      <- tbl_t[tbl_t$post == TRUE, "ci_u"] * 100
+
+  # Use svycontrast to get the difference = Post (TRUE) - Pre (FALSE)
+  diff_t <- svycontrast(
+    tbl_t,
+    quote(`TRUE` - `FALSE`)
+  )
+  # Coefficient (point estimate) is in coef(diff_t)
+  diff_t_est <- coef(diff_t)[1] * 100   
+  diff_t_se  <- SE(diff_t)[1]   * 100
+  # 95% CI from confint()
+  diff_t_ci  <- confint(diff_t) * 100  
+  diff_t_ci_l <- diff_t_ci[1, 1]
+  diff_t_ci_u <- diff_t_ci[1, 2]
+
+  # Also get a p-value for (pre vs post) in the intervention group
+  did_ttest_t <- svyttest(
+    as.formula(paste0(outcome_var, " ~ post")),
+    design = int_design
+  )
+  did_pval_t <- formatC(did_ttest_t$p.value, format = "f", digits = 4)
+
+
+  # -------------------------------------------------------------------
+  # 2) Control group
+  # -------------------------------------------------------------------
+  # Subset design for the control group
+  ctl_design <- subset(survey_design, intervention2 == FALSE)
+
+  # Calculate pre vs. post means with covariance
+  tbl_c <- svyby(
+    formula = as.formula(paste0("~", outcome_var)),
+    by = ~post,               
+    design = ctl_design,
+    FUN = svymean,
+    na.rm = TRUE,
+    covmat = TRUE,
+    vartype = "ci"
+  )
+
+  # Pre (FALSE)
+  pre_mean_c  <- tbl_c[tbl_c$post == FALSE, outcome_var] * 100
+  pre_ci_l_c  <- tbl_c[tbl_c$post == FALSE, "ci_l"] * 100
+  pre_ci_u_c  <- tbl_c[tbl_c$post == FALSE, "ci_u"] * 100
+
+  # Post (TRUE)
+  post_mean_c <- tbl_c[tbl_c$post == TRUE, outcome_var] * 100
+  post_ci_l_c <- tbl_c[tbl_c$post == TRUE, "ci_l"] * 100
+  post_ci_u_c <- tbl_c[tbl_c$post == TRUE, "ci_u"] * 100
+
+  # Difference in the control group
+  diff_c <- svycontrast(
+    tbl_c,
+    quote(`TRUE` - `FALSE`)
+  )
+  diff_c_est <- coef(diff_c)[1] * 100
+  diff_c_se  <- SE(diff_c)[1]   * 100
+  diff_c_ci  <- confint(diff_c) * 100
+  diff_c_ci_l <- diff_c_ci[1, 1]
+  diff_c_ci_u <- diff_c_ci[1, 2]
+
+  # p-value for control group
+  did_ttest_c <- svyttest(
+    as.formula(paste0(outcome_var, " ~ post")),
+    design = ctl_design
+  )
+  did_pval_c <- formatC(did_ttest_c$p.value, format = "f", digits = 4)
+
+
+  # -------------------------------------------------------------------
+  # 3) Print out results
+  # -------------------------------------------------------------------
+  # Intervention group
+  cat("Intervention group:\n")
+  cat(sprintf("Pre period mean: %.1f (%.1f, %.1f)\n",
+              pre_mean_t, pre_ci_l_t, pre_ci_u_t))
+  cat(sprintf("Post period mean: %.1f (%.1f, %.1f)\n",
+              post_mean_t, post_ci_l_t, post_ci_u_t))
+  cat(sprintf("Difference: %.1f (%.1f, %.1f)\n",
+              diff_t_est, diff_t_ci_l, diff_t_ci_u))
+  cat(sprintf("P value: %s\n\n", did_pval_t))
+
+  # Control group
+  cat("Control group:\n")
+  cat(sprintf("Pre period mean: %.1f (%.1f, %.1f)\n",
+              pre_mean_c, pre_ci_l_c, pre_ci_u_c))
+  cat(sprintf("Post period mean: %.1f (%.1f, %.1f)\n",
+              post_mean_c, post_ci_l_c, post_ci_u_c))
+  cat(sprintf("Difference: %.1f (%.1f, %.1f)\n",
+              diff_c_est, diff_c_ci_l, diff_c_ci_u))
+  cat(sprintf("P value: %s\n\n", did_pval_c))
+}
+
+# GA v non-expansion 19-64
+gen_did_tbl("medicaid", sample2)
+gen_did_tbl("uninsured", sample2)
+gen_did_tbl("employed", sample2)
+```
+
+## Unadjusted DID analysis
+```{r}
+# Medicaid
+medicaid_unadj <- svyglm(medicaid ~ intervention2 * post, design = sample2)
+summary(medicaid_unadj)
+confint(medicaid_unadj)
+
+# Uninsured
+uninsured_unadj <- svyglm(uninsured ~ intervention2 * post, design = sample2)
+summary(uninsured_unadj)
+confint(uninsured_unadj)
+
+# Employed
+employed_unadj <- svyglm(employed ~ intervention2 * post, design = sample2)
+summary(employed_unadj)
+confint(employed_unadj)
+```
+
+## Adjusted DID analysis
+```{r}
+# Medicaid
+medicaid_adj <- svyglm(medicaid ~ intervention2 * post + age_cat + sex_cat + race_cat + state_factor + date_factor, design = sample2)
+summary(medicaid_adj)
+confint(medicaid_adj)
+
+# Uninsured
+uninsured_adj <- svyglm(uninsured ~ intervention2 * post + age_cat + sex_cat + race_cat + state_factor + date_factor, design = sample2)
+summary(uninsured_adj)
+confint(uninsured_adj)
+
+# Employed
+employed_adj <- svyglm(employed ~ intervention2 * post + age_cat + sex_cat + race_cat + state_factor + date_factor, design = sample2)
+summary(employed_adj)
+confint(employed_adj)
+```
+
 
 ## Data exploration
 ```{r}
@@ -112,9 +399,9 @@ table(eligible_raw$STATEFIP, eligible_raw$post)
 
 ## Plot data
 ```{r}
-medicaid_year <- svytable(~medicaid + YEAR + intervention, eligible) %>%
+medicaid_year <- svytable(~medicaid + YEAR + intervention2, sample2) %>%
   as.data.frame() %>%
-  group_by(YEAR, intervention) %>%
+  group_by(YEAR, intervention2) %>%
   summarize(
     total = sum(Freq),
     medicaid_1 = sum(Freq[medicaid == 1]),
@@ -122,7 +409,7 @@ medicaid_year <- svytable(~medicaid + YEAR + intervention, eligible) %>%
   ) %>%
   ungroup()
 
-medicaid_year_plot <- ggplot(medicaid_year, aes(x = YEAR, y = percentage, color = intervention, group = intervention)) +
+medicaid_year_plot <- ggplot(medicaid_year, aes(x = YEAR, y = percentage, color = intervention2, group = intervention2)) +
   geom_line() +
   geom_point() +
   labs(
@@ -132,17 +419,18 @@ medicaid_year_plot <- ggplot(medicaid_year, aes(x = YEAR, y = percentage, color 
     color = ""
   ) +
   # scale_x_discrete(labels = c("2022 Q1", "2022 Q2", "2022 Q3", "2022 Q4", "2023 Q1", "2023 Q2", "2023 Q3", "2023 Q4")) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("Non-expansion states", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 medicaid_year_plot
 # ggsave("medicaid_year_plot.jpg")
 
 # Uninsured
-uninsured_year <- svytable(~uninsured + YEAR + intervention, eligible) %>%
+uninsured_year <- svytable(~uninsured + YEAR + intervention2, sample2) %>%
   as.data.frame() %>%
-  group_by(YEAR, intervention) %>%
+  group_by(YEAR, intervention2) %>%
   summarize(
     total = sum(Freq),
     uninsured_1 = sum(Freq[uninsured == 1]),
@@ -150,7 +438,7 @@ uninsured_year <- svytable(~uninsured + YEAR + intervention, eligible) %>%
   ) %>%
   ungroup()
 
-uninsured_year_plot <- ggplot(uninsured_year, aes(x = YEAR, y = percentage, color = intervention, group = intervention)) +
+uninsured_year_plot <- ggplot(uninsured_year, aes(x = YEAR, y = percentage, color = intervention2, group = intervention2)) +
   geom_line() +
   geom_point() +
   labs(
@@ -159,44 +447,18 @@ uninsured_year_plot <- ggplot(uninsured_year, aes(x = YEAR, y = percentage, colo
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("Non-expansion states", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 uninsured_year_plot
 # ggsave("medicaid_year_plot.jpg")
 
-# esi
-esi_year <- svytable(~esi + YEAR + intervention, eligible) %>%
-  as.data.frame() %>%
-  group_by(YEAR, intervention) %>%
-  summarize(
-    total = sum(Freq),
-    esi_1 = sum(Freq[esi == 1]),
-    percentage = (esi_1 / total) * 100
-  ) %>%
-  ungroup()
-
-esi_year_plot <- ggplot(esi_year, aes(x = YEAR, y = percentage, color = intervention, group = intervention)) +
-  geom_line() +
-  geom_point() +
-  labs(
-    title = "ESI",
-    x = "Year",
-    y = "Percentage",
-    color = ""
-  ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-esi_year_plot
-# ggsave("medicaid_year_plot.jpg")
-
 # Employed
-employed_year <- svytable(~employed + YEAR + intervention, eligible) %>%
+employed_year <- svytable(~employed + YEAR + intervention2, sample2) %>%
   as.data.frame() %>%
-  group_by(YEAR, intervention) %>%
+  group_by(YEAR, intervention2) %>%
   summarize(
     total = sum(Freq),
     employed_1 = sum(Freq[employed == 1]),
@@ -204,7 +466,7 @@ employed_year <- svytable(~employed + YEAR + intervention, eligible) %>%
   ) %>%
   ungroup()
 
-employed_year_plot <- ggplot(employed_year, aes(x = YEAR, y = percentage, color = intervention, group = intervention)) +
+employed_year_plot <- ggplot(employed_year, aes(x = YEAR, y = percentage, color = intervention2, group = intervention2)) +
   geom_line() +
   geom_point() +
   labs(
@@ -213,12 +475,13 @@ employed_year_plot <- ggplot(employed_year, aes(x = YEAR, y = percentage, color 
     y = "Percentage",
     color = ""
   ) +
-  scale_color_discrete(labels = c("South Dakota", "Georgia")) +
+  scale_color_discrete(labels = c("Non-expansion states", "Georgia")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylim(0, 100)
 
 employed_year_plot
-# ggsave("medicaid_year_plot.jpg")
+# ggsave("employed_year_plot.jpg")
 
 ```
 
@@ -538,4 +801,191 @@ summary(pcp_adj)
 # Cost-related delays in care
 not_afford_adj <- svyglm(not_afford ~ intervention * post + age_cat + sex_cat + race_cat, design = eligible)
 summary(not_afford_adj)
+```
+
+# Load libraries
+
+```{r libraries}
+library(ipumsr)
+library(tidyverse)
+library(haven)
+library(survey)
+```
+
+# Original cross-sectional data 
+
+## Load data
+
+```{r}
+ddi <- read_ipums_ddi("cps_00010.xml")
+data <- read_ipums_micro(ddi)
+```
+
+## Clean data
+``` {r}
+data <- data %>%
+  mutate(
+    intervention1 = case_when(
+      STATEFIP == 13 ~ TRUE, # Georgia
+      STATEFIP == 46 ~ FALSE, # South Dakota
+      TRUE ~ NA
+    ),
+    intervention2 = case_when(
+      STATEFIP == 13 ~ TRUE, # Georgia
+      STATEFIP %in% c(1, 12, 47, 28, 45) ~ FALSE, # Alabama, Florida, Tennessee, Mississippi, South Carolina
+      TRUE ~ NA
+    ),
+    post = case_when(
+      YEAR %in% c(2022, 2023) ~ FALSE,
+      YEAR == 2024 ~ TRUE, 
+      TRUE ~ NA
+    ),
+    medicaid = case_when(
+      HIMCAIDNW == 1 ~ 0,
+      HIMCAIDNW == 2 ~ 1,
+      TRUE ~ NA_real_
+    ),
+    uninsured = case_when(
+      ANYCOVNW == 1 ~ 0,
+      ANYCOVNW == 2 ~ 1,
+      TRUE ~ NA_real_
+    ),
+    employed = case_when(
+      EMPSTAT %in% c(20, 21, 22, 30, 31, 32, 33, 34, 35, 36) ~ 0,
+      EMPSTAT %in% c(10, 12) ~ 1,
+      TRUE ~ NA_real_
+    ),
+    state = case_when(
+      STATEFIP == 01 ~ "Alabama",
+      STATEFIP == 02 ~ "Alaska",
+      STATEFIP == 04 ~ "Arizona",
+      STATEFIP == 05 ~ "Arkansas",
+      STATEFIP == 06 ~ "California",
+      STATEFIP == 08 ~ "Colorado",
+      STATEFIP == 09 ~ "Connecticut",
+      STATEFIP == 10 ~ "Delaware",
+      STATEFIP == 11 ~ "District of Columbia",
+      STATEFIP == 12 ~ "Florida",
+      STATEFIP == 13 ~ "Georgia",
+      STATEFIP == 15 ~ "Hawaii",
+      STATEFIP == 16 ~ "Idaho",
+      STATEFIP == 17 ~ "Illinois",
+      STATEFIP == 18 ~ "Indiana",
+      STATEFIP == 19 ~ "Iowa",
+      STATEFIP == 20 ~ "Kansas",
+      STATEFIP == 21 ~ "Kentucky",
+      STATEFIP == 22 ~ "Louisiana",
+      STATEFIP == 23 ~ "Maine",
+      STATEFIP == 24 ~ "Maryland",
+      STATEFIP == 25 ~ "Massachusetts",
+      STATEFIP == 26 ~ "Michigan",
+      STATEFIP == 27 ~ "Minnesota",
+      STATEFIP == 28 ~ "Mississippi",
+      STATEFIP == 29 ~ "Missouri",
+      STATEFIP == 30 ~ "Montana",
+      STATEFIP == 31 ~ "Nebraska",
+      STATEFIP == 32 ~ "Nevada",
+      STATEFIP == 33 ~ "New Hampshire",
+      STATEFIP == 34 ~ "New Jersey",
+      STATEFIP == 35 ~ "New Mexico",
+      STATEFIP == 36 ~ "New York",
+      STATEFIP == 37 ~ "North Carolina",
+      STATEFIP == 38 ~ "North Dakota",
+      STATEFIP == 39 ~ "Ohio",
+      STATEFIP == 40 ~ "Oklahoma",
+      STATEFIP == 41 ~ "Oregon",
+      STATEFIP == 42 ~ "Pennsylvania",
+      STATEFIP == 44 ~ "Rhode Island",
+      STATEFIP == 45 ~ "South Carolina",
+      STATEFIP == 46 ~ "South Dakota",
+      STATEFIP == 47 ~ "Tennessee",
+      STATEFIP == 48 ~ "Texas",
+      STATEFIP == 49 ~ "Utah",
+      STATEFIP == 50 ~ "Vermont",
+      STATEFIP == 51 ~ "Virginia",
+      STATEFIP == 53 ~ "Washington",
+      STATEFIP == 54 ~ "West Virginia",
+      STATEFIP == 55 ~ "Wisconsin",
+      STATEFIP == 56 ~ "Wyoming"
+    ),
+    age_cat = case_when(
+      AGE >= 18 & AGE <= 24 ~ "18-24",
+      AGE >= 25 & AGE <= 34 ~ "25-34",
+      AGE >= 35 & AGE <= 44 ~ "35-44",
+      AGE >= 45 & AGE <= 54 ~ "45-54",
+      AGE >= 55 & AGE <= 64 ~ "55-64",
+      AGE >= 65 & AGE <= 74 ~ "65-74",
+      AGE >= 75 ~ ">75",
+      TRUE ~ NA_character_
+    )
+  )
+```
+
+## Create survey design object
+```{r}
+survey <- svydesign(id = ~`CPSIDP`, weights = ~`ASECWT`, data = data, nest = TRUE)
+
+options(survey.lonely.psu = "adjust")
+```
+
+## Select samples
+```{r}
+sample1_raw <- data %>%
+  filter(
+    !is.na(intervention1) &
+      AGE >= 19 & AGE <= 64 & # 19-64 years old
+      OFFPOV == 1 # Income up to 100% FPL
+  )
+
+sample1 <- survey %>%
+  subset(
+    !is.na(intervention1) &
+      AGE >= 19 & AGE <= 64 & # 19-64 years old
+      OFFPOV == 1 # Income up to 100% FPL
+  )
+
+sample2_raw <- data %>%
+  filter(
+    !is.na(intervention2) &
+      AGE >= 19 & AGE <= 64 & # 19-64 years old
+      OFFPOV == 1 # Income up to 100% FPL
+  )
+
+sample2 <- survey %>%
+  subset(
+    !is.na(intervention2) &
+      AGE >= 19 & AGE <= 64 & # 19-64 years old
+      OFFPOV == 1 # Income up to 100% FPL
+  )
+
+# Subset to pre-period
+sample2_pre <- sample2 %>% subset(post == FALSE)
+
+# Subset to post-period
+sample2_post <- sample2 %>% subset(post == TRUE)
+```
+
+## Pre-post stats
+```{r}
+table(sample1_raw$intervention1, sample1_raw$post)
+
+medicaid_post_sd <- svyby(~medicaid, ~intervention1 + post, design = sample1, FUN = svymean, vartype = "ci")
+medicaid_post_sd
+
+uninsured_post_sd <- svyby(~uninsured, ~intervention1 + post, design = sample1, FUN = svymean, vartype = "ci")
+uninsured_post_sd
+
+employed_post_sd <- svyby(~employed, ~intervention1 + post, design = subset(sample1, !is.na(employed)), FUN = svymean, vartype = "ci")
+employed_post_sd
+
+table(sample2_raw$intervention2, sample2_raw$post)
+
+medicaid_post_south <- svyby(~medicaid, ~intervention2 + post, design = sample2, FUN = svymean, vartype = "ci")
+medicaid_post_south
+
+uninsured_post_south <- svyby(~uninsured, ~intervention2 + post, design = sample2, FUN = svymean, vartype = "ci")
+uninsured_post_south
+
+employed_post_south <- svyby(~employed, ~intervention2 + post, design = subset(sample2, !is.na(employed)), FUN = svymean, vartype = "ci")
+employed_post_south
 ```
